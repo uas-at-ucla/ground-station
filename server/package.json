@@ -1,0 +1,30 @@
+{
+  "name": "ground_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ground_server.js",
+  "scripts": {
+    "start": "npm run server",
+    "server": "nodemon ground_server.js",
+    "all": "concurrently --kill-others \"npm:server\" \"npm:ui\"",
+    "all-web": "concurrently --kill-others \"npm:server\" \"npm:ui-web\"",
+    "ui": "cd ../ui && npm start",
+    "ui-web": "cd ../ui && npm run start-web",
+    "test": "node test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "check-dependencies": "^1.1.0",
+    "concurrently": "^4.0.1"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "nodemon": "^1.18.10",
+    "protobufjs": "^6.8.8",
+    "socket.io": "^2.1.1"
+  },
+  "optionalDependencies": {
+    "net-ping": "^1.2.3"
+  }
+}

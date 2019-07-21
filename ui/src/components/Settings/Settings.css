@@ -1,0 +1,18 @@
+.Settings .logo {
+  text-align: center;
+}
+
+.Settings .row {
+  margin-bottom: 10px;
+}
+
+.Settings .connect-btn {
+  width: 100%;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.Settings .connect-status {
+  display: flex;
+  align-items: center; 
+}

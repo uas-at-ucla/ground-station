@@ -1,0 +1,49 @@
+.Altimeter {
+  background: rgba(0, 0, 0, 0.6);
+  width: 70px;
+  flex-grow: 1;
+  padding: 2px;
+  margin-bottom: 1em;
+  display: flex;
+}
+
+.Altimeter .progress-bars {
+  position: relative;
+  width: 100%;
+  flex-grow: 1;
+}
+
+.Altimeter .progress-bar {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.Altimeter .filler {
+  background: rgba(45, 121, 167, 0.6);
+  width: 100%;
+}
+
+.Altimeter .filler.too-low {
+  background: rgba(242, 128, 51, 0.6);
+}
+
+.Altimeter .filler.too-high {
+  background: rgba(255, 0, 0, 0.6);
+}
+
+.Altimeter .filler-min {
+  border-top: solid #F28033 1px;
+  width: 100%;
+}
+
+.Altimeter .filler-max {
+  border-top: solid red 1px;
+  width: 100%;
+}
+
+

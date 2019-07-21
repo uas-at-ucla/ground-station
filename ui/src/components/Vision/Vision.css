@@ -1,0 +1,20 @@
+.Vision .map-overlay {
+  padding: 10px;
+  position: fixed;
+  height: auto;
+  width: auto;
+  top: 60px;
+  pointer-events: all;
+  color: #FFF;
+  z-index: 10;
+}
+
+/* .Vision .image-crop {
+  padding: 10px;
+  position: absolute;
+  top: 0;
+  left: 450px;
+  height: 1000px;
+  width: 1000px;
+  z-index: 20;
+} */
