@@ -1,16 +1,6 @@
 // use require() to load libraries from node_modules
 const fs = require('fs');
 const socketIOServer = require('socket.io');
-var ping;
-try {
-  ping = require("net-ping"); //might fail since it needs to be compiled specifically on each platform
-} catch(e) {
-  console.log(e);
-  console.log("Can't load net-ping. It either did not install succesfully, or it may be installed for the wrong platform. Uninstall and reinstall on the desired platform with:");
-  console.log("    cd src/ground/server");
-  console.log("    npm uninstall net-ping --no-save");
-  console.log("    npm install net-ping\n");
-}
 
 const inDockerContainer = fs.existsSync("/.dockerenv");
 
@@ -21,7 +11,6 @@ const config = require('./config');
 const server_port = 8081;
 
 var droneIP = inDockerContainer ? "192.168.3.20" : "192.168.1.20";
-const pingInterval = 1000 //ms
 const uiSendFrequency = 5; //Hz
 const trackySendFrequency = 5; //Hz
 var telemetry = { output: {} };
@@ -376,49 +365,6 @@ ui_io.on('connect', (socket) => {
   });
 });
 
-/**************************
- * PING THE DRONE
- **************************/
-if (ping) {
-  //ping options
-  var pingOptions = {
-    networkProtocol: ping.NetworkProtocol.IPv4,
-    packetSize: 16,
-    retries: 1,
-    sessionId: (process.pid % 65535),
-    timeout: 3000,
-    ttl: 128
-  };
-
-  try { // might fail without sudo
-    var pingSession = ping.createSession(pingOptions);
-
-    setInterval(() => droneIP && pingSession.pingHost(droneIP, function (error, droneIP, sent, rcvd) {
-      var ms = rcvd - sent;
-      if (error) {
-        ui_io.emit('PING', null);
-        if (error instanceof ping.RequestTimedOutError)
-          if (config.verbose) console.log(droneIP + ": Not alive");
-        else
-          console.log(droneIP + ": " + error.toString());
-      } else {
-        if (config.verbose) console.log(droneIP + ": Alive (ms=" + ms + ")");
-        ui_io.emit('PING', ms);
-      }
-    }), pingInterval);
-
-    pingSession.on("close", function () {
-      console.log("PING SOCKET CLOSED");
-    });
-
-    pingSession.on("error", function (error) {
-      console.log(error.toString());
-    });
-  } catch(e) {
-    console.log(e);
-    console.log("Can't start ping session. You may need to run with sudo\n.");
-  }
-}
 
 /**************************
  * FAKE_DRONE SOCKET

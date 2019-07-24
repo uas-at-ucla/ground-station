@@ -1,9 +1,9 @@
 // UNCOMMENT TO USE GOOGLE MAPS OFFLINE (1/2):
-import "google_maps_js_api";
+// import "google_maps_js_api";
 
 export function getLocalImageUrl(coord: google.maps.Point, zoom: number) {
   // UNCOMMENT TO USE GOOGLE MAPS OFFLINE (2/2):
-  return require(`google_maps_js_api/map_images/${zoom}/mag-${zoom}_x-${coord.x}_y-${coord.y}.jpg`);
+  // return require(`google_maps_js_api/map_images/${zoom}/mag-${zoom}_x-${coord.x}_y-${coord.y}.jpg`);
   return "";
 }
 
