@@ -16,7 +16,8 @@
   "license": "ISC",
   "devDependencies": {
     "check-dependencies": "^1.1.0",
-    "concurrently": "^4.0.1"
+    "concurrently": "^4.0.1",
+    "cross-env": "^5.2.0"
   },
   "dependencies": {
     "axios": "^0.18.0",

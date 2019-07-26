@@ -5,6 +5,9 @@ import "./GoogleMap.css";
 import downloadToBrowser from "utils/downloadToBrowser";
 import google, { getLocalImageUrl } from "./google";
 
+// TODO: Google updates this from time to time. Use Chrome Dev Tools to find the number used for image urls in the satellite map here: https://developers.google.com/maps/documentation/javascript/maptypes
+const imageUrlV = "849";
+
 function getCustomTilesMapType() {
   return new google.maps.ImageMapType({
     getTileUrl: (coord, zoom) => {
@@ -15,8 +18,7 @@ function getCustomTilesMapType() {
           throw new Error();
         }
       } catch (e) {
-        // Note: 'v=844' may need to be updated to a new number from time to time.
-        url = `https://khms0.googleapis.com/kh?v=844&hl=en-US&x=${coord.x}&y=${coord.y}&z=${zoom}`;
+        url = `https://khms0.googleapis.com/kh?v=${imageUrlV}&hl=en-US&x=${coord.x}&y=${coord.y}&z=${zoom}`;
       }
 
       // UNCOMMENT TO TEST:
@@ -69,6 +71,11 @@ class GoogleMapWrapperComponent extends Component<GoogleMap["props"]> {
 export default GoogleMapWrapperComponent;
 
 // For testing only:
+// Explanation: To use, uncomment the two "UNCOMMENT TO TEST" comments above.
+// When the the map is clicked, the position and URL of all google map tiles that were downloaded since the app started will be saved to tileUrls.json.
+// You would use this by panning around an area at ALL zoom levels you want, then clicking the map to save the URLs for the tiles in that area.
+// For example, you could record all the tiles for a certain airfield. Then use ground-station/tools/googleMapsDownloader.py to actually download the images.
+// Finally, you would update https://github.com/uas-at-ucla/google_maps_js_api with the new images.
 var tileBounds: {
   [key: number]: { left: number; right: number; top: number; bottom: number };
 } = {};
@@ -110,7 +117,7 @@ function downloadTileListOnClick(map: any) {
           tileUrls[zoom].push({
             x: x,
             y: y,
-            url: `https://khms0.googleapis.com/kh?v=821&hl=en-US&x=${x}&y=${y}&z=${zoom}`
+            url: `https://khms0.googleapis.com/kh?v=${imageUrlV}&hl=en-US&x=${x}&y=${y}&z=${zoom}`
           });
         }
       }

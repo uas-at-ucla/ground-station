@@ -28,7 +28,7 @@ def downloadImage(mag, image_list = [], *args):
 def main():
     os.chdir(os.path.dirname(sys.argv[0]))
     current_directory = os.getcwd()
-    json_file = open('tileUrls.json')
+    json_file = open('tileUrls.json') # To learn how to generate this file, see ui/src/components/utils/GoogleMap/GoogleMap.tsx
     json_str = json_file.read()
     json_data = json.loads(json_str)
     download_destination = str("googleMapsImages")

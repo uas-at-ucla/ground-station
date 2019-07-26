@@ -28,6 +28,7 @@
     "bootstrap": "^4.3.1",
     "check-dependencies": "^1.1.0",
     "concurrently": "^4.1.1",
+    "cross-env": "^5.2.0",
     "electron": "^5.0.6",
     "electron-packager": "^14.0.1",
     "eslint": "^5.16.0",
@@ -64,9 +65,9 @@
     "wait-on": "^3.2.0"
   },
   "scripts": {
-    "react-start": "PORT=3001 BROWSER=none react-scripts start",
-    "electron-start-prod": "ELECTRON_IS_DEV=0 electron .",
-    "electron-start": "ELECTRON_IS_DEV=1 electron .",
+    "react-start": "cross-env PORT=3001 BROWSER=none react-scripts start",
+    "electron-start-prod": "cross-env ELECTRON_IS_DEV=0 electron .",
+    "electron-start": "cross-env ELECTRON_IS_DEV=1 electron .",
     "start": "concurrently \"npm run react-start\" \"wait-on http://localhost:3001/ && npm run  electron-start\"",
     "start-web": "react-scripts start",
     "build": "react-scripts build",

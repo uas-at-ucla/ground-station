@@ -4,11 +4,11 @@ import os
 import sys
 import argparse
 import subprocess
+import shutil
 
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
-sys.dont_write_bytecode = True
-sys.path.insert(0, 'tools')
-import npm_install
+from tools import npm_install
+
+npm_cmd = shutil.which("npm") # For Windows compatibility
 
 def build_server():
     os.chdir("server")
@@ -27,31 +27,33 @@ def build(args=None):
 
 def run_all(args):
     build()
-    # run all-web (w/o Electron) if web option specified. Otherwise, run start (w/ Electron).
-    subprocess.call(["npm", "run", "all"+args.web], cwd="server")
+    # run all-web (w/o Electron) if web option specified. Otherwise, run all (w/ Electron).
+    subprocess.call([npm_cmd, "run", "all"+args.web], cwd="server")
 
 def run_server(args):
     build_server()
-    subprocess.call(["npm", "run", "start"], cwd="server")
+    subprocess.call([npm_cmd, "run", "start"], cwd="server")
 
 def run_ui(args):
     build_ui()
     # run start-web (w/o Electron) if web option specified. Otherwise, run start (w/ Electron).
-    subprocess.call(["npm", "run", "start"+args.web], cwd="ui")
+    subprocess.call([npm_cmd, "run", "start"+args.web], cwd="ui")
 
 def deploy_win(args):
     build_ui()
-    subprocess.call(["npm", "run", "package-win"], cwd="ui")
+    subprocess.call([npm_cmd, "run", "package-win"], cwd="ui")
 
 def deploy_mac(args):
     build_ui()
-    subprocess.call(["npm", "run", "package-mac"], cwd="ui")
+    subprocess.call([npm_cmd, "run", "package-mac"], cwd="ui")
 
 def deploy_linux(args):
     build_ui()
-    subprocess.call(["npm", "run", "package-linux"], cwd="ui")
+    subprocess.call([npm_cmd, "run", "package-linux"], cwd="ui")
 
 if __name__ == '__main__':
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest='option')
     subparsers.required = True
