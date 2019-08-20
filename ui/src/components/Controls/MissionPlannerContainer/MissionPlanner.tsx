@@ -30,9 +30,6 @@ interface OwnProps {
   className: string;
 }
 
-type ReduxProps = ReturnType<typeof mapStateToProps> &
-  (typeof mapDispatchToProps);
-
 type Props = ReturnType<typeof mapStateToProps> &
   (typeof mapDispatchToProps) &
   OwnProps;

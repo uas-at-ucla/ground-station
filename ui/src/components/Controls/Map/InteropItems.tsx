@@ -31,11 +31,14 @@ const mapStateToProps = (state: AppState) => {
 
 const mapDispatchToProps = missionActions;
 
+interface OwnProps {
+  isOpen: { [key: string]: boolean };
+  toggleOpen: (id: string) => void;
+}
+
 type Props = ReturnType<typeof mapStateToProps> &
-  (typeof mapDispatchToProps) & {
-    isOpen: { [key: string]: boolean };
-    toggleOpen: (id: string) => void;
-  };
+  (typeof mapDispatchToProps) &
+  OwnProps;
 
 class InteropItems extends Component<Props> {
   public render() {
