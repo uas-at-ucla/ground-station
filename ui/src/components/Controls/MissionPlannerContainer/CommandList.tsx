@@ -2,9 +2,8 @@ import React, { Component, PureComponent } from "react";
 import { Button } from "reactstrap";
 import { Row, Col, Input, InputGroup, InputGroupAddon } from "reactstrap";
 import { SortableElement } from "react-sortable-hoc";
-// import { CommandChangersType } from "./MissionPlanner";
-import { CommandChangersType } from "./MissionPlanner";
-// class MissionPlannerClass extends MissionPlanner.WrappedComponent {} // get class from redux wrapped component
+import MissionPlanner from "./MissionPlanner";
+type MissionPlannerClass = typeof MissionPlanner["WrappedComponent"]["prototype"]; // Get class from redux wrapped component type
 
 interface CommandListProps {
   className: string;
@@ -13,7 +12,7 @@ interface CommandListProps {
   mutable: boolean;
   protoInfo: any;
   centerMapOnCommand: (i: number) => void;
-  commandChangers?: CommandChangersType; //MissionPlannerClass["commandChangers"];
+  commandChangers?: MissionPlannerClass["commandChangers"];
 }
 
 interface CommandRowProps {
@@ -26,7 +25,7 @@ interface CommandRowProps {
   mutable: boolean;
   protoInfo: any;
   centerMapOnCommand: (i: number) => void;
-  commandChangers?: CommandChangersType; //MissionPlannerClass["commandChangers"];
+  commandChangers?: MissionPlannerClass["commandChangers"];
 }
 
 const SortableCommand = SortableElement((props: CommandRowProps) => (
@@ -41,7 +40,7 @@ class CommandList extends Component<CommandListProps> {
     }
     return (
       <span className="CommandList">
-        {this.props.commands.map((command: any, index: number) => (
+        {this.props.commands.map((command, index: number) => (
           <CommandRowElement
             className={this.props.className}
             key={command.id}
@@ -170,12 +169,12 @@ class CommandRow extends PureComponent<CommandRowProps> {
     name: string;
     dotProp: string;
     type: string;
-    object: any;
+    object: any[];
   }) => {
     let { name, dotProp, type, object } = props;
     return (
       <span>
-        {object.map((element: any, index: number) => (
+        {object.map((element, index: number) => (
           <this.Field
             name={`${name} ${index + 1}`}
             key={index}

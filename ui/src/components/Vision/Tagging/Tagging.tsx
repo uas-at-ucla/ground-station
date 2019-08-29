@@ -8,9 +8,9 @@ import pathImport from "path";
 import fsImport from "fs";
 const path: typeof pathImport = window.require("path");
 const fs: typeof fsImport = window.require("fs");
-const imageClipper = require("image-clipper");
+const imageClipper = require("image-clipper"); // use require instead of import because image-clipper doesn't have TypeScript support
 
-// import testImage from "./testImages/pexels-photo-236047.jpeg";
+// import testImage from "./electron/testImages/pexels-photo-236047.jpeg";
 
 const ListItem = (props: {
   value: string;
@@ -29,7 +29,7 @@ const List = (props: {
     </ul>
   ) : null;
 
-const imagePath = "../ui/src/components/Vision/Tagging/testImages/";
+const imagePath = "electron/testImages/";
 let images: string[] = fs.readdirSync(imagePath);
 
 const initialAnnValues = {

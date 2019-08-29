@@ -9,6 +9,7 @@
 # production
 /build
 /release-builds
+/electron/electron.js
 
 # misc
 .DS_Store

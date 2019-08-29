@@ -230,7 +230,6 @@ class Settings extends Component<Props> {
         <br />
         <Row>
           <Col>
-            <Button onClick={this.props.logReduxState}>Log Redux State</Button>
             <Button color="danger" onClick={this.props.resetReduxState}>
               [DANGER] Reset Redux State
             </Button>

@@ -1,28 +1,44 @@
-// Modules to control application life and create native browser window
-const { app, BrowserWindow, Menu, MenuItem, protocol } = require("electron");
-
-const path = require("path");
+import { app, BrowserWindow, Menu, MenuItem, protocol } from "electron";
+import path = require("path");
+import isDev = require("electron-is-dev");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow;
+let mainWindow: BrowserWindow;
 
 function createWindow() {
-  // Fix asset loading as per https://stackoverflow.com/a/43423171
-  protocol.interceptFileProtocol(
-    "file",
-    (request, callback) => {
-      let url = request.url.substr(7); /* all urls start with 'file://' */
-      if (request.url.startsWith("file:///static")) {
-        callback(path.normalize(`${__dirname}/build/${url}`));
-      } else {
-        callback(url);
+  // Install helpful Chrome Extensions for debugging
+  if (isDev) {
+    const {
+      default: installExtension,
+      REACT_DEVELOPER_TOOLS,
+      REDUX_DEVTOOLS
+    } = require("electron-devtools-installer");
+
+    [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS].forEach(extension => {
+      installExtension(extension)
+        .then(name => console.log(`Added Extension: ${name}`))
+        .catch(err => console.log("An error occurred: ", err));
+    });
+  }
+
+  // Handle the file:// protocol for files in build/static
+  if (!isDev) {
+    protocol.interceptFileProtocol(
+      "file",
+      (request, callback) => {
+        const url = request.url.substr(7); // Remove "file://"
+        if (url.startsWith("/static")) {
+          callback(path.normalize(`${process.cwd()}/build/${url}`));
+        } else {
+          callback(url);
+        }
+      },
+      error => {
+        if (error) console.error("Failed to register file protocol", error);
       }
-    },
-    err => {
-      if (err) console.error("Failed to register file protocol");
-    }
-  );
+    );
+  }
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -35,11 +51,10 @@ function createWindow() {
   });
 
   // and load the url of the app.
-  const isDev = require("electron-is-dev");
   mainWindow.loadURL(
     isDev
       ? "http://localhost:3001"
-      : `file://${path.join(__dirname, "build/index.html")}`
+      : `file://${path.join(process.cwd(), "build/index.html")}`
   );
 
   // Open the DevTools.
@@ -78,25 +93,22 @@ app.on("window-all-closed", function() {
   app.quit();
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
 // All available menu roles
 const menuRoles = [
-  "toggledevtools",
+  "toggleDevTools",
   "undo",
   "redo",
   "cut",
   "copy",
   "paste",
-  "pasteandmatchstyle",
+  "pasteAndMatchStyle",
   "delete",
-  "selectall",
+  "selectAll",
   "reload",
-  "forcereload",
-  "resetzoom",
-  "zoomin",
-  "zoomout",
+  "forceReload",
+  "resetZoom",
+  "zoomIn",
+  "zoomOut",
   "togglefullscreen",
   "window",
   "minimize",
@@ -105,13 +117,25 @@ const menuRoles = [
   "about",
   "services",
   "hide",
-  "hideothers",
+  "hideOthers",
   "unhide",
   "quit",
-  "startspeaking",
-  "stopspeaking",
+  "startSpeaking",
+  "stopSpeaking",
   "close",
   "minimize",
   "zoom",
-  "front"
-];
+  "front",
+  "appMenu",
+  "fileMenu",
+  "editMenu",
+  "viewMenu",
+  "recentDocuments",
+  "toggleTabBar",
+  "selectNextTab",
+  "selectPreviousTab",
+  "mergeAllWindows",
+  "clearRecentDocuments",
+  "moveTabToNewWindow",
+  "windowMenu"
+] as const;

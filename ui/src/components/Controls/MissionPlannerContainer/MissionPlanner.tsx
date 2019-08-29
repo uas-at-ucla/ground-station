@@ -223,8 +223,6 @@ class MissionPlanner extends Component<Props> {
   };
 }
 
-export type CommandChangersType = MissionPlanner["commandChangers"];
-
 export default connect(
   mapStateToProps,
   mapDispatchToProps

@@ -1,11 +1,9 @@
 import { applyMiddleware, combineReducers, createStore } from "redux";
-import { createLogger } from "redux-logger";
+import { composeWithDevTools } from "redux-devtools-extension/developmentOnly";
 import { createStructuredSelector } from "reselect";
 
 import communicator from "communicator";
 import loadTimelineGrammar from "protobuf/timelineGrammarUtil";
-
-import { AppAction } from "./actions/actionTypes";
 
 import missionReducer from "./reducers/missionReducer";
 import settingsReducer from "./reducers/settingsReducer";
@@ -24,24 +22,9 @@ export const selector = createStructuredSelector({
   mission: missionSelector
 });
 
-let printingPrevState = true;
-const logger = createLogger({
-  predicate: (getState: Function, action: AppAction): boolean => {
-    let shouldLog = action.type === "LOG_REDUX_STATE";
-    // let shouldLog = false;
-    return shouldLog;
-  },
-  stateTransformer: (state: AppState): AppState => {
-    const msg = printingPrevState ? "prev derived data" : "next derived data";
-    console.log(msg, selector(state));
-    printingPrevState = !printingPrevState;
-    return state;
-  }
-});
+const middleware = applyMiddleware(communicator);
 
-const middleware = applyMiddleware(logger, communicator);
-
-const store = createStore(reducer, middleware);
+const store = createStore(reducer, composeWithDevTools(middleware));
 
 loadTimelineGrammar(store.dispatch);
 
