@@ -1,0 +1,12 @@
+language: python
+os: linux
+sudo: required
+
+python:
+- '3.6'
+
+install:
+- ./ground.py build
+
+script:
+- true
