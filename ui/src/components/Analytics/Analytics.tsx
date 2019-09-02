@@ -29,18 +29,18 @@ const mapDispatchToProps = analyticsActions;
 type Props = ReturnType<typeof mapStateToProps> & (typeof mapDispatchToProps);
 
 class Analytics extends Component<Props> {
-  public state = {
+  state = {
     isPaused: false
   };
-  private usingLoaded: boolean = false;
-  private fileInput: React.RefObject<HTMLInputElement> = React.createRef();
+  usingLoaded: boolean = false;
+  fileInput: React.RefObject<HTMLInputElement> = React.createRef();
 
   // componentDidUpdate(prevProps) {
   //   if (this.props.recording && prevProps.telemetry !== this.props.telemetry) {
   //     telemetryData.push(this.props.telemetry)
   //   }
   // }
-  public render() {
+  render() {
     return (
       <Container className="Analytics">
         <Row>
@@ -134,7 +134,7 @@ class Analytics extends Component<Props> {
     );
   }
 
-  private saveInteropMission = () => {
+  saveInteropMission = () => {
     // TODO: add the interop data to mapStateToProps (see Map.js)
     // Save it to a file using JSON.stringify and downloadToBrowser
     // console.log(this.props.interopData)
@@ -144,7 +144,7 @@ class Analytics extends Component<Props> {
     );
   };
 
-  private loadInteropMission = () => {
+  loadInteropMission = () => {
     // TODO load JSON data from a file
     // this.props.loadInteropData({ type: 'INTEROP_DATA', payload: data });
 
@@ -163,14 +163,14 @@ class Analytics extends Component<Props> {
     }
   };
 
-  private downloadTelemetry() {
+  downloadTelemetry() {
     downloadToBrowser(
       "telemetry.json",
       JSON.stringify(this.props.telemetryData, null, 2)
     );
   }
 
-  private toggleRecord = () => {
+  toggleRecord = () => {
     if (this.props.recording) {
       this.downloadTelemetry();
       let i;
@@ -182,13 +182,13 @@ class Analytics extends Component<Props> {
     this.props.toggleRecording();
   };
 
-  private handleSubmit = (event: any) => {
+  handleSubmit = (event: any) => {
     event.preventDefault();
     if (this.fileInput.current && this.fileInput.current.files)
       alert(`Selected file - ${this.fileInput.current.files[0].name}`);
   };
 
-  private runLoaded = () => {
+  runLoaded = () => {
     if (!this.usingLoaded) {
       this.props.togglePlayback();
       let reader: FileReader = new FileReader();
@@ -228,7 +228,7 @@ class Analytics extends Component<Props> {
     }
   };
 
-  // private stringifyTelemetry = string => {
+  // stringifyTelemetry = string => {
   //   if (!this.usingLoaded) {
   //     return JSON.stringify(this.props.telemetry);
   //   } else {

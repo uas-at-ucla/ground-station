@@ -33,7 +33,7 @@ const SortableCommand = SortableElement((props: CommandRowProps) => (
 ));
 
 class CommandList extends Component<CommandListProps> {
-  public render() {
+  render() {
     let CommandRowElement = CommandRow;
     if (this.props.mutable) {
       CommandRowElement = SortableCommand as typeof CommandRow;
@@ -63,14 +63,14 @@ export default CommandList;
 
 // PureComponent improves performance b/c it only re-renders when props change
 class CommandRow extends PureComponent<CommandRowProps> {
-  private centerMapOnCommand = () => {
+  centerMapOnCommand = () => {
     console.log(this.props);
     this.props.centerMapOnCommand(this.props.myIndex);
   };
 
-  public render() {
-    let command = this.props.command;
-    let index = this.props.myIndex;
+  render() {
+    const command = this.props.command;
+    const index = this.props.myIndex;
     return (
       <Row
         className={`MissionPlanner ${this.props.className}`}
@@ -128,13 +128,13 @@ class CommandRow extends PureComponent<CommandRowProps> {
   }
 
   // Helper components
-  private NumberField = (props: {
+  NumberField = (props: {
     name: string;
     dotProp: string;
     value: number;
     units?: string;
   }) => {
-    let { name, dotProp, value, units } = props;
+    const { name, dotProp, value, units } = props;
     return (
       <Row>
         <Col xs="auto">
@@ -165,13 +165,13 @@ class CommandRow extends PureComponent<CommandRowProps> {
     );
   };
 
-  private RepeatedField = (props: {
+  RepeatedField = (props: {
     name: string;
     dotProp: string;
     type: string;
     object: any[];
   }) => {
-    let { name, dotProp, type, object } = props;
+    const { name, dotProp, type, object } = props;
     return (
       <span>
         {object.map((element, index: number) => (
@@ -208,15 +208,15 @@ class CommandRow extends PureComponent<CommandRowProps> {
     );
   };
 
-  private Field = (props: {
+  Field = (props: {
     name: string;
     dotProp: string;
     type: string;
     object: any;
   }) => {
-    let { name, dotProp, type, object } = props;
+    const { name, dotProp, type, object } = props;
     // Recursively create HTML based on protobuf definition
-    let timelineGrammar = this.props.protoInfo.timelineGrammar;
+    const timelineGrammar = this.props.protoInfo.timelineGrammar;
     if (timelineGrammar[type]) {
       // object is a protobuf defined object
       return (
@@ -227,9 +227,9 @@ class CommandRow extends PureComponent<CommandRowProps> {
             </Col>
           ) : null}
           {Object.keys(timelineGrammar[type].fields).map(fieldName => {
-            let field = timelineGrammar[type].fields[fieldName];
-            let fieldDotProp = dotProp + "." + fieldName;
-            let fieldProps = {
+            const field = timelineGrammar[type].fields[fieldName];
+            const fieldDotProp = dotProp + "." + fieldName;
+            const fieldProps = {
               name: fieldName,
               dotProp: fieldDotProp,
               type: field.type,

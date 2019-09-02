@@ -1,26 +1,25 @@
-import { createSelector, createStructuredSelector } from "reselect";
+import { createSelector } from "reselect";
 import { createObjectSelector } from "reselect-map";
 import { AppState } from "../store";
 
-// TODO redesign needed here (too many any's rn)
-// Google TypeScript with reselect
-
-const protoInfo = createSelector(
-  [state => (state as AppState).mission.timelineGrammar],
+export const protoInfo = createSelector(
+  [(state: AppState) => state.mission.timelineGrammar],
   timelineGrammar => {
     // Create objects that make it easy to get info about the proto definition
     if (!timelineGrammar) {
       return null;
     }
-    let groundCommandNames = timelineGrammar.GroundCommand.oneofs.command.oneof;
-    let commandAbbr: { [s: string]: string } = {};
-    for (let commandName of groundCommandNames) {
-      let commandType = timelineGrammar.GroundCommand.fields[commandName].type;
+    const groundCommandNames =
+      timelineGrammar.GroundCommand.oneofs.command.oneof;
+    const commandAbbr: { [s: string]: string } = {};
+    for (const commandName of groundCommandNames) {
+      const commandType =
+        timelineGrammar.GroundCommand.fields[commandName].type;
       commandAbbr[commandName] = commandType.replace("Command", "");
     }
-    let droneCommandNames = timelineGrammar.DroneCommand.oneofs.command.oneof;
-    for (let commandName of droneCommandNames) {
-      let commandType = timelineGrammar.DroneCommand.fields[commandName].type;
+    const droneCommandNames = timelineGrammar.DroneCommand.oneofs.command.oneof;
+    for (const commandName of droneCommandNames) {
+      const commandType = timelineGrammar.DroneCommand.fields[commandName].type;
       commandAbbr[commandName] = commandType.replace("Command", "");
     }
     return {
@@ -40,8 +39,8 @@ const protoInfo = createSelector(
   }
 );
 
-const commandsById = createSelector(
-  [state => (state as AppState).mission.commands],
+export const commandsById = createSelector(
+  [(state: AppState) => state.mission.commands],
   commands =>
     commands.reduce((map, cmd) => {
       map[cmd.id] = cmd;
@@ -50,13 +49,13 @@ const commandsById = createSelector(
 );
 
 // createObjectSelector is more efficient because it only recalculates for commands that have changed
-const commandMarkers = createObjectSelector(
+export const commandMarkers = createObjectSelector(
   [commandsById, protoInfo],
   (cmd: any, protoInfo) => {
     if (!protoInfo) {
       return null;
     }
-    for (let locationField of protoInfo.locationFields) {
+    for (const locationField of protoInfo.locationFields) {
       if (cmd[cmd.name][locationField]) {
         let label = null;
         if (cmd.type === "WaypointCommand") {
@@ -78,7 +77,7 @@ const commandMarkers = createObjectSelector(
             fontSize: "15px"
           };
         }
-        let location = cmd[cmd.name][locationField];
+        const location = cmd[cmd.name][locationField];
         return {
           altitude: location.altitude,
           position: {
@@ -93,11 +92,11 @@ const commandMarkers = createObjectSelector(
   }
 );
 
-const commandPoints = createSelector(
-  [state => (state as AppState).mission.commands, commandMarkers, protoInfo],
+export const commandPoints = createSelector(
+  [(state: AppState) => state.mission.commands, commandMarkers, protoInfo],
   (commands, commandMarkers: any, protoInfo) => {
     return commands.map((cmd, index) => {
-      let marker = commandMarkers[cmd.id];
+      const marker = commandMarkers[cmd.id];
       if (!marker || !protoInfo) {
         return null;
       }
@@ -115,17 +114,17 @@ const commandPoints = createSelector(
   }
 );
 
-const droneProgramPath = createSelector(
-  [state => (state as AppState).mission.droneProgram, protoInfo],
+export const droneProgramPath = createSelector(
+  [(state: AppState) => state.mission.droneProgram, protoInfo],
   (droneProgram, protoInfo) => {
     if (!droneProgram || !protoInfo) {
       return [];
     }
-    let path = [];
-    for (let cmd of droneProgram.commands) {
-      for (let locationField of protoInfo.locationFields) {
+    const path = [];
+    for (const cmd of droneProgram.commands) {
+      for (const locationField of protoInfo.locationFields) {
         if (cmd[cmd.name][locationField]) {
-          let location = cmd[cmd.name][locationField];
+          const location = cmd[cmd.name][locationField];
           path.push({
             lat: location.latitude,
             lng: location.longitude
@@ -138,16 +137,16 @@ const droneProgramPath = createSelector(
   }
 );
 
-const mainFlyZone = createSelector(
-  [state => (state as AppState).mission.interopData],
+export const mainFlyZone = createSelector(
+  [(state: AppState) => state.mission.interopData],
   interopData => {
     if (!interopData) {
       return null;
     }
     let maxArea = -1;
     let mainFlyZone = null;
-    for (let flyZone of interopData.mission.flyZones) {
-      let area = polygonArea(flyZone.boundaryPoints);
+    for (const flyZone of interopData.mission.flyZones) {
+      const area = polygonArea(flyZone.boundaryPoints);
       if (area > maxArea) {
         maxArea = area;
         mainFlyZone = flyZone;
@@ -158,21 +157,12 @@ const mainFlyZone = createSelector(
   }
 );
 
-export default createStructuredSelector({
-  protoInfo,
-  commandsById,
-  commandMarkers,
-  commandPoints,
-  droneProgramPath,
-  mainFlyZone
-});
-
 function shoelace(vertices: { latitude: number; longitude: number }[]) {
   // The shoelace formula determines the area of a polygon
   let area = 0;
 
   for (let i = 0; i < vertices.length; i++) {
-    let j = (i + 1) % vertices.length;
+    const j = (i + 1) % vertices.length;
     area += vertices[i].longitude * vertices[j].latitude;
     area -= vertices[j].longitude * vertices[i].latitude;
   }

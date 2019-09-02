@@ -32,32 +32,37 @@ function getCustomTilesMapType() {
 }
 
 class GoogleMapWrapperComponent extends Component<GoogleMap["props"]> {
-  private setMapType = (mapComponent: GoogleMap) => {
+  mapComponent: GoogleMap | null = null;
+
+  // pan smoothly when map center changes
+  componentDidUpdate(prevProps: GoogleMap["props"]) {
+    if (this.mapComponent) {
+      if (prevProps.center !== this.props.center && this.props.center) {
+        this.mapComponent.panTo(this.props.center);
+      }
+    }
+  }
+
+  setMapType = (mapComponent: GoogleMap) => {
     if (mapComponent) {
+      this.mapComponent = mapComponent;
       // google = window.google;
-      let customTilesMapType = getCustomTilesMapType();
-      let map =
+      const customTilesMapType = getCustomTilesMapType();
+      const map =
         mapComponent.context.__SECRET_MAP_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // lol don't worry
       map.mapTypes.set("customTiles", customTilesMapType);
       // map.setMapTypeId('customTiles');
-
-      // pan smoothly when map center changes
-      this.componentDidUpdate = prevProps => {
-        if (prevProps.center !== this.props.center && this.props.center) {
-          mapComponent.panTo(this.props.center);
-        }
-      };
 
       // UNCOMMENT TO TEST:
       // downloadTileListOnClick(map);
     }
   };
 
-  private GoogleMapComponent = withGoogleMap(props => (
+  GoogleMapComponent = withGoogleMap(props => (
     <GoogleMap {...props} ref={this.setMapType} />
   ));
 
-  public render() {
+  render() {
     return (
       <this.GoogleMapComponent
         containerElement={<div style={{ height: `100%` }} />}
@@ -76,7 +81,7 @@ export default GoogleMapWrapperComponent;
 // You would use this by panning around an area at ALL zoom levels you want, then clicking the map to save the URLs for the tiles in that area.
 // For example, you could record all the tiles for a certain airfield. Then use ground-station/tools/googleMapsDownloader.py to actually download the images.
 // Finally, you would update https://github.com/uas-at-ucla/google_maps_js_api with the new images.
-var tileBounds: {
+const tileBounds: {
   [key: number]: { left: number; right: number; top: number; bottom: number };
 } = {};
 function tileLoaded(coord: { x: number; y: number }, zoom: number) {
@@ -103,14 +108,14 @@ function tileLoaded(coord: { x: number; y: number }, zoom: number) {
 }
 function downloadTileListOnClick(map: any) {
   map.addListener("click", () => {
-    let tileUrls: {
+    const tileUrls: {
       [key: number]: {
         x: number;
         y: number;
         url: string;
       }[];
     } = {};
-    for (let zoom in tileBounds) {
+    for (const zoom in tileBounds) {
       tileUrls[zoom] = [];
       for (let x = tileBounds[zoom].left; x <= tileBounds[zoom].right; x++) {
         for (let y = tileBounds[zoom].top; y <= tileBounds[zoom].bottom; y++) {

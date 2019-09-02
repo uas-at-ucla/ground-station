@@ -36,11 +36,11 @@ const blankTelmet = {
 };
 
 class Telemetry extends Component<Props> {
-  private telmet = blankTelmet;
+  telmet = blankTelmet;
 
-  private update() {
-    let rawTelmet = this.props.telemetry.droneTelemetry;
-    let pingDelay = this.props.telemetry.pingDelay;
+  update() {
+    const rawTelmet = this.props.telemetry.droneTelemetry;
+    const pingDelay = this.props.telemetry.pingDelay;
     if (rawTelmet != null) {
       this.telmet = {
         pingDelay: pingDelay !== undefined ? pingDelay : NaN,
@@ -67,14 +67,13 @@ class Telemetry extends Component<Props> {
     return this.telmet;
   }
 
-  private readoutData() {
+  readoutData() {
     return [
       {
         key: "Ping",
-        values:
-          this.telmet.pingDelay != NaN
-            ? [this.telmet.pingDelay, " ms"]
-            : ["Not Connected"]
+        values: !isNaN(this.telmet.pingDelay)
+          ? [this.telmet.pingDelay, " ms"]
+          : ["Not Connected"]
       },
       {
         key: "State",
@@ -99,7 +98,7 @@ class Telemetry extends Component<Props> {
     ];
   }
 
-  public render() {
+  render() {
     this.update();
 
     // console.log(telmet);

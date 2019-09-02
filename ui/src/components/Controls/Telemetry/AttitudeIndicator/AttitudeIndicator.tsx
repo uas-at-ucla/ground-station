@@ -26,18 +26,18 @@ interface Props {
 }
 
 class Navball extends Component<Props> {
-  private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera(
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(
     fov,
     1,
     cameraDistance - sphereRadius,
     cameraDistance + sphereRadius
   );
-  private renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  private ballContainer = new THREE.Object3D();
-  private frameId = NaN;
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  ballContainer = new THREE.Object3D();
+  frameId = NaN;
 
-  private navballDidMount = (navball: HTMLElement | null) => {
+  navballDidMount = (navball: HTMLElement | null) => {
     this.scene.add(this.camera);
     this.camera.position.set(cameraDistance, 0, 0);
     this.camera.up.set(0, 0, 1);
@@ -46,15 +46,15 @@ class Navball extends Component<Props> {
     this.renderer.setSize(WIDTH, HEIGHT);
     navball && navball.appendChild(this.renderer.domElement);
 
-    var light = new THREE.AmbientLight(0xffffff, 1.5);
+    const light = new THREE.AmbientLight(0xffffff, 1.5);
     this.scene.add(light);
 
-    var sphereGeom = new THREE.SphereGeometry(sphereRadius, 48, 32);
-    var texture = new THREE.TextureLoader().load(NavballImg);
+    const sphereGeom = new THREE.SphereGeometry(sphereRadius, 48, 32);
+    const texture = new THREE.TextureLoader().load(NavballImg);
     texture.offset.x = 1 / 4; // 0 radians yaw is East
     texture.wrapS = THREE.RepeatWrapping;
-    var material = new THREE.MeshPhongMaterial({ map: texture });
-    var ball = new THREE.Mesh(sphereGeom, material);
+    const material = new THREE.MeshPhongMaterial({ map: texture });
+    const ball = new THREE.Mesh(sphereGeom, material);
     ball.position.set(0, 0, 0);
     ball.rotation.x = Math.PI / 2;
     this.ballContainer.add(ball);
@@ -62,30 +62,27 @@ class Navball extends Component<Props> {
     this.scene.add(this.ballContainer);
 
     this.updateRotation();
-
-    this.frameId = requestAnimationFrame(this.animate);
+    setTimeout(() => {
+      this.frameId = requestAnimationFrame(this.animate);
+    }, 500); // Need to wait for something to be ready, not sure exactly what, but this is needed.
   };
 
-  private updateRotation = () => {
+  updateRotation = () => {
     this.ballContainer.rotation.x = this.props.data["roll"];
     this.ballContainer.rotation.y = -this.props.data["pitch"];
     this.ballContainer.rotation.z = this.props.data["yaw"];
   };
 
-  public componentWillUnmount() {
-    cancelAnimationFrame(this.frameId);
-  }
-
-  private animate = () => {
-    this.frameId = window.requestAnimationFrame(this.animate);
+  animate = () => {
     this.renderer.render(this.scene, this.camera);
+    console.log("rendering");
   };
 
-  public componentDidUpdate(prevProps: Props) {
+  render() {
     this.updateRotation();
-  }
-
-  public render() {
+    setTimeout(() => {
+      this.frameId = requestAnimationFrame(this.animate);
+    }, 0);
     return (
       <div className="AttitudeIndicator">
         <div className="navball-background"></div>

@@ -11,7 +11,7 @@ import InteropItems from "./InteropItems";
 import VehicleMarkers from "./VehicleMarkers";
 
 const mapStateToProps = (state: AppState) => {
-  let derivedData = selector(state);
+  const derivedData = selector(state);
   return {
     commandAnimate: state.mission.commandAnimate,
     defaultAltitude: state.mission.defaultAltitude,
@@ -27,18 +27,18 @@ const mapDispatchToProps = missionActions;
 type Props = ReturnType<typeof mapStateToProps> & (typeof mapDispatchToProps);
 
 class Map extends Component<Props> {
-  private initialIsOpen: { [key: string]: boolean } = {};
-  public state = {
+  initialIsOpen: { [key: string]: boolean } = {};
+  state = {
     isOpen: this.initialIsOpen
   };
 
-  private toggleOpen = (id: string) => {
+  toggleOpen = (id: string) => {
     this.setState({
       isOpen: { ...this.state.isOpen, [id]: !this.state.isOpen[id] }
     });
   };
 
-  private onMapClick = () => {
+  onMapClick = () => {
     if (this.state.isOpen) {
       this.setState({
         isOpen: {}
@@ -46,7 +46,7 @@ class Map extends Component<Props> {
     }
   };
 
-  public render() {
+  render() {
     const commandPointPolyCoords = this.props.commandPoints
       .filter(p => p)
       .map(commandPoint => {
@@ -154,11 +154,11 @@ class Map extends Component<Props> {
     );
   }
 
-  private deleteCommand = (event: MouseEvent<HTMLElement>) => {
+  deleteCommand = (event: MouseEvent<HTMLElement>) => {
     this.props.deleteCommand(Number(event.currentTarget.dataset.index));
   };
 
-  private commandDragged = (event: any, dotProp: string) => {
+  commandDragged = (event: any, dotProp: string) => {
     this.props.changeCommandField(
       dotProp + ".goal.latitude",
       event.latLng.lat()
@@ -169,12 +169,12 @@ class Map extends Component<Props> {
     );
   };
 
-  private mapDblClick = (event: google.maps.MouseEvent) => {
+  mapDblClick = (event: google.maps.MouseEvent) => {
     this.addFlyThroughCommand(event.latLng.lat(), event.latLng.lng());
   };
 
-  private addFlyThroughCommand = (lat: number, lng: number) => {
-    let defaultWaypointCommand = {
+  addFlyThroughCommand = (lat: number, lng: number) => {
+    const defaultWaypointCommand = {
       goal: {
         latitude: lat,
         longitude: lng,

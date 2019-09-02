@@ -10,8 +10,13 @@ import CommandList from "./CommandList";
 
 const FEET_PER_METER = 3.28084;
 
+interface OwnProps {
+  programType: string;
+  className: string;
+}
+
 const mapStateToProps = (state: AppState) => {
-  let derivedData = selector(state);
+  const derivedData = selector(state);
   return {
     mission: state.mission,
     protoInfo: derivedData.mission.protoInfo,
@@ -25,17 +30,12 @@ const mapStateToProps = (state: AppState) => {
 
 const mapDispatchToProps = missionActions;
 
-interface OwnProps {
-  programType: string;
-  className: string;
-}
-
-type Props = ReturnType<typeof mapStateToProps> &
-  (typeof mapDispatchToProps) &
-  OwnProps;
+type Props = OwnProps &
+  ReturnType<typeof mapStateToProps> &
+  (typeof mapDispatchToProps);
 
 class MissionPlanner extends Component<Props> {
-  public render() {
+  render() {
     return (
       <div className="MissionPlanner">
         <this.Commands onSortEnd={this.reorderCommand} distance={2} />
@@ -43,18 +43,18 @@ class MissionPlanner extends Component<Props> {
     );
   }
 
-  private autoGenerate = () => {
+  autoGenerate = () => {
     //console.log(this.props.interopData.mission);
-    var defaultAlt = this.props.mission.defaultAltitude;
-    var defaultDrpHeight = defaultAlt;
-    var defaultHeight = defaultAlt;
+    const defaultAlt = this.props.mission.defaultAltitude;
+    const defaultDrpHeight = defaultAlt;
+    const defaultHeight = defaultAlt;
 
     for (let i = 0; i < this.props.interopData.mission.waypoints.length; i++) {
-      var lat = this.props.interopData.mission.waypoints[i].latitude;
-      var long = this.props.interopData.mission.waypoints[i].longitude;
-      var alt = this.props.interopData.mission.waypoints[i].altitude; // ft above MSL
+      const lat = this.props.interopData.mission.waypoints[i].latitude;
+      const long = this.props.interopData.mission.waypoints[i].longitude;
+      let alt = this.props.interopData.mission.waypoints[i].altitude; // ft above MSL
       alt = alt - this.props.homeAltitude * FEET_PER_METER; // convert to relative alt
-      let defaultWaypointCommand = {
+      const defaultWaypointCommand = {
         goal: {
           latitude: lat,
           longitude: long,
@@ -84,9 +84,9 @@ class MissionPlanner extends Component<Props> {
     // }
     // this.props.addCommand("survey_command", search_command, this.props.protoInfo)
 
-    var lat = this.props.interopData.mission.airDropPos.latitude;
-    var long = this.props.interopData.mission.airDropPos.longitude;
-    let airDropCommand = {
+    const lat = this.props.interopData.mission.airDropPos.latitude;
+    const long = this.props.interopData.mission.airDropPos.longitude;
+    const airDropCommand = {
       goal: {
         latitude: lat,
         longitude: long,
@@ -116,7 +116,7 @@ class MissionPlanner extends Component<Props> {
     // this.props.addCommand("off_axis_command", off_axis_command, this.props.protoInfo)
   };
 
-  private Commands = SortableContainer(() => {
+  Commands = SortableContainer(() => {
     return (
       <Container fluid>
         {this.props.mission.interopData ? (
@@ -158,8 +158,8 @@ class MissionPlanner extends Component<Props> {
     );
   });
 
-  private addCommand = () => {
-    let defaultWaypointCommand = {
+  addCommand = () => {
+    const defaultWaypointCommand = {
       goal: {
         latitude: 38.147483,
         longitude: -76.427778,
@@ -169,31 +169,31 @@ class MissionPlanner extends Component<Props> {
     this.props.addWaypointCommand(defaultWaypointCommand, this.props.protoInfo);
   };
 
-  private reorderCommand = (indices: {
+  reorderCommand = (indices: {
     oldIndex: number;
     newIndex: number;
   }) => {
     this.props.reorderCommand(indices.oldIndex, indices.newIndex);
   };
 
-  private centerMapOnCommand = (index: number) => {
+  centerMapOnCommand = (index: number) => {
     if (this.props.className === "SmallMissionPlanner") {
-      let command = this.props.mission.commands[index];
+      const command = this.props.mission.commands[index];
       this.props.centerMapOnCommand(command, this.props.protoInfo);
       setTimeout(() => this.props.commandStopAnimation(command), 1000);
     }
   };
 
-  private commandChangers = {
+  commandChangers = {
     deleteCommand: (event: MouseEvent<HTMLElement>) => {
-      let index = Number(event.currentTarget.dataset.index);
+      const index = Number(event.currentTarget.dataset.index);
       this.props.deleteCommand(index);
     },
 
     changeCommandType: (event: ChangeEvent<HTMLInputElement>) => {
-      let index = Number(event.target.dataset.index);
-      let newType = event.target.value;
-      let oldCommand = this.props.mission.commands[index];
+      const index = Number(event.target.dataset.index);
+      const newType = event.target.value;
+      const oldCommand = this.props.mission.commands[index];
       this.props.changeCommandType(
         index,
         oldCommand,
@@ -203,21 +203,21 @@ class MissionPlanner extends Component<Props> {
     },
 
     changeNumberField: (event: ChangeEvent<HTMLInputElement>) => {
-      let newValue = Number(event.target.value);
+      const newValue = Number(event.target.value);
       if (!isNaN(newValue)) {
-        let dotProp = event.target.dataset.dotProp as string;
+        const dotProp = event.target.dataset.dotProp as string;
         this.props.changeCommandField(dotProp, newValue);
       }
     },
 
     addRepeatedField: (event: MouseEvent<HTMLElement>) => {
-      let dotProp = event.currentTarget.dataset.dotProp as string;
-      let type = event.currentTarget.dataset.type as string;
+      const dotProp = event.currentTarget.dataset.dotProp as string;
+      const type = event.currentTarget.dataset.type as string;
       this.props.addRepeatedField(dotProp, type, this.props.protoInfo);
     },
 
     popRepeatedField: (event: MouseEvent<HTMLElement>) => {
-      let dotProp = event.currentTarget.dataset.dotProp as string;
+      const dotProp = event.currentTarget.dataset.dotProp as string;
       this.props.popRepeatedField(dotProp);
     }
   };

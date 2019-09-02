@@ -5,7 +5,7 @@ interface ReadoutProps {
 }
 
 class Readout extends React.Component<ReadoutProps> {
-  public render() {
+  render() {
     return (
       <div className="Readout">
         {this.props.data.map((comp, i) => (

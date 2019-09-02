@@ -7,23 +7,23 @@ interface Props {
 }
 
 class CustomMarker extends Component<Props> {
-  public state = {
+  state = {
     isOpen: false
   };
 
-  private open() {
+  open() {
     this.setState({
       isOpen: true
     });
   }
 
-  private close() {
+  close() {
     this.setState({
       isOpen: false
     });
   }
 
-  public render() {
+  render() {
     console.log("creating marker");
     const pos = {
       lat: this.props.marker.position.lat,

@@ -4,16 +4,16 @@ import { AppAction } from "redux/actions/actionTypes";
 import * as externalActions from "redux/actions/externalActions";
 
 class Communicator {
-  private store: MiddlewareAPI;
-  private socket: SocketIOClient.Socket;
+  store: MiddlewareAPI;
+  socket: SocketIOClient.Socket;
 
-  public constructor(store: MiddlewareAPI) {
+  constructor(store: MiddlewareAPI) {
     console.log("Initializing communicator");
     this.store = store;
     this.socket = this.initSocket();
   }
 
-  private initSocket(): SocketIOClient.Socket {
+  initSocket(): SocketIOClient.Socket {
     this.socket = socketIOClient(
       "http://" + this.store.getState().settings.gndServerIp + "/ui",
       { transports: ["websocket"] }
@@ -27,7 +27,7 @@ class Communicator {
       this.store.dispatch(externalActions.serverDisconnected());
     });
 
-    for (let message of externalActions.basicServerAction.basicMessages) {
+    for (const message of externalActions.basicServerAction.basicMessages) {
       this.socket.on(message, (data: any) => {
         this.store.dispatch(externalActions.basicServerAction(message, data));
       });
@@ -48,7 +48,7 @@ class Communicator {
     return this.socket;
   }
 
-  public reduxMiddleware(next: Dispatch) {
+  reduxMiddleware(next: Dispatch) {
     return (action: AppAction) => {
       if (action.type === "TRANSMIT") {
         if (action.payload.data != null) {
@@ -67,6 +67,6 @@ class Communicator {
 }
 
 export default ((store: MiddlewareAPI) => {
-  let communicator = new Communicator(store);
+  const communicator = new Communicator(store);
   return (next: Dispatch) => communicator.reduxMiddleware(next);
 }) as Middleware;

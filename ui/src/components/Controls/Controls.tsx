@@ -14,7 +14,7 @@ const mapDispatchToProps = genericActions;
 type Props = typeof mapDispatchToProps;
 
 class Controls extends Component<Props> {
-  public render() {
+  render() {
     return (
       <div className="Controls">
         <div className="map-overlay">
@@ -40,7 +40,7 @@ class Controls extends Component<Props> {
     );
   }
 
-  private centerOnDrone = () => {
+  centerOnDrone = () => {
     this.props.centerOnDrone();
   };
 }

@@ -16,8 +16,8 @@ const mapStateToProps = (state: AppState) => {
 type Props = ReturnType<typeof mapStateToProps>;
 
 class DroneMarker extends Component<Props> {
-  public render() {
-    var pos = this.props.telemetry
+  render() {
+    const pos = this.props.telemetry
       ? {
           lat: this.props.telemetry.sensors.latitude,
           lng: this.props.telemetry.sensors.longitude

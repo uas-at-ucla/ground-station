@@ -36,34 +36,34 @@ const mapDispatchToProps = { ...settingsActions, ...genericActions };
 type Props = ReturnType<typeof mapStateToProps> & (typeof mapDispatchToProps);
 
 class Settings extends Component<Props> {
-  public state = {
+  state = {
     gndServerDropdown: false,
     interopDropdown: false,
     compLocDropdown: false
   };
 
-  private toggleGndServerDropdown = () =>
+  toggleGndServerDropdown = () =>
     this.setState({ gndServerDropdown: !this.state.gndServerDropdown });
-  private toggleInteropDropdown = () =>
+  toggleInteropDropdown = () =>
     this.setState({ interopDropdown: !this.state.interopDropdown });
-  private toggleCompLocDropdown = () =>
+  toggleCompLocDropdown = () =>
     this.setState({ compLocDropdown: !this.state.compLocDropdown });
 
-  private handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     this.props.updateSettings(({
       [event.target.name]: event.target.value
     } as unknown) as AppState["settings"]);
   };
 
-  private handleSelect = (event: MouseEvent<HTMLElement>) => {
+  handleSelect = (event: MouseEvent<HTMLElement>) => {
     console.log(event.target);
-    let name = event.currentTarget.dataset.name as string;
+    const name = event.currentTarget.dataset.name as string;
     this.props.updateSettings(({
       [name]: (event.target as HTMLElement).innerText
     } as unknown) as AppState["settings"]);
   };
 
-  private connectToInterop = () => {
+  connectToInterop = () => {
     this.props.connectToInterop(
       this.props.settings.interopIp,
       this.props.settings.interopUsername,
@@ -72,29 +72,29 @@ class Settings extends Component<Props> {
     );
   };
 
-  private connectToGndServer = () => {
+  connectToGndServer = () => {
     this.props.connectToGndServer();
   };
 
-  private configureTrackyPos = () => {
+  configureTrackyPos = () => {
     this.props.configureTrackyPos(this.props.settings.antennaPos);
   };
 
-  private configureUgvDest = () => {
+  configureUgvDest = () => {
     this.props.configureUgvDest(this.props.settings.antennaPos); // temporary, but convenient to use the same map
   };
 
-  private handleClickedMap = (event: any) => {
+  handleClickedMap = (event: any) => {
     this.props.updateSettings(({
       antennaPos: { lat: event.latLng.lat(), lng: event.latLng.lng() }
     } as unknown) as AppState["settings"]);
   };
 
-  public render() {
-    let connectedGroundServer = this.props.settings.gndServerConnected
+  render() {
+    const connectedGroundServer = this.props.settings.gndServerConnected
       ? this.props.settings.connectedGndServerIp
       : "NONE";
-    let connectedInteropServer = this.props.interopData
+    const connectedInteropServer = this.props.interopData
       ? this.props.interopData.ip
       : "NONE";
     return (

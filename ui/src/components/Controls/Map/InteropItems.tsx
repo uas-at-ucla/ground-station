@@ -15,8 +15,13 @@ import blueMarker from "./icons/blue_marker.png";
 
 const FEET_PER_METER = 3.28084;
 
+interface OwnProps {
+  isOpen: { [key: string]: boolean };
+  toggleOpen: (id: string) => void;
+}
+
 const mapStateToProps = (state: AppState) => {
-  let derivedData = selector(state);
+  const derivedData = selector(state);
   return {
     interopData: state.mission.interopData,
     ugvDestination: state.mission.ugvDestination,
@@ -31,26 +36,21 @@ const mapStateToProps = (state: AppState) => {
 
 const mapDispatchToProps = missionActions;
 
-interface OwnProps {
-  isOpen: { [key: string]: boolean };
-  toggleOpen: (id: string) => void;
-}
-
-type Props = ReturnType<typeof mapStateToProps> &
-  (typeof mapDispatchToProps) &
-  OwnProps;
+type Props = OwnProps &
+  ReturnType<typeof mapStateToProps> &
+  (typeof mapDispatchToProps);
 
 class InteropItems extends Component<Props> {
-  public render() {
+  render() {
     if (this.props.interopData) {
-      var boxCenter = this.props.mainFlyZone.boundaryPoints[0];
-      var boxCoordinates = [
+      const boxCenter = this.props.mainFlyZone.boundaryPoints[0];
+      const boxCoordinates = [
         { lat: boxCenter.latitude + 0.1, lng: boxCenter.longitude + 0.1 },
         { lat: boxCenter.latitude + 0.1, lng: boxCenter.longitude - 0.1 },
         { lat: boxCenter.latitude - 0.1, lng: boxCenter.longitude - 0.1 },
         { lat: boxCenter.latitude - 0.1, lng: boxCenter.longitude + 0.1 }
       ];
-      var boundaryCoordinates = this.props.mainFlyZone.boundaryPoints.map(
+      const boundaryCoordinates = this.props.mainFlyZone.boundaryPoints.map(
         (coord: any) => {
           return { lat: coord.latitude, lng: coord.longitude };
         }
@@ -59,7 +59,7 @@ class InteropItems extends Component<Props> {
         boundaryCoordinates.reverse();
       }
 
-      var flyZonePolygons = this.props.interopData.mission.flyZones.map(
+      const flyZonePolygons = this.props.interopData.mission.flyZones.map(
         (flyZone: any) => {
           return flyZone.boundaryPoints.map((coord: any) => {
             return { lat: coord.latitude, lng: coord.longitude };
@@ -67,10 +67,10 @@ class InteropItems extends Component<Props> {
         }
       );
 
-      var searchCenterLat = 0;
-      var searchCenterLng = 0;
-      var searchNum = this.props.interopData.mission.searchGridPoints.length;
-      var searchGridPoints = this.props.interopData.mission.searchGridPoints.map(
+      let searchCenterLat = 0;
+      let searchCenterLng = 0;
+      const searchNum = this.props.interopData.mission.searchGridPoints.length;
+      const searchGridPoints = this.props.interopData.mission.searchGridPoints.map(
         (coord: any) => {
           searchCenterLat += coord.latitude;
           searchCenterLng += coord.longitude;
@@ -80,17 +80,17 @@ class InteropItems extends Component<Props> {
       searchCenterLng = searchCenterLng / searchNum;
       searchCenterLat = searchCenterLat / searchNum;
 
-      var airDropPos = {
+      const airDropPos = {
         lat: this.props.interopData.mission.airDropPos.latitude,
         lng: this.props.interopData.mission.airDropPos.longitude
       };
 
-      var emergentPos = {
+      const emergentPos = {
         lat: this.props.interopData.mission.emergentLastKnownPos.latitude,
         lng: this.props.interopData.mission.emergentLastKnownPos.longitude
       };
 
-      var offAxisPos = {
+      const offAxisPos = {
         lat: this.props.interopData.mission.offAxisOdlcPos.latitude,
         lng: this.props.interopData.mission.offAxisOdlcPos.longitude
       };
@@ -310,8 +310,8 @@ class InteropItems extends Component<Props> {
     }
   }
 
-  private addWaypointCommand = (lat: number, lng: number, alt?: number) => {
-    let defaultWaypointCommand = {
+  addWaypointCommand = (lat: number, lng: number, alt?: number) => {
+    const defaultWaypointCommand = {
       goal: {
         latitude: lat,
         longitude: lng,

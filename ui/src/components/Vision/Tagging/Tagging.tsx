@@ -8,7 +8,7 @@ import pathImport from "path";
 import fsImport from "fs";
 const path: typeof pathImport = window.require("path");
 const fs: typeof fsImport = window.require("fs");
-const imageClipper = require("image-clipper"); // use require instead of import because image-clipper doesn't have TypeScript support
+const imageClipper = require("image-clipper"); // Use require when no TypeScript support
 
 // import testImage from "./electron/testImages/pexels-photo-236047.jpeg";
 
@@ -30,7 +30,7 @@ const List = (props: {
   ) : null;
 
 const imagePath = "electron/testImages/";
-let images: string[] = fs.readdirSync(imagePath);
+const images: string[] = fs.readdirSync(imagePath);
 
 const initialAnnValues = {
   shape: "",
@@ -41,7 +41,7 @@ const initialAnnValues = {
 };
 
 class Tagging extends Component<DispatchProp> {
-  public state = {
+  state = {
     formValues: initialAnnValues,
     annValues: initialAnnValues,
     selectedImage: "" /*testImage*/,
@@ -67,11 +67,11 @@ class Tagging extends Component<DispatchProp> {
     imageName: ""
   };
 
-  private handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
-    let name = event.target.name as keyof typeof initialAnnValues;
-    let value = event.target.value;
-    let formValues = this.state.formValues;
+    const name = event.target.name as keyof typeof initialAnnValues;
+    const value = event.target.value;
+    const formValues = this.state.formValues;
     formValues[name] = value;
     // console.log("click value: ", value);
     this.setState({
@@ -79,19 +79,19 @@ class Tagging extends Component<DispatchProp> {
     });
   };
 
-  private handleSelectChange = (
+  handleSelectChange = (
     name: keyof typeof initialAnnValues,
     selectedOption: typeof shapeOptions[number]
   ) => {
-    let value = selectedOption && selectedOption.value;
-    let formValues = this.state.formValues;
+    const value = selectedOption && selectedOption.value;
+    const formValues = this.state.formValues;
     formValues[name] = value;
     console.log(name + ` selected:`, value);
     this.setState({
       formValues //, curValues
     });
   };
-  private handleRestore = () => {
+  handleRestore = () => {
     this.setState({
       // croppedImage: null,
       crop: {
@@ -104,21 +104,21 @@ class Tagging extends Component<DispatchProp> {
     });
   };
 
-  private handleCropComplete = () => {
-    let crop: Area = this.state.croppedAreaPixels;
+  handleCropComplete = () => {
+    const crop: Area = this.state.croppedAreaPixels;
     console.log("cropping...");
     // let croppedImg = this.getCroppedImg(this.refImageCrop, crop);
     // console.log("width", croppedImg.width);
-    let self = this;
+    const self = this;
     imageClipper(this.state.selectedImage, function(this: any) {
       this.crop(crop.x, crop.y, crop.width, crop.height).toDataURL(
         (dataURL: string) => {
-          let base64Data = dataURL.split(";base64,").pop();
-          let extension = path
+          const base64Data = dataURL.split(";base64,").pop();
+          const extension = path
             .extname(self.state.imagePath)
             .split(".")
             .pop();
-          let croppedImagePath =
+          const croppedImagePath =
             self.state.imagePath.split(".")[0] + "_cropped." + extension;
           fs.writeFile(
             croppedImagePath,
@@ -151,18 +151,18 @@ class Tagging extends Component<DispatchProp> {
   //   });
   // }
 
-  private handleOpen = () => {
+  handleOpen = () => {
     // console.log("image cropper opened");
-    let displayCropper = !this.state.displayCropper;
+    const displayCropper = !this.state.displayCropper;
     // let displayImage = this.state.selectedImage;
     this.setState({ displayCropper: displayCropper });
     // this.setState({ displayImage: displayImage });
   };
 
-  private handleSubmit = (event: FormEvent) => {
+  handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    let formValues = this.state.formValues;
-    let annValues = this.state.annValues;
+    const formValues = this.state.formValues;
+    const annValues = this.state.annValues;
 
     let key: keyof typeof formValues;
     for (key in formValues) {
@@ -178,7 +178,7 @@ class Tagging extends Component<DispatchProp> {
     });
   };
 
-  private handleInteropSubmit = () => {
+  handleInteropSubmit = () => {
     this.props.dispatch({
       type: "TRANSMIT",
       payload: {
@@ -191,34 +191,34 @@ class Tagging extends Component<DispatchProp> {
     });
   };
 
-  private onCropChange = (crop: Location) => {
+  onCropChange = (crop: Location) => {
     this.setState({ crop });
   };
 
-  private onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
+  onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
     this.setState({ croppedAreaPixels: croppedAreaPixels });
     console.log("croppedAreaPixels", croppedAreaPixels);
     // this.setState({crop: croppedArea});
   };
 
-  private onZoomChange = (zoom: number) => {
+  onZoomChange = (zoom: number) => {
     this.setState({ zoom });
   };
 
-  private handleListClick = (e: MouseEvent<HTMLElement>) => {
-    let imageName = e.currentTarget.innerHTML;
-    let imageP = imagePath + imageName;
+  handleListClick = (e: MouseEvent<HTMLElement>) => {
+    const imageName = e.currentTarget.innerHTML;
+    const imageP = imagePath + imageName;
     fs.readFile(imageP, (err, data) => {
       if (err) {
         console.error(err);
         return;
       }
-      let extensionName = path
+      const extensionName = path
         .extname(imageP)
         .split(".")
         .pop();
-      let base64Image = data.toString("base64");
-      let imgSrcString = `data:image/${extensionName};base64,${base64Image}`;
+      const base64Image = data.toString("base64");
+      const imgSrcString = `data:image/${extensionName};base64,${base64Image}`;
       this.setState({
         selectedImage: imgSrcString,
         croppedImagePath: null,
@@ -230,7 +230,7 @@ class Tagging extends Component<DispatchProp> {
     });
   };
 
-  public render() {
+  render() {
     return (
       <div className="Annotations">
         <h1>Annotations</h1>

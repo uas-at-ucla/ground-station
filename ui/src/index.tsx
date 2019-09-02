@@ -6,8 +6,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "font-awesome/css/font-awesome.min.css";
 import "sanitize.css";
 
-import * as serviceWorker from "./serviceWorker";
-
 import App from "./components/App";
 import "./index.css";
 import store from "./redux/store";
@@ -22,6 +20,12 @@ declare global {
   }
 }
 
+if (process.env.NODE_ENV === "development") {
+  console.log("Running in development mode");
+} else {
+  console.log("Running in production mode");
+}
+
 loadGoogleMapsApi(() => {
   ReactDOM.render(
     <Provider store={store}>
@@ -30,8 +34,3 @@ loadGoogleMapsApi(() => {
     document.getElementById("root")
   );
 });
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();

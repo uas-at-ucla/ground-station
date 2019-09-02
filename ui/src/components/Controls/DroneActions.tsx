@@ -29,12 +29,10 @@ const mapStateToProps = (state: AppState) => {
     missionCommands: state.mission.commands,
     missionCompiled: state.mission.missionCompiled,
     missionUploaded: state.mission.missionUploaded,
-    dropReady: state.telemetry.droneTelemetry
-      ? state.telemetry.droneTelemetry.output.deploy
-      : null,
+    dropReady: state.telemetry.droneTelemetry ? true : null, //state.telemetry.droneTelemetry.output.deploy
     lastDroppyCommand: state.mission.lastDroppyCommand,
     runningMission: state.telemetry.droneTelemetry
-      ? state.telemetry.droneTelemetry.output.state === 5
+      ? 1 + 1 === 5 //state.telemetry.droneTelemetry.output.state
       : null, // 5 is MISSION in flight loop state machine
     setpoints: state.telemetry.setpoints
   };
@@ -45,7 +43,7 @@ const mapDispatchToProps = droneActions;
 type Props = ReturnType<typeof mapStateToProps> & (typeof mapDispatchToProps);
 
 class DroneActions extends Component<Props> {
-  public state = {
+  state = {
     modal: false,
     action: () => {},
     message: "",
@@ -58,7 +56,7 @@ class DroneActions extends Component<Props> {
     }
   };
 
-  public componentDidMount() {
+  componentDidMount() {
     document.addEventListener("keypress", e => {
       // Enter key
       if (e.keyCode === 13 && this.state.modal) {
@@ -68,11 +66,11 @@ class DroneActions extends Component<Props> {
     });
   }
 
-  private toggle = () => {
+  toggle = () => {
     this.setState({ modal: !this.state.modal });
   };
 
-  private toggleWithName = (message: string, action: () => void) => {
+  toggleWithName = (message: string, action: () => void) => {
     this.setState({
       message: message,
       action: action,
@@ -80,16 +78,16 @@ class DroneActions extends Component<Props> {
     });
   };
 
-  private doAction = () => {
+  doAction = () => {
     this.state.action();
     this.toggle();
   };
 
-  private toggleSetpoints = () => {
+  toggleSetpoints = () => {
     this.setState({ setpointModal: !this.state.setpointModal });
   };
 
-  private booleanSetpointChanged = (e: ChangeEvent<HTMLInputElement>) => {
+  booleanSetpointChanged = (e: ChangeEvent<HTMLInputElement>) => {
     this.setState({
       setpointInputs: {
         ...this.state.setpointInputs,
@@ -98,8 +96,8 @@ class DroneActions extends Component<Props> {
     });
   };
 
-  private floatSetpointChanged = (e: ChangeEvent<HTMLInputElement>) => {
-    let newValue = Number(e.target.value);
+  floatSetpointChanged = (e: ChangeEvent<HTMLInputElement>) => {
+    const newValue = Number(e.target.value);
     if (!isNaN(newValue)) {
       this.setState({
         setpointInputs: {
@@ -110,15 +108,15 @@ class DroneActions extends Component<Props> {
     }
   };
 
-  private sendSetpoint = (e: MouseEvent<HTMLButtonElement>) => {
-    let name = e.currentTarget.name as keyof (typeof setpointMsgs);
+  sendSetpoint = (e: MouseEvent<HTMLButtonElement>) => {
+    const name = e.currentTarget.name as keyof (typeof setpointMsgs);
     this.props.sendSetpoint(
       setpointMsgs[name],
       this.state.setpointInputs[name]
     );
   };
 
-  public render() {
+  render() {
     const { message } = this.state;
     return (
       <span className="DroneActions">
@@ -400,7 +398,7 @@ class DroneActions extends Component<Props> {
     );
   }
 
-  private compileMission = () => {
+  compileMission = () => {
     this.props.compileMission(this.props.missionCommands);
   };
 }

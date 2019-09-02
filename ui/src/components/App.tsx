@@ -16,7 +16,7 @@ import Settings from "./Settings/Settings";
 const defaultPage = "/controls"; // "/vision"
 
 class App extends Component {
-  public render() {
+  render() {
     return (
       <div>
         <Router>

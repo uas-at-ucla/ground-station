@@ -11,11 +11,11 @@ interface Props {
 }
 
 class MapElementWithInfo extends Component<Props> {
-  private toggleOpen = () => {
+  toggleOpen = () => {
     this.props.toggleOpen(this.props.name);
   };
 
-  public render() {
+  render() {
     let info = this.props.isOpen[this.props.name] ? (
       <InfoWindow
         onCloseClick={this.toggleOpen}

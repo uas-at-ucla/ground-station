@@ -22,9 +22,7 @@ const mapStateToProps = (state: AppState) => {
     droneProgram: state.mission.droneProgram,
     // missionStatus: state.mission.missionStatus,
     missionUploaded: state.mission.missionUploaded,
-    dropReady: state.telemetry.droneTelemetry
-      ? state.telemetry.droneTelemetry.output.deploy
-      : null,
+    dropReady: state.telemetry.droneTelemetry ? true : null, //state.telemetry.droneTelemetry.output.deploy
     lastDroppyCommand: state.mission.lastDroppyCommand,
     ugvStatus: state.telemetry.ugvStatus,
     protoInfo: selector(state).mission.protoInfo
@@ -34,12 +32,12 @@ const mapStateToProps = (state: AppState) => {
 type Props = ReturnType<typeof mapStateToProps>;
 
 class MissionPlannerContainer extends Component<Props> {
-  public state = {
+  state = {
     expand: false,
     activeTab: "plan"
   };
 
-  private toggleTab = (tab: "plan" | "drone") => {
+  toggleTab = (tab: "plan" | "drone") => {
     if (this.state.activeTab !== tab) {
       this.setState({
         activeTab: tab
@@ -47,7 +45,7 @@ class MissionPlannerContainer extends Component<Props> {
     }
   };
 
-  public render() {
+  render() {
     return (
       <div className="MissionPlannerContainer">
         <div className="missionPlannerHeader">
@@ -141,9 +139,9 @@ class MissionPlannerContainer extends Component<Props> {
     );
   }
 
-  private expand = () => this.setState({ expand: true });
+  expand = () => this.setState({ expand: true });
 
-  private close = () => this.setState({ expand: false });
+  close = () => this.setState({ expand: false });
 }
 
 export default connect(mapStateToProps)(MissionPlannerContainer);

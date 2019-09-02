@@ -19,7 +19,7 @@ console.log(
 // };
 
 class Vision extends Component {
-  public render() {
+  render() {
     return (
       <div className="Vision">
         <div className="map-overlay">

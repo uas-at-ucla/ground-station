@@ -2,8 +2,8 @@ import shortid from "shortid";
 import { createMessage } from "protobuf/timelineGrammarUtil";
 
 export const centerMapOnCommand = (cmd: any, protoInfo: any) => {
-  for (let locationField of protoInfo.locationFields) {
-    let location = cmd[cmd.name][locationField];
+  for (const locationField of protoInfo.locationFields) {
+    const location = cmd[cmd.name][locationField];
     if (location) {
       return {
         type: "CENTER_ON_COMMAND" as const,
@@ -93,8 +93,8 @@ export const popRepeatedField = (dotProp: string) => ({
 });
 
 function createCommand(name: string, options: any, protoInfo: any) {
-  let command: any = {};
-  let type = protoInfo.timelineGrammar.GroundCommand.fields[name].type;
+  const command: any = {};
+  const type = protoInfo.timelineGrammar.GroundCommand.fields[name].type;
   command[name] = createMissionObject(type, options, protoInfo);
   command.type = type; // not part of protobuf, but helpful info
   command.name = name; // not part of protobuf, but helpful info
@@ -109,13 +109,13 @@ function createMissionObject(type: string, options: any, protoInfo: any) {
   if (protoInfo.timelineGrammar[type]) {
     // object is a protobuf defined object
     missionObject = {};
-    for (let fieldName in protoInfo.timelineGrammar[type].fields) {
-      let field = protoInfo.timelineGrammar[type].fields[fieldName];
+    for (const fieldName in protoInfo.timelineGrammar[type].fields) {
+      const field = protoInfo.timelineGrammar[type].fields[fieldName];
       if (field.rule === "repeated") {
         // repeated objects are stored in arrays
         missionObject[fieldName] = [];
         if (options && options[fieldName]) {
-          for (let fieldElement of options[fieldName]) {
+          for (const fieldElement of options[fieldName]) {
             missionObject[fieldName].push(
               createMissionObject(field.type, fieldElement, protoInfo)
             );
@@ -150,14 +150,14 @@ function createMissionObject(type: string, options: any, protoInfo: any) {
 function setLocationFields(options: any, protoInfo: any) {
   // Set all location fields so location is preserved when changing command types
   let location = null;
-  for (let locationField of protoInfo.locationFields) {
+  for (const locationField of protoInfo.locationFields) {
     if (options[locationField]) {
       location = options[locationField];
       break;
     }
   }
   if (location) {
-    for (let locationField of protoInfo.locationFields) {
+    for (const locationField of protoInfo.locationFields) {
       options[locationField] = location;
     }
   }

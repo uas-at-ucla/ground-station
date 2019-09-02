@@ -1,10 +1,12 @@
 import { app, BrowserWindow, Menu, MenuItem, protocol } from "electron";
-import path = require("path");
-import isDev = require("electron-is-dev");
+import * as path from "path";
+import * as isDev from "electron-is-dev";
+
+process.chdir(path.resolve(__dirname, ".."));
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow: BrowserWindow;
+let mainWindow: BrowserWindow | null;
 
 function createWindow() {
   // Install helpful Chrome Extensions for debugging
@@ -15,11 +17,15 @@ function createWindow() {
       REDUX_DEVTOOLS
     } = require("electron-devtools-installer");
 
-    [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS].forEach(extension => {
-      installExtension(extension)
-        .then(name => console.log(`Added Extension: ${name}`))
-        .catch(err => console.log("An error occurred: ", err));
-    });
+    const RESELECT_DEVTOOLS = "cjmaipngmabglflfeepmdiffcijhjlbb"; // Chrome store ID
+
+    [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS, RESELECT_DEVTOOLS].forEach(
+      extension => {
+        installExtension(extension)
+          .then((name: string) => console.log(`Added Extension: ${name}`))
+          .catch((err: string) => console.log("An error occurred: ", err));
+      }
+    );
   }
 
   // Handle the file:// protocol for files in build/static
@@ -46,7 +52,7 @@ function createWindow() {
     height: 600,
     icon: path.join(__dirname, "icon.png"),
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true // expose Node.js require() as window.require() in web app
     }
   });
 
@@ -58,7 +64,7 @@ function createWindow() {
   );
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on("closed", () => {

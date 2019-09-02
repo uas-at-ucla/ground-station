@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 // const google = window.google;
 
 class Map extends Component {
-  public state = {
+  state = {
     markers: [
       {
         position: {
@@ -63,7 +63,7 @@ class Map extends Component {
     selectionComplete: false
   };
 
-  public componentDidMount() {
+  componentDidMount() {
     setTimeout(
       () =>
         this.setState({
@@ -210,7 +210,7 @@ class Map extends Component {
     ); // Temporary: give time for google maps api to download
   }
 
-  private toggleHeatmap = () => {
+  toggleHeatmap = () => {
     if (this.state.hmOpacity == 0) {
       this.setState({
         hmOpacity: 1,
@@ -225,7 +225,7 @@ class Map extends Component {
     }
   };
 
-  // private heatmapOptions = props => {
+  // heatmapOptions = props => {
   //   if (props.open) {
   //     return (
   //       <div className="buttonPanel">
@@ -245,7 +245,7 @@ class Map extends Component {
   //   }
   // };
 
-  private mapDblClick = (event: any) => {
+  mapDblClick = (event: any) => {
     // event.stopPropagation();
     let hasSelection = this.state.hasSelection;
     // console.log(event.latLng.lat(), event.latLng.lng());
@@ -269,7 +269,7 @@ class Map extends Component {
     }
   };
 
-  private handleCancelSelect = () => {
+  handleCancelSelect = () => {
     console.log("right click");
     this.setState({
       imageArea: {},
@@ -278,7 +278,7 @@ class Map extends Component {
     });
   };
 
-  public render() {
+  render() {
     let customMarkers;
     if (this.state.markers) {
       customMarkers = this.state.markers.map((marker, index) => {
