@@ -1,13 +1,18 @@
 language: python
-os: 
-- linux
-- osx
+matrix:
+  include:
+    -name: "linux"
+     python: 3.6
+    -name: "mac"
+     os: osx
+     osx_image: xcode11
+     language: shell
+     
 sudo: required
 
-python:
-- '2.7'
 
 install:
+- pip3 install --upgrade pip
 - ./ground.py build
 
 script:
