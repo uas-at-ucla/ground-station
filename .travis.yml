@@ -10,7 +10,6 @@ matrix:
      
 sudo: required
 
-
 install:
 - pip3 install --upgrade pip
 - ./ground.py build
