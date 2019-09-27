@@ -1,4 +1,4 @@
-# Ground Station Software Setup
+# Ground Station Software Setup [![Build Status](https://travis-ci.com/uas-at-ucla/ground-station.svg?token=dMx8PjxFT52nsQrKYmrL&branch=master)](https://travis-ci.com/uas-at-ucla/ground-station)
 ## Software Tools to Install
 * [VS Code](https://code.visualstudio.com/)
 * [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
