@@ -1,5 +1,7 @@
 language: python
-os: linux
+os: 
+- linux
+- osx
 sudo: required
 
 python:
