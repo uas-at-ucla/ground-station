@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
+    "baseUrl": "src", // Allows import statements relative to the src folder
     "target": "es5",
     "lib": [
       "dom",

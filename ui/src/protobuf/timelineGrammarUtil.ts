@@ -15,12 +15,12 @@ if (electronRequire)
 
 //TODO copy .proto files to app when packaging with Electron and use those files when not electron-is-dev
 
-var root = electronRequire ? new protobuf.Root() : null;
-var packageNames: string[] = [];
+let root = electronRequire ? new protobuf.Root() : null;
+const packageNames: string[] = [];
 
 function loadRootFromJson(dispatch: Dispatch) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  let jsonDescriptor = require("./timeline_grammar.proto.json");
+  const jsonDescriptor = require("./timeline_grammar.proto.json");
   // Send to Redux store
   dispatch(externalActions.timelineProtoLoaded(jsonDescriptor));
   return protobuf.Root.fromJSON({ nested: jsonDescriptor });
@@ -37,7 +37,7 @@ export default function loadTimelineGrammar(dispatch: Dispatch) {
   return;
   // }
 
-  let prevCwd = window.process.cwd();
+  const prevCwd = window.process.cwd();
   window.process.chdir("../../../");
 
   root.load(
@@ -51,11 +51,11 @@ export default function loadTimelineGrammar(dispatch: Dispatch) {
 
       // Combine message definitions from the file and imported files
       let timelineGrammar = {};
-      for (let file of root.files) {
-        let packagePath = file.split("/");
+      for (const file of root.files) {
+        const packagePath = file.split("/");
         packagePath.pop();
         let protoMessages = root.toJSON().nested;
-        for (let name of packagePath) {
+        for (const name of packagePath) {
           protoMessages = protoMessages[name].nested;
         }
         timelineGrammar = { ...timelineGrammar, ...protoMessages };
@@ -64,7 +64,7 @@ export default function loadTimelineGrammar(dispatch: Dispatch) {
 
       // Eliminate package references to imports
       let timelineGrammarString = JSON.stringify(timelineGrammar);
-      for (let packageName of packageNames) {
+      for (const packageName of packageNames) {
         timelineGrammarString = timelineGrammarString.replace(
           new RegExp(packageName, "g"),
           ""
@@ -89,8 +89,8 @@ export function createMessage(type: string, payload: any) {
     return null;
   }
 
-  let messageType = root.lookupType(type);
-  let errMsg = messageType.verify(payload);
+  const messageType = root.lookupType(type);
+  const errMsg = messageType.verify(payload);
   if (errMsg) throw Error("Type " + type + " not supported!");
 
   return messageType.create(payload);

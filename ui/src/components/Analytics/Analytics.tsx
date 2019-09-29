@@ -32,7 +32,7 @@ class Analytics extends Component<Props> {
   state = {
     isPaused: false
   };
-  usingLoaded: boolean = false;
+  usingLoaded = false;
   fileInput: React.RefObject<HTMLInputElement> = React.createRef();
 
   // componentDidUpdate(prevProps) {
@@ -148,7 +148,7 @@ class Analytics extends Component<Props> {
     // TODO load JSON data from a file
     // this.props.loadInteropData({ type: 'INTEROP_DATA', payload: data });
 
-    let reader = new FileReader();
+    const reader = new FileReader();
     reader.onload = () => {
       const data = JSON.parse(reader.result as string);
       console.log(data);
@@ -174,7 +174,7 @@ class Analytics extends Component<Props> {
     if (this.props.recording) {
       this.downloadTelemetry();
       let i;
-      let l = this.props.telemetryData.length;
+      const l = this.props.telemetryData.length;
       for (i = 0; i < l; i++) {
         this.props.telemetryData.pop();
       }
@@ -191,14 +191,15 @@ class Analytics extends Component<Props> {
   runLoaded = () => {
     if (!this.usingLoaded) {
       this.props.togglePlayback();
-      let reader: FileReader = new FileReader();
+      const reader: FileReader = new FileReader();
       reader.onload = e => {
         loadedTelemetry = JSON.parse(reader.result as string);
         this.usingLoaded = true;
         // console.log(loadedTelemetry)
         let i = 0;
-        let intervalID = setInterval(() => {
+        const intervalID = setInterval(() => {
           if (this.state.isPaused) {
+            //
           } else {
             this.props.playback(loadedTelemetry[i]);
             i = i + 1;
