@@ -37,3 +37,13 @@ script:
 - ./ground.py deploy-linux
 - ./ground.py deploy-mac
 - ./ground.py deploy-win
+- ls ui/release-builds
+
+deploy:
+  provider: releases
+  api_key: "b9bdce6d160c3a75ddf9cb52ddcf099b7d86f1cb"
+  file:
+  - "./ui/release-builds/FlightDeck-darwin-x64"
+  - "./ui/release-builds/FlightDeck-linux-x64"
+  skip_cleanup: true
+  draft: true
