@@ -43,7 +43,13 @@ deploy:
   provider: releases
   api_key: "b9bdce6d160c3a75ddf9cb52ddcf099b7d86f1cb"
   file:
-  - "./ui/release-builds/FlightDeck-darwin-x64"
-  - "./ui/release-builds/FlightDeck-linux-x64"
+    - "./ui/release-builds/FlightDeck-darwin-x64"
+    - "./ui/release-builds/FlightDeck-linux-x64"
+    - "./ui/release-builds/FlightDeck-win32-x64"
+  on:
+    repo: uas-at-ucla/ground-station
+    branches: 
+      only: 
+        - alfred
   skip_cleanup: true
   draft: true
