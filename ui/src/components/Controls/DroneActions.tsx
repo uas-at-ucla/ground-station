@@ -14,7 +14,6 @@ import {
 
 import * as droneActions from "redux/actions/droneActions";
 import { AppState } from "redux/store";
-import { number } from "prop-types";
 
 const disableBtns = false; // set to true to disable buttons when they shouldn't be triggered based on drone state
 const setpointMsgs = {

@@ -110,7 +110,7 @@ export default produce((draftState: MissionState, action: AppAction) => {
       if (!droneProgram.commands) {
         droneProgram.commands = [];
       }
-      droneProgram.commands.map((command: any, index: any) => {
+      droneProgram.commands.array.forEach((command: any, index: any) => {
         command.name = Object.keys(command)[0];
         command.type =
           draftState.timelineGrammar.DroneCommand.fields[command.name].type;

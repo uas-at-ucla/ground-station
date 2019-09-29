@@ -84,6 +84,7 @@ export default GoogleMapWrapperComponent;
 const tileBounds: {
   [key: number]: { left: number; right: number; top: number; bottom: number };
 } = {};
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function tileLoaded(coord: { x: number; y: number }, zoom: number) {
   if (!tileBounds[zoom]) {
     tileBounds[zoom] = {
@@ -106,6 +107,7 @@ function tileLoaded(coord: { x: number; y: number }, zoom: number) {
     tileBounds[zoom].bottom = coord.y;
   }
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function downloadTileListOnClick(map: any) {
   map.addListener("click", () => {
     const tileUrls: {

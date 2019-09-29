@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { Button, ButtonGroup, Col, Container, Row, Progress } from "reactstrap";
+import { Button, ButtonGroup, Col, Container, Row } from "reactstrap";
 
 import UasLogo from "components/utils/UasLogo/UasLogo";
 import { AppState } from "redux/store";

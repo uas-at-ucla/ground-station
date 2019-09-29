@@ -1,11 +1,10 @@
 /*global google*/
-import React, { Component, MouseEvent } from "react";
+import React, { Component } from "react";
 import CustomMarker from "./CustomMarker";
-import { Marker } from "react-google-maps";
+// import { Marker } from "react-google-maps";
 import GoogleMap from "../../utils/GoogleMap/GoogleMap";
 import HeatmapLayer from "react-google-maps/lib/components/visualization/HeatmapLayer";
 import "./Map.css";
-import { Link } from "react-router-dom";
 
 // const google = window.google;
 
@@ -211,7 +210,7 @@ class Map extends Component {
   }
 
   toggleHeatmap = () => {
-    if (this.state.hmOpacity == 0) {
+    if (this.state.hmOpacity === 0) {
       this.setState({
         hmOpacity: 1,
         hmHeatmapOn: true
@@ -247,10 +246,10 @@ class Map extends Component {
 
   mapDblClick = (event: any) => {
     // event.stopPropagation();
-    let hasSelection = this.state.hasSelection;
+    const hasSelection = this.state.hasSelection;
     // console.log(event.latLng.lat(), event.latLng.lng());
-    let x = event.latLng.lat();
-    let y = event.latLng.lng();
+    const x = event.latLng.lat();
+    const y = event.latLng.lng();
     if (!hasSelection) {
       this.setState({
         imageArea: { pixelX: x, pixelY: y },
@@ -258,8 +257,8 @@ class Map extends Component {
       });
       console.log("1st", this.state.imageArea);
     } else if (hasSelection) {
-      let width = x - this.state.imageArea.pixelX;
-      let height = y - this.state.imageArea.pixelY;
+      const width = x - this.state.imageArea.pixelX;
+      const height = y - this.state.imageArea.pixelY;
       this.setState({
         imageArea: { ...this.state.imageArea, width: width, height: height },
         hasSelection: !hasSelection,

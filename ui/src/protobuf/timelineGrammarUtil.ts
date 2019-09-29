@@ -5,8 +5,8 @@ import * as externalActions from "redux/actions/externalActions";
 
 const electronRequire = window.require;
 const protobuf = electronRequire ? electronRequire("protobufjs") : null;
-const fs = electronRequire ? electronRequire("fs") : null;
-const isDev = electronRequire ? electronRequire("electron-is-dev") : null;
+// const fs = electronRequire ? electronRequire("fs") : null;
+// const isDev = electronRequire ? electronRequire("electron-is-dev") : null;
 // Fix import statement in .proto file:
 if (electronRequire)
   protobuf.Root.prototype.resolvePath = (origin: string, target: string) => {
@@ -16,7 +16,7 @@ if (electronRequire)
 //TODO copy .proto files to app when packaging with Electron and use those files when not electron-is-dev
 
 let root = electronRequire ? new protobuf.Root() : null;
-const packageNames: string[] = [];
+// const packageNames: string[] = [];
 
 function loadRootFromJson(dispatch: Dispatch) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -37,6 +37,7 @@ export default function loadTimelineGrammar(dispatch: Dispatch) {
   return;
   // }
 
+  /*
   const prevCwd = window.process.cwd();
   window.process.chdir("../../../");
 
@@ -82,6 +83,7 @@ export default function loadTimelineGrammar(dispatch: Dispatch) {
       root = loadRootFromJson(dispatch); // Load the proto root from the json file. We'll do this in the packaged app where the original .proto isn't available, so we'll do it here too for consistency.
     }
   );
+  */
 }
 
 export function createMessage(type: string, payload: any) {

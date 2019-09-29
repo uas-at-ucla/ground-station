@@ -47,7 +47,7 @@ class MissionPlanner extends Component<Props> {
     //console.log(this.props.interopData.mission);
     const defaultAlt = this.props.mission.defaultAltitude;
     const defaultDrpHeight = defaultAlt;
-    const defaultHeight = defaultAlt;
+    // const defaultHeight = defaultAlt;
 
     for (let i = 0; i < this.props.interopData.mission.waypoints.length; i++) {
       const lat = this.props.interopData.mission.waypoints[i].latitude;
@@ -169,10 +169,7 @@ class MissionPlanner extends Component<Props> {
     this.props.addWaypointCommand(defaultWaypointCommand, this.props.protoInfo);
   };
 
-  reorderCommand = (indices: {
-    oldIndex: number;
-    newIndex: number;
-  }) => {
+  reorderCommand = (indices: { oldIndex: number; newIndex: number }) => {
     this.props.reorderCommand(indices.oldIndex, indices.newIndex);
   };
 
