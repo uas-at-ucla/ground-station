@@ -3,10 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "main": "electron/electron.js",
-
   "homepage": "./",
   "//homepageComment": "This is required for React to use the correct path for file:// requests in production",
-  
   "scripts": {
     "react-start": "cross-env BROWSER=none react-scripts start",
     "electron-start": "npm run electron-build && cross-env ELECTRON_IS_DEV=1 electron .",
@@ -145,7 +143,6 @@
     "typescript": "PRIMARY LIBRARY. Typed superset of JavaScript. With editor support, catches errors and adds clarity to JavaScript. Provides the `tsc` command for compiling.",
     "wait-on": "Wait for a URL to be up. Used to wait for the React app to be ready before starting Electron in `npm start`"
   },
-
   "browserslist": [
     ">0.2%",
     "not dead",
