@@ -9,4 +9,6 @@ install:
 - ./ground.py build
 
 script:
-- true
+- ./ground.py deploy-linux
+- ./ground.py deploy-mac
+- ./ground.py deploy-win
