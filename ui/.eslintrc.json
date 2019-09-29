@@ -1,13 +1,15 @@
 {
     "parser": "@typescript-eslint/parser",
     "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        "plugin:react/recommended",
-        "prettier/@typescript-eslint",
-        "plugin:prettier/recommended"
+        "eslint:recommended", // ESLint base recommended rules
+        "plugin:@typescript-eslint/eslint-recommended", // Disable ESLint rules that conflict with @typescript-eslint rules
+        "plugin:@typescript-eslint/recommended", // @typescript-eslint recommended rules
+        "plugin:@typescript-eslint/recommended-requiring-type-checking", // @typescript-eslint recommended rules that involve type checking
+        "plugin:react/recommended", // React recommended linting rules
+        "prettier", // Disable ESLint rules that conflict with Prettier
+        "prettier/@typescript-eslint", // Disable @typescript-eslint rules that conflict with Prettier
+        "prettier/react", // Disable React linting rules that conflict with Prettier
+        "plugin:prettier/recommended" // Recommended Prettier formatting rules
     ],
     "parserOptions": {
         "project": "./tsconfig.json",
@@ -18,9 +20,9 @@
         }
     },
     "rules": {
-        "@typescript-eslint/explicit-function-return-type": 0,
-        "@typescript-eslint/no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false, "typedefs": false }],
-        "@typescript-eslint/no-var-requires": 0
+        "@typescript-eslint/explicit-function-return-type": 0, // Typescript does an amazing job at inferring function return types, so this almost never needed
+        "@typescript-eslint/no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false, "typedefs": false }], // Sometimes it makes sense to use a class/function/type above its definition for organizational reasons
+        "@typescript-eslint/no-var-requires": 0 // Require shouldn't be used most of the time, but it is needed to import packages that don't support TypeScript, including our very own google-maps-js-api
     },
     "settings": {
         "react": {

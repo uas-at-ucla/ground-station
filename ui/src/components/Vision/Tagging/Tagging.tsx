@@ -166,7 +166,7 @@ class Tagging extends Component<DispatchProp> {
 
     let key: keyof typeof formValues;
     for (key in formValues) {
-      if (formValues[key] != "") {
+      if (formValues[key] !== "") {
         annValues[key] = formValues[key];
         formValues[key] = "";
       }

@@ -59,7 +59,7 @@ function createWindow() {
   // and load the url of the app.
   mainWindow.loadURL(
     isDev
-      ? "http://localhost:3001"
+      ? "http://localhost:3000"
       : `file://${path.join(process.cwd(), "build/index.html")}`
   );
 

@@ -221,7 +221,7 @@ class CommandRow extends PureComponent<CommandRowProps> {
       // object is a protobuf defined object
       return (
         <Row>
-          {name != "" ? (
+          {name !== "" ? (
             <Col xs="auto" className="name">
               {name}:
             </Col>

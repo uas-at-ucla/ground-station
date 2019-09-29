@@ -1,4 +1,7 @@
 language: python
+os: linux
+dist: bionic
+sudo: required
 
 matrix:
   include:
@@ -18,9 +21,19 @@ matrix:
      
 sudo: required
 
+before_install:
+# Install wine for packaging FlightDeck for Windows:
+- sudo dpkg --add-architecture i386
+- wget -qO - https://dl.winehq.org/wine-builds/winehq.key | sudo apt-key add -
+- sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'
+- sudo apt-get update
+- sudo apt-get install -y --install-recommends winehq-stable
+
 install:
 - pip3 install --upgrade pip
 - ./ground.py build
 
 script:
-- true
+- ./ground.py deploy-linux
+- ./ground.py deploy-mac
+- ./ground.py deploy-win

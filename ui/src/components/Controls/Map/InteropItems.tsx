@@ -67,18 +67,18 @@ class InteropItems extends Component<Props> {
         }
       );
 
-      let searchCenterLat = 0;
-      let searchCenterLng = 0;
-      const searchNum = this.props.interopData.mission.searchGridPoints.length;
+      // let searchCenterLat = 0;
+      // let searchCenterLng = 0;
+      // const searchNum = this.props.interopData.mission.searchGridPoints.length;
       const searchGridPoints = this.props.interopData.mission.searchGridPoints.map(
         (coord: any) => {
-          searchCenterLat += coord.latitude;
-          searchCenterLng += coord.longitude;
+          // searchCenterLat += coord.latitude;
+          // searchCenterLng += coord.longitude;
           return { lat: coord.latitude, lng: coord.longitude };
         }
       );
-      searchCenterLng = searchCenterLng / searchNum;
-      searchCenterLat = searchCenterLat / searchNum;
+      // searchCenterLng = searchCenterLng / searchNum;
+      // searchCenterLat = searchCenterLat / searchNum;
 
       const airDropPos = {
         lat: this.props.interopData.mission.airDropPos.latitude,
