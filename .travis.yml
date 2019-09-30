@@ -48,7 +48,7 @@ deploy:
     - "./ui/release-builds/FlightDeck-win32-x64"
   on:
     repo: uas-at-ucla/ground-station
-    branches: 
+    branch: 
       only: 
         - alfred
   skip_cleanup: true
