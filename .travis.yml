@@ -39,6 +39,12 @@ script:
 - ./ground.py deploy-win
 - ls ui/release-builds
 
+before-deploy:
+  - git config --local user.name wyc1997
+  - git config --local user.email wuyangchao1997@foxmail.com
+  - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
+  - git tag $TRAVIS_TAG
+
 deploy:
   provider: releases
   api_key: "b9bdce6d160c3a75ddf9cb52ddcf099b7d86f1cb"
@@ -47,9 +53,10 @@ deploy:
     - "./ui/release-builds/FlightDeck-linux-x64"
     - "./ui/release-builds/FlightDeck-win32-x64"
   on:
+    tags: true
     repo: uas-at-ucla/ground-station
     branch: 
       only: 
         - alfred
   skip_cleanup: true
-  draft: true
+
