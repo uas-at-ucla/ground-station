@@ -52,11 +52,10 @@ deploy:
     - "./ui/release-builds/FlightDeck-darwin-x64"
     - "./ui/release-builds/FlightDeck-linux-x64"
     - "./ui/release-builds/FlightDeck-win32-x64"
-  on:
-    tags: true
-    repo: uas-at-ucla/ground-station
-    branch: 
-      only: 
-        - alfred
+#   on:
+#     repo: uas-at-ucla/ground-station
+#     branch: 
+#       only: 
+#         - alfred
   skip_cleanup: true
-
+  draft: true
