@@ -10,6 +10,11 @@ from tools import npm_install
 
 npm_cmd = shutil.which("npm") # For Windows compatibility
 
+def exit_if_error(*args, **kwargs):
+    exit_code = subprocess.call(*args, **kwargs)
+    if exit_code != 0:
+        sys.exit(exit_code)
+
 def build_server():
     os.chdir("server")
     npm_install.npm_install()
@@ -28,28 +33,28 @@ def build(args=None):
 def run_all(args):
     build()
     # run all-web (w/o Electron) if web option specified. Otherwise, run all (w/ Electron).
-    subprocess.call([npm_cmd, "run", "all"+args.web], cwd="server")
+    exit_if_error([npm_cmd, "run", "all"+args.web], cwd="server")
 
 def run_server(args):
     build_server()
-    subprocess.call([npm_cmd, "run", "start"], cwd="server")
+    exit_if_error([npm_cmd, "run", "start"], cwd="server")
 
 def run_ui(args):
     build_ui()
     # run start-web (w/o Electron) if web option specified. Otherwise, run start (w/ Electron).
-    subprocess.call([npm_cmd, "run", "start"+args.web], cwd="ui")
+    exit_if_error([npm_cmd, "run", "start"+args.web], cwd="ui")
 
 def deploy_win(args):
     build_ui()
-    subprocess.call([npm_cmd, "run", "package-win"], cwd="ui")
+    exit_if_error([npm_cmd, "run", "package-win"], cwd="ui")
 
 def deploy_mac(args):
     build_ui()
-    subprocess.call([npm_cmd, "run", "package-mac"], cwd="ui")
+    exit_if_error([npm_cmd, "run", "package-mac"], cwd="ui")
 
 def deploy_linux(args):
     build_ui()
-    subprocess.call([npm_cmd, "run", "package-linux"], cwd="ui")
+    exit_if_error([npm_cmd, "run", "package-linux"], cwd="ui")
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
