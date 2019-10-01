@@ -38,7 +38,7 @@ install:
 script:
 - echo "Tests will go here"
 
-before-deploy:
+before_deploy:
   - ./ground.py deploy-linux
   - zip -r FlightDeck-linux-x64.zip ./ui/release-builds/FlightDeck-linux-x64
   - ./ground.py deploy-mac
@@ -46,8 +46,8 @@ before-deploy:
   - ./ground.py deploy-win
   - zip -r FlightDeck-win32-x64.zip ./ui/release-builds/FlightDeck-win32-x64
 
-  - git config --local user.name wyc1997
-  - git config --local user.email wuyangchao1997@foxmail.com
+  - git config --local user.name UAS@UCLA
+  - git config --local user.email unmannedsystems.ucla@gmail.com
   - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
   - git tag $TRAVIS_TAG
 
