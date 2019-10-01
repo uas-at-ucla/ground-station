@@ -2,8 +2,6 @@ import { app, BrowserWindow, Menu, MenuItem, protocol } from "electron";
 import * as path from "path";
 import * as isDev from "electron-is-dev";
 
-process.chdir(path.resolve(__dirname, ".."));
-
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow: BrowserWindow | null;
@@ -35,7 +33,7 @@ function createWindow() {
       (request, callback) => {
         const url = request.url.substr(7); // Remove "file://"
         if (url.startsWith("/static")) {
-          callback(path.normalize(`${process.cwd()}/build/${url}`));
+          callback(path.normalize(`${__dirname}/../build/${url}`));
         } else {
           callback(url);
         }
@@ -60,7 +58,7 @@ function createWindow() {
   mainWindow.loadURL(
     isDev
       ? "http://localhost:3000"
-      : `file://${path.join(process.cwd(), "build/index.html")}`
+      : `file://${path.join(__dirname, "../build/index.html")}`
   );
 
   // Open the DevTools.

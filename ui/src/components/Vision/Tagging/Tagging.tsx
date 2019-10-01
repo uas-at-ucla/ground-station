@@ -29,8 +29,8 @@ const List = (props: {
     </ul>
   ) : null;
 
-const imagePath = "electron/testImages/";
-const images: string[] = fs.readdirSync(imagePath);
+const imagePath = "electron/testImages/"; // TODO Have the user choose this folder in the UI. Hardcoding it works in development but not in the packaged executable.
+const images: string[] = []; //fs.readdirSync(imagePath);
 
 const initialAnnValues = {
   shape: "",
