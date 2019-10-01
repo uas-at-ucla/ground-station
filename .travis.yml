@@ -29,17 +29,23 @@ before_install:
 - sudo apt-get update
 - sudo apt-get install -y --install-recommends winehq-stable
 
+- sudo apt-get install -y zip
+
 install:
 - pip3 install --upgrade pip
 - ./ground.py build
 
 script:
-- ./ground.py deploy-linux
-- ./ground.py deploy-mac
-- ./ground.py deploy-win
 - ls ui/release-builds
 
 before-deploy:
+  - ./ground.py deploy-linux
+  - zip -r FlightDeck-linux-x64.zip ./ui/release-builds/FlightDeck-linux-x64
+  - ./ground.py deploy-mac
+  - zip -r FlightDeck-darwin-x64.zip ./ui/release-builds/FlightDeck-darwin-x64
+  - ./ground.py deploy-win
+  - zip -r FlightDeck-win32-x64.zip ./ui/release-builds/FlightDeck-win32-x64
+
   - git config --local user.name wyc1997
   - git config --local user.email wuyangchao1997@foxmail.com
   - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
@@ -47,11 +53,12 @@ before-deploy:
 
 deploy:
   provider: releases
-  api_key: "b9bdce6d160c3a75ddf9cb52ddcf099b7d86f1cb"
+  api_key:
+    secure: d09GH/Cz5+WUAmUCNkWI8L/T355VdjulzE+DwvpVFKMEx/NZbyJIBP2Qs+u7UkrZMw33SGAGSCSdPFksaYGYtGAdNVBKwvGqTGJyp4qxyx95Ro7vP79tsitk/+wfNxhPnjxnYkFRcE0EZ90/oZpAvnj1tdudSqnS104xAPV7ebWMZETqr8wNETu+mrrKM8rStFPW0KUmBFm+5SHvwajRTJivBMDxu02dtI769it/dZKGfROabHBZUw4an3Qxy0LM1RENrdNEThIQyMYtWSFa81FKlIwQqCxt2BKnyISENBkPz29sd9TIUYfHPVYs5viaC5aDj5tta3kVXMYYdMNatyHUnBpHScoV6P+BFeOltgnWQfUBc7xOfSwn8+B2QgEnPpt6Jit/InQ+PwCBO4SkExU0KhMQy8+5kLR19sTxibmnqpXusS4RrghLaXWzBjkpmyUlVr5GbPCwDACEIDijA90/NEQ0brxPX5JWA1ipvC4HdFzQmpW4/B0F6PA4DDQs5YUNmXpcTKLBHSdE3laAZRF9zf2xri4c+1cKYbNH4rkJlrLLJFr6QtR0i0Njewf56MzMgSf+7d3OlwwrBnHj2vp2sD3uaLk1iWNJe4VE5pXvgh9KeB24TNpfnTrpsXlKHhi7QsKt7Pex7JnhOTANjosPlR7rF8JZ8NPHC/U4pUY=
   file:
-    - "./ui/release-builds/FlightDeck-darwin-x64"
-    - "./ui/release-builds/FlightDeck-linux-x64"
-    - "./ui/release-builds/FlightDeck-win32-x64"
+    - "FlightDeck-darwin-x64.zip"
+    - "FlightDeck-linux-x64.zip"
+    - "FlightDeck-win32-x64.zip"
 #   on:
 #     repo: uas-at-ucla/ground-station
 #     branch: 
