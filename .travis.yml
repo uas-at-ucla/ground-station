@@ -36,7 +36,7 @@ install:
 - ./ground.py build
 
 script:
-- ls ui/release-builds
+- echo "Tests will go here"
 
 before-deploy:
   - ./ground.py deploy-linux
