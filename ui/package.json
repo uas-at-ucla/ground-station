@@ -17,7 +17,7 @@
     "test": "react-scripts test --env=jsdom",
     "lint": "eslint ./src ./electron --ext .ts,.tsx",
     "eject": "react-scripts eject",
-    "package": "npm run build && electron-packager . --overwrite --asar --out=release-builds --ignore=\"^/([^benp]|public|package-lock.json)\" --arch=x64",
+    "package": "npm run build && electron-packager . --overwrite --asar.unpackDir=\"electron/files\" --out=release-builds --ignore=\"^/([^benp]|public|package-lock.json)\" --arch=x64",
     "package-mac": "npm run package -- --platform=darwin",
     "package-win": "npm run package -- --platform=win32",
     "package-linux": "npm run package -- --platform=linux"

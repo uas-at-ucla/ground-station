@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import {
-  BrowserRouter as Router,
+  MemoryRouter as Router, // MemoryRouter does not read or write to the address bar, which is good for Electron
   Route,
   Link,
   Redirect,

@@ -10,8 +10,6 @@ const path: typeof pathImport = window.require("path");
 const fs: typeof fsImport = window.require("fs");
 const imageClipper = require("image-clipper"); // Use require when no TypeScript support
 
-// import testImage from "./electron/testImages/pexels-photo-236047.jpeg";
-
 const ListItem = (props: {
   value: string;
   onClick: (event: MouseEvent<HTMLElement>) => void;
@@ -29,8 +27,11 @@ const List = (props: {
     </ul>
   ) : null;
 
-const imagePath = "electron/testImages/"; // TODO Have the user choose this folder in the UI. Hardcoding it works in development but not in the packaged executable.
-const images: string[] = []; //fs.readdirSync(imagePath);
+const appPath = window.require("electron").remote.app.getAppPath();
+const imagePath = path
+  .join(appPath, "electron/files/testImages")
+  .replace("app.asar", "app.asar.unpacked");
+const images: string[] = fs.readdirSync(imagePath);
 
 const initialAnnValues = {
   shape: "",
@@ -119,7 +120,12 @@ class Tagging extends Component<DispatchProp> {
             .split(".")
             .pop();
           const croppedImagePath =
-            self.state.imagePath.split(".")[0] + "_cropped." + extension;
+            self.state.imagePath
+              .split(".")
+              .slice(0, -1)
+              .join(".") +
+            "_cropped." +
+            extension;
           fs.writeFile(
             croppedImagePath,
             base64Data,
@@ -207,7 +213,7 @@ class Tagging extends Component<DispatchProp> {
 
   handleListClick = (e: MouseEvent<HTMLElement>) => {
     const imageName = e.currentTarget.innerHTML;
-    const imageP = imagePath + imageName;
+    const imageP = path.join(imagePath, imageName);
     fs.readFile(imageP, (err, data) => {
       if (err) {
         console.error(err);
@@ -223,7 +229,7 @@ class Tagging extends Component<DispatchProp> {
         selectedImage: imgSrcString,
         croppedImagePath: null,
         // displayImage: imgSrcString,
-        imagePath: path.resolve(imageP),
+        imagePath: imageP,
         imageName: imageName,
         annValues: { ...this.state.annValues }
       });
