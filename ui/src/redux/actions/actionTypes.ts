@@ -1,3 +1,5 @@
+// This file is used purely to define a type definition encompassing all possible actions
+
 import * as genericActions from "./genericActions";
 import * as externalActions from "./externalActions";
 import * as analyticsActions from "./analyticsActions";

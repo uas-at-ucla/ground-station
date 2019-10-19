@@ -13,6 +13,8 @@ def npm_install():
             exit_code = subprocess.call([npm_cmd, "install"])
             if exit_code != 0:
                 sys.exit(exit_code)
+        else:
+            print("All necessary npm packages are installed")
     else:
         print("Error: package.json not present")
         sys.exit(1)

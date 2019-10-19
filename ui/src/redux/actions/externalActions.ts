@@ -1,3 +1,5 @@
+// These "external" actions are never triggered by the user, they will typically come from communicator.ts
+
 export const serverConnected = () => ({
   type: "GND_SERVER_CONNECTED" as const
 });

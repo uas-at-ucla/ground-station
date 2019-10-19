@@ -24,7 +24,7 @@
   },
   "//scriptsComments": {
     "react-start": "Start the React app in development mode, which will auto-reload the app when files are changed.",
-    "electron-start": "Start electron in development mode, i.e. use the React app running on http://localhost:3001",
+    "electron-start": "Start electron in development mode, i.e. use the React app running on http://localhost:3000",
     "start": "Concurrently run react-start and electron-start",
     "start-web": "Start the React app in development mode on port 3001 and automatically open in your web Browser. Electron-dependent features will be missing in the browser.",
     "start-prod": "Given that `npm run build` has been run, run the app in production mode, i.e. run electron and use build/index.html as the entry point",
@@ -57,7 +57,6 @@
     "@types/react-router-dom": "^4.3.5",
     "@types/react-select": "^3.0.4",
     "@types/reactstrap": "^8.0.4",
-    "@types/redux-logger": "^3.0.7",
     "@types/shortid": "0.0.29",
     "@types/socket.io-client": "^1.4.32",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
