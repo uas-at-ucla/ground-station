@@ -61,8 +61,10 @@ function createWindow() {
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  if (isDev) {
+    // Open the DevTools.
+    mainWindow.webContents.openDevTools();
+  }
 
   // Emitted when the window is closed.
   mainWindow.on("closed", () => {
