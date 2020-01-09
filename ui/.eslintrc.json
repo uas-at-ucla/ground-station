@@ -19,10 +19,15 @@
             "jsx": true
         }
     },
+    "plugins": ["no-autofix", "react-hooks"],
     "rules": {
         "@typescript-eslint/explicit-function-return-type": 0, // Typescript does an amazing job at inferring function return types, so this almost never needed
         "@typescript-eslint/no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false, "typedefs": false }], // Sometimes it makes sense to use a class/function/type above its definition for organizational reasons
-        "@typescript-eslint/no-var-requires": 0 // Require shouldn't be used most of the time, but it is needed to import packages that don't support TypeScript, including our very own google-maps-js-api
+        "@typescript-eslint/no-var-requires": 0, // Require shouldn't be used most of the time, but it is needed to import packages that don't support TypeScript, including our very own google-maps-js-api
+        "prefer-const": "off",
+        "no-autofix/prefer-const": "error",
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "warn"
     },
     "settings": {
         "react": {

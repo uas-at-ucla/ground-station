@@ -1,9 +1,15 @@
-import React, { Component, PureComponent } from "react";
+import React from "react";
 import { Button } from "reactstrap";
 import { Row, Col, Input, InputGroup, InputGroupAddon } from "reactstrap";
 import { SortableElement } from "react-sortable-hoc";
-import MissionPlanner from "./MissionPlanner";
-type MissionPlannerClass = typeof MissionPlanner["WrappedComponent"]["prototype"]; // Get class from redux wrapped component type
+
+interface CommandChangersType {
+  deleteCommand: (index: number) => void;
+  changeCommandType: (index: number, oldCommand: any, newType: string) => void;
+  changeNumberField: (dotProp: string, input: string) => void;
+  addRepeatedField: (dotProp: string, type: string) => void;
+  popRepeatedField: (dotProp: string) => void;
+}
 
 interface CommandListProps {
   className: string;
@@ -12,7 +18,7 @@ interface CommandListProps {
   mutable: boolean;
   protoInfo: any;
   centerMapOnCommand: (i: number) => void;
-  commandChangers?: MissionPlannerClass["commandChangers"];
+  commandChangers?: CommandChangersType;
 }
 
 interface CommandRowProps {
@@ -25,116 +31,59 @@ interface CommandRowProps {
   mutable: boolean;
   protoInfo: any;
   centerMapOnCommand: (i: number) => void;
-  commandChangers?: MissionPlannerClass["commandChangers"];
+  commandChangers?: CommandChangersType;
 }
 
 const SortableCommand = SortableElement((props: CommandRowProps) => (
   <CommandRow {...props} />
 ));
 
-class CommandList extends Component<CommandListProps> {
-  render() {
-    let CommandRowElement = CommandRow;
-    if (this.props.mutable) {
-      CommandRowElement = SortableCommand as typeof CommandRow;
-    }
-    return (
-      <span className="CommandList">
-        {this.props.commands.map((command, index: number) => (
-          <CommandRowElement
-            className={this.props.className}
-            key={command.id}
-            centerMapOnCommand={this.props.centerMapOnCommand}
-            commandChangers={this.props.commandChangers}
-            command={command}
-            programType={this.props.programType}
-            index={index}
-            myIndex={index}
-            mutable={this.props.mutable}
-            protoInfo={this.props.protoInfo}
-          ></CommandRowElement>
-        ))}
-      </span>
-    );
+const CommandList = (props: CommandListProps) => {
+  let CommandRowElement = CommandRow;
+  if (props.mutable) {
+    CommandRowElement = (SortableCommand as unknown) as typeof CommandRow;
   }
-}
+  return (
+    <span className="CommandList">
+      {props.commands.map((command, index: number) => (
+        <CommandRowElement
+          className={props.className}
+          key={command.id}
+          centerMapOnCommand={props.centerMapOnCommand}
+          commandChangers={props.commandChangers}
+          command={command}
+          programType={props.programType}
+          index={index}
+          myIndex={index}
+          mutable={props.mutable}
+          protoInfo={props.protoInfo}
+        ></CommandRowElement>
+      ))}
+    </span>
+  );
+};
 
 export default CommandList;
 
 // PureComponent improves performance b/c it only re-renders when props change
-class CommandRow extends PureComponent<CommandRowProps> {
-  centerMapOnCommand = () => {
-    console.log(this.props);
-    this.props.centerMapOnCommand(this.props.myIndex);
+const CommandRowImpure = (props: CommandRowProps) => {
+  const centerMapOnCommand = () => {
+    console.log(props);
+    props.centerMapOnCommand(props.myIndex);
   };
 
-  render() {
-    const command = this.props.command;
-    const index = this.props.myIndex;
-    return (
-      <Row
-        className={`MissionPlanner ${this.props.className}`}
-        onClick={this.centerMapOnCommand}
-      >
-        <Col xs="auto" className="command-column input command-header">
-          <Button
-            className="delete-btn"
-            color="danger"
-            size="sm"
-            data-index={index}
-            onClick={
-              this.props.commandChangers &&
-              this.props.commandChangers.deleteCommand
-            }
-          >
-            <i className="fa fa-minus"></i>
-          </Button>
-        </Col>
-        <Col xs="auto" className="command-column command-index command-header">
-          {index + 1}
-        </Col>
-        <Col xs="auto" className="command-column command-type command-header">
-          <span className="value">
-            {this.props.protoInfo.commandAbbr[command.name]}
-          </span>
-          <Input
-            type="select"
-            className="input"
-            value={command.name}
-            readOnly={!this.props.mutable}
-            data-index={index}
-            onChange={
-              this.props.commandChangers &&
-              this.props.commandChangers.changeCommandType
-            }
-          >
-            {this.props.protoInfo.commandNames.map((commandName: string) => (
-              <option value={commandName} key={commandName}>
-                {this.props.protoInfo.commandAbbr[commandName]}
-              </option>
-            ))}
-          </Input>
-        </Col>
-        <Col xs="auto" className="command-column">
-          <this.Field
-            name=""
-            dotProp={index + "." + command.name}
-            type={command.type}
-            object={command[command.name]}
-          />
-        </Col>
-      </Row>
-    );
-  }
-
   // Helper components
-  NumberField = (props: {
+  const NumberField = ({
+    name,
+    dotProp,
+    value,
+    units
+  }: {
     name: string;
     dotProp: string;
     value: number;
     units?: string;
   }) => {
-    const { name, dotProp, value, units } = props;
     return (
       <Row>
         <Col xs="auto">
@@ -146,11 +95,10 @@ class CommandRow extends PureComponent<CommandRowProps> {
               }}
               value={value}
               type="number"
-              readOnly={!this.props.mutable}
-              data-dot-prop={dotProp}
-              onChange={
-                this.props.commandChangers &&
-                this.props.commandChangers.changeNumberField
+              readOnly={!props.mutable}
+              onChange={e =>
+                props.commandChangers &&
+                props.commandChangers.changeNumberField(dotProp, e.target.value)
               }
             ></Input>
             {units ? (
@@ -165,17 +113,21 @@ class CommandRow extends PureComponent<CommandRowProps> {
     );
   };
 
-  RepeatedField = (props: {
+  const RepeatedField = ({
+    name,
+    dotProp,
+    type,
+    object
+  }: {
     name: string;
     dotProp: string;
     type: string;
     object: any[];
   }) => {
-    const { name, dotProp, type, object } = props;
     return (
       <span>
         {object.map((element, index: number) => (
-          <this.Field
+          <Field
             name={`${name} ${index + 1}`}
             key={index}
             dotProp={dotProp + "." + index}
@@ -185,21 +137,18 @@ class CommandRow extends PureComponent<CommandRowProps> {
         ))}
         <Button
           className="input"
-          data-dot-prop={dotProp}
-          data-type={type}
-          onClick={
-            this.props.commandChangers &&
-            this.props.commandChangers.addRepeatedField
+          onClick={() =>
+            props.commandChangers &&
+            props.commandChangers.addRepeatedField(dotProp, type)
           }
         >
           +
         </Button>
         <Button
           className="input"
-          data-dot-prop={dotProp}
-          onClick={
-            this.props.commandChangers &&
-            this.props.commandChangers.popRepeatedField
+          onClick={() =>
+            props.commandChangers &&
+            props.commandChangers.popRepeatedField(dotProp)
           }
         >
           -
@@ -208,15 +157,19 @@ class CommandRow extends PureComponent<CommandRowProps> {
     );
   };
 
-  Field = (props: {
+  const Field = ({
+    name,
+    dotProp,
+    type,
+    object
+  }: {
     name: string;
     dotProp: string;
     type: string;
     object: any;
   }) => {
-    const { name, dotProp, type, object } = props;
     // Recursively create HTML based on protobuf definition
-    const timelineGrammar = this.props.protoInfo.timelineGrammar;
+    const timelineGrammar = props.protoInfo.timelineGrammar;
     if (timelineGrammar[type]) {
       // object is a protobuf defined object
       return (
@@ -238,9 +191,9 @@ class CommandRow extends PureComponent<CommandRowProps> {
             return (
               <Col xs="auto" className="field-container" key={fieldName}>
                 {field.rule === "repeated" ? (
-                  <this.RepeatedField {...fieldProps} />
+                  <RepeatedField {...fieldProps} />
                 ) : field.rule === "required" ? (
-                  <this.Field {...fieldProps} />
+                  <Field {...fieldProps} />
                 ) : (
                   (() => {
                     throw new Error(
@@ -257,11 +210,11 @@ class CommandRow extends PureComponent<CommandRowProps> {
       );
     } else if (type === "double") {
       return (
-        <this.NumberField
+        <NumberField
           name={name}
           dotProp={dotProp}
           value={object}
-          units={this.props.protoInfo.fieldUnits[this.props.programType][name]}
+          units={props.protoInfo.fieldUnits[props.programType][name]}
         />
       );
     } else if (type === "bool") {
@@ -274,4 +227,63 @@ class CommandRow extends PureComponent<CommandRowProps> {
       );
     }
   };
-}
+
+  const command = props.command;
+  const index = props.myIndex;
+  return (
+    <Row
+      className={`MissionPlanner ${props.className}`}
+      onClick={centerMapOnCommand}
+    >
+      <Col xs="auto" className="command-column input command-header">
+        <Button
+          className="delete-btn"
+          color="danger"
+          size="sm"
+          onClick={() =>
+            props.commandChangers && props.commandChangers.deleteCommand(index)
+          }
+        >
+          <i className="fa fa-minus"></i>
+        </Button>
+      </Col>
+      <Col xs="auto" className="command-column command-index command-header">
+        {index + 1}
+      </Col>
+      <Col xs="auto" className="command-column command-type command-header">
+        <span className="value">
+          {props.protoInfo.commandAbbr[command.name]}
+        </span>
+        <Input
+          type="select"
+          className="input"
+          value={command.name}
+          readOnly={!props.mutable}
+          onChange={e =>
+            props.commandChangers &&
+            props.commandChangers.changeCommandType(
+              index,
+              command,
+              e.target.value
+            )
+          }
+        >
+          {props.protoInfo.commandNames.map((commandName: string) => (
+            <option value={commandName} key={commandName}>
+              {props.protoInfo.commandAbbr[commandName]}
+            </option>
+          ))}
+        </Input>
+      </Col>
+      <Col xs="auto" className="command-column">
+        <Field
+          name=""
+          dotProp={index + "." + command.name}
+          type={command.type}
+          object={command[command.name]}
+        />
+      </Col>
+    </Row>
+  );
+};
+const CommandRow = React.memo(CommandRowImpure);

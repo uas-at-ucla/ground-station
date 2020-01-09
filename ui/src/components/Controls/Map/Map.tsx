@@ -1,4 +1,4 @@
-import React, { Component, MouseEvent } from "react";
+import React, { MouseEvent, useState } from "react";
 import { Marker, InfoWindow, Polyline } from "react-google-maps";
 import { Button } from "reactstrap";
 import { connect } from "react-redux";
@@ -9,6 +9,7 @@ import google from "components/utils/GoogleMap/google";
 import GoogleMap from "components/utils/GoogleMap/GoogleMap";
 import InteropItems from "./InteropItems";
 import VehicleMarkers from "./VehicleMarkers";
+import { ExtractPropsType } from "utils/reduxUtils";
 
 const mapStateToProps = (state: AppState) => {
   const derivedData = selector(state);
@@ -24,171 +25,142 @@ const mapStateToProps = (state: AppState) => {
 
 const mapDispatchToProps = missionActions;
 
-type Props = ReturnType<typeof mapStateToProps> & (typeof mapDispatchToProps);
+const connectComponent = connect(mapStateToProps, mapDispatchToProps);
+type Props = ExtractPropsType<typeof connectComponent>;
 
-class Map extends Component<Props> {
-  initialIsOpen: { [key: string]: boolean } = {};
-  state = {
-    isOpen: this.initialIsOpen
+const Map = (props: Props) => {
+  const [isOpen, setOpen] = useState<{ [key: string]: boolean }>({});
+
+  const toggleOpen = (id: string) => {
+    setOpen({ ...isOpen, [id]: !isOpen[id] });
   };
 
-  toggleOpen = (id: string) => {
-    this.setState({
-      isOpen: { ...this.state.isOpen, [id]: !this.state.isOpen[id] }
-    });
+  const onMapClick = () => {
+    setOpen({});
   };
 
-  onMapClick = () => {
-    if (this.state.isOpen) {
-      this.setState({
-        isOpen: {}
-      });
-    }
+  const deleteCommand = (index: number) => {
+    props.deleteCommand(index);
   };
 
-  render() {
-    const commandPointPolyCoords = this.props.commandPoints
-      .filter(p => p)
-      .map(commandPoint => {
-        return commandPoint ? commandPoint.marker.position : null;
-      });
-
-    return (
-      <div className="Map">
-        <GoogleMap
-          defaultZoom={16}
-          defaultMapTypeId="customTiles"
-          defaultOptions={{
-            disableDefaultUI: true,
-            disableDoubleClickZoom: true,
-            scaleControl: true
-          }}
-          center={this.props.mapCenter}
-          onClick={this.onMapClick}
-          onDblClick={this.mapDblClick}
-        >
-          <VehicleMarkers />
-          <InteropItems
-            isOpen={this.state.isOpen}
-            toggleOpen={this.toggleOpen}
-          />
-
-          {this.props.commandPoints.map((commandPoint, index) =>
-            commandPoint ? (
-              <Marker
-                draggable={true}
-                onDragEnd={event =>
-                  this.commandDragged(event, index + "." + commandPoint.name)
-                }
-                {...commandPoint.marker}
-                key={commandPoint.id}
-                onClick={() => this.toggleOpen(commandPoint.id)}
-                animation={
-                  this.props.commandAnimate[commandPoint.id]
-                    ? google.maps.Animation.BOUNCE
-                    : null
-                }
-              >
-                {this.state.isOpen[commandPoint.id] && (
-                  <InfoWindow
-                    {...commandPoint.infobox}
-                    onCloseClick={() => this.toggleOpen(commandPoint.id)}
-                  >
-                    <div className="map-infobox">
-                      <div>
-                        {/* TODO: add title */}
-                        {commandPoint.infobox.title}
-                      </div>
-                      <div>{commandPoint.infobox.content}</div>
-
-                      <Button
-                        onClick={this.deleteCommand}
-                        data-index={index}
-                        color="danger"
-                      >
-                        <i
-                          className="fa fa-trash"
-                          style={{ pointerEvents: "none" }}
-                        ></i>
-                      </Button>
-                    </div>
-                  </InfoWindow>
-                )}
-              </Marker>
-            ) : null
-          )}
-          <Polyline
-            path={commandPointPolyCoords}
-            options={{
-              icons: [
-                {
-                  icon: {
-                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                    strokeColor: "#000000"
-                  },
-                  offset: "100%",
-                  repeat: "200px"
-                }
-              ]
-            }}
-          />
-
-          <Polyline
-            path={this.props.droneProgramPath}
-            options={{
-              strokeColor: "#3355EE",
-              icons: [
-                {
-                  icon: {
-                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                    strokeColor: "#3355EE"
-                  },
-                  offset: "100%",
-                  repeat: "200px"
-                }
-              ]
-            }}
-          />
-        </GoogleMap>
-      </div>
-    );
-  }
-
-  deleteCommand = (event: MouseEvent<HTMLElement>) => {
-    this.props.deleteCommand(Number(event.currentTarget.dataset.index));
+  const commandDragged = (event: any, dotProp: string) => {
+    props.changeCommandField(dotProp + ".goal.latitude", event.latLng.lat());
+    props.changeCommandField(dotProp + ".goal.longitude", event.latLng.lng());
   };
 
-  commandDragged = (event: any, dotProp: string) => {
-    this.props.changeCommandField(
-      dotProp + ".goal.latitude",
-      event.latLng.lat()
-    );
-    this.props.changeCommandField(
-      dotProp + ".goal.longitude",
-      event.latLng.lng()
-    );
+  const mapDblClick = (event: google.maps.MouseEvent) => {
+    addFlyThroughCommand(event.latLng.lat(), event.latLng.lng());
   };
 
-  mapDblClick = (event: google.maps.MouseEvent) => {
-    this.addFlyThroughCommand(event.latLng.lat(), event.latLng.lng());
-  };
-
-  addFlyThroughCommand = (lat: number, lng: number) => {
+  const addFlyThroughCommand = (lat: number, lng: number) => {
     const defaultWaypointCommand = {
       goal: {
         latitude: lat,
         longitude: lng,
-        altitude: this.props.defaultAltitude
+        altitude: props.defaultAltitude
       }
     };
-    this.props.addFlyThroughCommand(
-      defaultWaypointCommand,
-      this.props.protoInfo
-    );
+    props.addFlyThroughCommand(defaultWaypointCommand, props.protoInfo);
   };
-}
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Map);
+  const commandPointPolyCoords = props.commandPoints
+    .filter(p => p)
+    .map(commandPoint => {
+      return commandPoint ? commandPoint.marker.position : null;
+    });
+
+  return (
+    <div className="Map">
+      <GoogleMap
+        defaultZoom={16}
+        defaultMapTypeId="customTiles"
+        defaultOptions={{
+          disableDefaultUI: true,
+          disableDoubleClickZoom: true,
+          scaleControl: true
+        }}
+        center={props.mapCenter}
+        onClick={onMapClick}
+        onDblClick={mapDblClick}
+      >
+        <VehicleMarkers />
+        <InteropItems isOpen={isOpen} toggleOpen={toggleOpen} />
+
+        {props.commandPoints.map((commandPoint, index) =>
+          commandPoint ? (
+            <Marker
+              draggable={true}
+              onDragEnd={event =>
+                commandDragged(event, index + "." + commandPoint.name)
+              }
+              {...commandPoint.marker}
+              key={commandPoint.id}
+              onClick={() => toggleOpen(commandPoint.id)}
+              animation={
+                props.commandAnimate[commandPoint.id]
+                  ? google.maps.Animation.BOUNCE
+                  : null
+              }
+            >
+              {isOpen[commandPoint.id] && (
+                <InfoWindow
+                  {...commandPoint.infobox}
+                  onCloseClick={() => toggleOpen(commandPoint.id)}
+                >
+                  <div className="map-infobox">
+                    <div>
+                      {/* TODO: add title */}
+                      {commandPoint.infobox.title}
+                    </div>
+                    <div>{commandPoint.infobox.content}</div>
+
+                    <Button onClick={() => deleteCommand(index)} color="danger">
+                      <i
+                        className="fa fa-trash"
+                        style={{ pointerEvents: "none" }}
+                      ></i>
+                    </Button>
+                  </div>
+                </InfoWindow>
+              )}
+            </Marker>
+          ) : null
+        )}
+        <Polyline
+          path={commandPointPolyCoords}
+          options={{
+            icons: [
+              {
+                icon: {
+                  path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                  strokeColor: "#000000"
+                },
+                offset: "100%",
+                repeat: "200px"
+              }
+            ]
+          }}
+        />
+
+        <Polyline
+          path={props.droneProgramPath}
+          options={{
+            strokeColor: "#3355EE",
+            icons: [
+              {
+                icon: {
+                  path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                  strokeColor: "#3355EE"
+                },
+                offset: "100%",
+                repeat: "200px"
+              }
+            ]
+          }}
+        />
+      </GoogleMap>
+    </div>
+  );
+};
+
+export default connectComponent(Map);

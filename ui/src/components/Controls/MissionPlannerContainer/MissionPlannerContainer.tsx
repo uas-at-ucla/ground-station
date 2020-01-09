@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalHeader,
@@ -16,6 +16,7 @@ import { selector, AppState } from "redux/store";
 import "./MissionPlannerContainer.css";
 import MissionPlanner from "./MissionPlanner";
 import CommandList from "./CommandList";
+import { ExtractPropsType } from "utils/reduxUtils";
 
 const mapStateToProps = (state: AppState) => {
   return {
@@ -29,119 +30,102 @@ const mapStateToProps = (state: AppState) => {
   };
 };
 
-type Props = ReturnType<typeof mapStateToProps>;
+const connectComponent = connect(mapStateToProps);
+type Props = ExtractPropsType<typeof connectComponent>;
 
-class MissionPlannerContainer extends Component<Props> {
-  state = {
-    expand: false,
-    activeTab: "plan"
-  };
+const MissionPlannerContainer = (props: Props) => {
+  const [isExpanded, setExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState("plan");
 
-  toggleTab = (tab: "plan" | "drone") => {
-    if (this.state.activeTab !== tab) {
-      this.setState({
-        activeTab: tab
-      });
+  const toggleTab = (tab: "plan" | "drone") => {
+    if (activeTab !== tab) {
+      setActiveTab(tab);
     }
   };
 
-  render() {
-    return (
-      <div className="MissionPlannerContainer">
-        <div className="missionPlannerHeader">
-          <Nav tabs>
-            <NavItem>
-              <NavLink
-                className={
-                  this.state.activeTab === "plan" ? "active" : undefined
-                }
-                onClick={() => this.toggleTab("plan")}
-              >
-                Plan
-              </NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink
-                className={
-                  this.state.activeTab === "drone" ? "active" : undefined
-                }
-                onClick={() => this.toggleTab("drone")}
-              >
-                {this.props.missionUploaded ? "Uploaded" : "Compiled"} Mission
-              </NavLink>
-            </NavItem>
-          </Nav>
-          <i onClick={this.expand} className="fa fa-expand fa-lg"></i>
-        </div>
+  const expand = () => setExpanded(true);
 
-        <TabContent activeTab={this.state.activeTab}>
-          <div>
-            Drop Status: {this.props.lastDroppyCommand} (
-            {this.props.dropReady ? "Ready" : "Not ready"})
-          </div>
-          <div>
-            UGV is Still?{" "}
-            {this.props.ugvStatus
-              ? this.props.ugvStatus.is_still != null
-                ? this.props.ugvStatus.is_still
-                  ? "YES"
-                  : "NO"
-                : "UNKNOWN"
-              : "UNKNOWN"}
-          </div>
-          {/* <span>Mission Status: {this.props.missionStatus}</span> */}
-          <TabPane tabId="plan">
-            <div className="SmallMissionPlanner">
-              <MissionPlanner
-                className="SmallMissionPlanner"
-                programType="GroundProgram"
-              />
-            </div>
-          </TabPane>
-          <TabPane tabId="drone">
-            <div className="SmallMissionPlanner">
-              <Container fluid>
-                <CommandList
-                  commands={
-                    this.props.droneProgram
-                      ? this.props.droneProgram.commands
-                      : []
-                  }
-                  programType="DroneProgram"
-                  className="SmallMissionPlanner"
-                  protoInfo={this.props.protoInfo}
-                  centerMapOnCommand={() => {
-                    /*TODO*/
-                  }}
-                  mutable={false}
-                />
-              </Container>
-            </div>
-          </TabPane>
-        </TabContent>
+  const close = () => setExpanded(false);
 
-        <Modal
-          isOpen={this.state.expand}
-          toggle={this.close}
-          className="MissionPlannerModal"
-        >
-          <ModalHeader toggle={this.close}>Mission Planner</ModalHeader>
-          <ModalBody>
-            <div className="BigMissionPlanner">
-              <MissionPlanner
-                className="BigMissionPlanner"
-                programType="GroundProgram"
-              />
-            </div>
-          </ModalBody>
-        </Modal>
+  return (
+    <div className="MissionPlannerContainer">
+      <div className="missionPlannerHeader">
+        <Nav tabs>
+          <NavItem>
+            <NavLink
+              className={activeTab === "plan" ? "active" : undefined}
+              onClick={() => toggleTab("plan")}
+            >
+              Plan
+            </NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink
+              className={activeTab === "drone" ? "active" : undefined}
+              onClick={() => toggleTab("drone")}
+            >
+              {props.missionUploaded ? "Uploaded" : "Compiled"} Mission
+            </NavLink>
+          </NavItem>
+        </Nav>
+        <i onClick={expand} className="fa fa-expand fa-lg"></i>
       </div>
-    );
-  }
 
-  expand = () => this.setState({ expand: true });
+      <TabContent activeTab={activeTab}>
+        <div>
+          Drop Status: {props.lastDroppyCommand} (
+          {props.dropReady ? "Ready" : "Not ready"})
+        </div>
+        <div>
+          UGV is Still?{" "}
+          {props.ugvStatus
+            ? props.ugvStatus.is_still != null
+              ? props.ugvStatus.is_still
+                ? "YES"
+                : "NO"
+              : "UNKNOWN"
+            : "UNKNOWN"}
+        </div>
+        {/* <span>Mission Status: {props.missionStatus}</span> */}
+        <TabPane tabId="plan">
+          <div className="SmallMissionPlanner">
+            <MissionPlanner
+              className="SmallMissionPlanner"
+              programType="GroundProgram"
+            />
+          </div>
+        </TabPane>
+        <TabPane tabId="drone">
+          <div className="SmallMissionPlanner">
+            <Container fluid>
+              <CommandList
+                commands={props.droneProgram ? props.droneProgram.commands : []}
+                programType="DroneProgram"
+                className="SmallMissionPlanner"
+                protoInfo={props.protoInfo}
+                centerMapOnCommand={() => {
+                  /*TODO*/
+                }}
+                mutable={false}
+              />
+            </Container>
+          </div>
+        </TabPane>
+      </TabContent>
 
-  close = () => this.setState({ expand: false });
-}
+      <Modal isOpen={isExpanded} toggle={close} className="MissionPlannerModal">
+        <ModalHeader toggle={close}>Mission Planner</ModalHeader>
+        <ModalBody>
+          <div className="BigMissionPlanner">
+            <MissionPlanner
+              className="BigMissionPlanner"
+              programType="GroundProgram"
+            />
+          </div>
+        </ModalBody>
+      </Modal>
+    </div>
+  );
+};
 
-export default connect(mapStateToProps)(MissionPlannerContainer);
+export default connectComponent(MissionPlannerContainer);

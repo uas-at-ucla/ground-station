@@ -1,4 +1,4 @@
-import React, { Component, MouseEvent, ChangeEvent } from "react";
+import React, { useMemo } from "react";
 import { Button } from "reactstrap";
 import { connect } from "react-redux";
 import { Container } from "reactstrap";
@@ -7,6 +7,7 @@ import { SortableContainer } from "react-sortable-hoc";
 import * as missionActions from "redux/actions/missionActions";
 import { selector, AppState } from "redux/store";
 import CommandList from "./CommandList";
+import { ExtractPropsType } from "utils/reduxUtils";
 
 const FEET_PER_METER = 3.28084;
 
@@ -15,7 +16,7 @@ interface OwnProps {
   className: string;
 }
 
-const mapStateToProps = (state: AppState) => {
+const mapStateToProps = (state: AppState, props: OwnProps) => {
   const derivedData = selector(state);
   return {
     mission: state.mission,
@@ -30,30 +31,21 @@ const mapStateToProps = (state: AppState) => {
 
 const mapDispatchToProps = missionActions;
 
-type Props = OwnProps &
-  ReturnType<typeof mapStateToProps> &
-  (typeof mapDispatchToProps);
+const connectComponent = connect(mapStateToProps, mapDispatchToProps);
+type Props = ExtractPropsType<typeof connectComponent>;
 
-class MissionPlanner extends Component<Props> {
-  render() {
-    return (
-      <div className="MissionPlanner">
-        <this.Commands onSortEnd={this.reorderCommand} distance={2} />
-      </div>
-    );
-  }
-
-  autoGenerate = () => {
-    //console.log(this.props.interopData.mission);
-    const defaultAlt = this.props.mission.defaultAltitude;
+const MissionPlanner = (props: Props) => {
+  const autoGenerate = () => {
+    //console.log(props.interopData.mission);
+    const defaultAlt = props.mission.defaultAltitude;
     const defaultDrpHeight = defaultAlt;
     // const defaultHeight = defaultAlt;
 
-    for (let i = 0; i < this.props.interopData.mission.waypoints.length; i++) {
-      const lat = this.props.interopData.mission.waypoints[i].latitude;
-      const long = this.props.interopData.mission.waypoints[i].longitude;
-      let alt = this.props.interopData.mission.waypoints[i].altitude; // ft above MSL
-      alt = alt - this.props.homeAltitude * FEET_PER_METER; // convert to relative alt
+    for (let i = 0; i < props.interopData.mission.waypoints.length; i++) {
+      const lat = props.interopData.mission.waypoints[i].latitude;
+      const long = props.interopData.mission.waypoints[i].longitude;
+      let alt = props.interopData.mission.waypoints[i].altitude; // ft above MSL
+      alt = alt - props.homeAltitude * FEET_PER_METER; // convert to relative alt
       const defaultWaypointCommand = {
         goal: {
           latitude: lat,
@@ -61,17 +53,14 @@ class MissionPlanner extends Component<Props> {
           altitude: alt
         }
       };
-      this.props.addWaypointCommand(
-        defaultWaypointCommand,
-        this.props.protoInfo
-      );
+      props.addWaypointCommand(defaultWaypointCommand, props.protoInfo);
     }
 
     // If Survey command is supported
     // var search_grid = []
-    // for (i = 0; i < this.props.interopData.mission.searchGridPoints.length; i++){
-    //   var lat = this.props.interopData.mission.searchGridPoints[i].latitude
-    //   var long = this.props.interopData.mission.searchGridPoints[i].longitude
+    // for (i = 0; i < props.interopData.mission.searchGridPoints.length; i++){
+    //   var lat = props.interopData.mission.searchGridPoints[i].latitude
+    //   var long = props.interopData.mission.searchGridPoints[i].longitude
     //   let search_point = {
     //     latitude: lat,
     //     longitude: long
@@ -82,10 +71,10 @@ class MissionPlanner extends Component<Props> {
     //   altitude: default_alt,
     //   survey_polygon: search_grid
     // }
-    // this.props.addCommand("survey_command", search_command, this.props.protoInfo)
+    // props.addCommand("survey_command", search_command, props.protoInfo)
 
-    const lat = this.props.interopData.mission.airDropPos.latitude;
-    const long = this.props.interopData.mission.airDropPos.longitude;
+    const lat = props.interopData.mission.airDropPos.latitude;
+    const long = props.interopData.mission.airDropPos.longitude;
     const airDropCommand = {
       goal: {
         latitude: lat,
@@ -93,15 +82,11 @@ class MissionPlanner extends Component<Props> {
         altitude: defaultDrpHeight
       }
     };
-    this.props.addCommand(
-      "ugv_drop_command",
-      airDropCommand,
-      this.props.protoInfo
-    );
+    props.addCommand("ugv_drop_command", airDropCommand, props.protoInfo);
 
     // If OffAxis command is supported
-    // var lat = this.props.interopData.mission.offAxisOdlcPos.latitude
-    // var long = this.props.interopData.mission.offAxisOdlcPos.longitude
+    // var lat = props.interopData.mission.offAxisOdlcPos.latitude
+    // var long = props.interopData.mission.offAxisOdlcPos.longitude
     // let off_axis_command = {
     //   photographer_location: {
     //     latitude: lat,
@@ -113,52 +98,52 @@ class MissionPlanner extends Component<Props> {
     //     longitude: long,
     //   }
     // }
-    // this.props.addCommand("off_axis_command", off_axis_command, this.props.protoInfo)
+    // props.addCommand("off_axis_command", off_axis_command, props.protoInfo)
   };
 
-  Commands = SortableContainer(() => {
+  const Commands = SortableContainer(() => {
     return (
       <Container fluid>
-        {this.props.mission.interopData ? (
+        {props.mission.interopData ? (
           <div>
             {"Mission Altitude Range: " +
-              this.props.mainFlyZone.altitudeMin +
+              props.mainFlyZone.altitudeMin +
               " - " +
-              this.props.mainFlyZone.altitudeMax +
+              props.mainFlyZone.altitudeMax +
               " ft AMSL " +
-              (this.props.homeAltitude != null
+              (props.homeAltitude != null
                 ? "(" +
-                  (this.props.mainFlyZone.altitudeMin -
-                    this.props.homeAltitude * FEET_PER_METER) +
+                  (props.mainFlyZone.altitudeMin -
+                    props.homeAltitude * FEET_PER_METER) +
                   " - " +
-                  (this.props.mainFlyZone.altitudeMax -
-                    this.props.homeAltitude * FEET_PER_METER) +
+                  (props.mainFlyZone.altitudeMax -
+                    props.homeAltitude * FEET_PER_METER) +
                   "ft rel)"
                 : "")}
           </div>
         ) : null}
         <CommandList
-          commands={this.props.mission.commands}
-          programType={this.props.programType}
-          className={this.props.className}
-          protoInfo={this.props.protoInfo}
-          centerMapOnCommand={this.centerMapOnCommand}
-          commandChangers={this.commandChangers}
+          commands={props.mission.commands}
+          programType={props.programType}
+          className={props.className}
+          protoInfo={props.protoInfo}
+          centerMapOnCommand={centerMapOnCommand}
+          commandChangers={commandChangers}
           mutable={true}
         />
-        <Button onClick={this.addCommand} className="command-btn">
+        <Button onClick={addCommand} className="command-btn">
           Add Command
         </Button>
-        {this.props.homeAltitude &&
-        this.props.interopData &&
-        this.props.mission.commands.length === 0 ? (
-          <Button onClick={this.autoGenerate}>Auto-Generate</Button>
+        {props.homeAltitude &&
+        props.interopData &&
+        props.mission.commands.length === 0 ? (
+          <Button onClick={autoGenerate}>Auto-Generate</Button>
         ) : null}
       </Container>
     );
   });
 
-  addCommand = () => {
+  const addCommand = () => {
     const defaultWaypointCommand = {
       goal: {
         latitude: 38.147483,
@@ -166,61 +151,67 @@ class MissionPlanner extends Component<Props> {
         altitude: 100
       }
     };
-    this.props.addWaypointCommand(defaultWaypointCommand, this.props.protoInfo);
+    props.addWaypointCommand(defaultWaypointCommand, props.protoInfo);
   };
 
-  reorderCommand = (indices: { oldIndex: number; newIndex: number }) => {
-    this.props.reorderCommand(indices.oldIndex, indices.newIndex);
+  const reorderCommand = (indices: { oldIndex: number; newIndex: number }) => {
+    props.reorderCommand(indices.oldIndex, indices.newIndex);
   };
 
-  centerMapOnCommand = (index: number) => {
-    if (this.props.className === "SmallMissionPlanner") {
-      const command = this.props.mission.commands[index];
-      this.props.centerMapOnCommand(command, this.props.protoInfo);
-      setTimeout(() => this.props.commandStopAnimation(command), 1000);
+  const centerMapOnCommand = (index: number) => {
+    if (props.className === "SmallMissionPlanner") {
+      const command = props.mission.commands[index];
+      props.centerMapOnCommand(command, props.protoInfo);
+      setTimeout(() => props.commandStopAnimation(command), 1000);
     }
   };
 
-  commandChangers = {
-    deleteCommand: (event: MouseEvent<HTMLElement>) => {
-      const index = Number(event.currentTarget.dataset.index);
-      this.props.deleteCommand(index);
-    },
+  const {
+    deleteCommand,
+    changeCommandType,
+    changeCommandField,
+    addRepeatedField,
+    popRepeatedField
+  } = props;
+  const commandChangers = useMemo(() => {
+    return {
+      deleteCommand: (index: number) => {
+        deleteCommand(index);
+      },
 
-    changeCommandType: (event: ChangeEvent<HTMLInputElement>) => {
-      const index = Number(event.target.dataset.index);
-      const newType = event.target.value;
-      const oldCommand = this.props.mission.commands[index];
-      this.props.changeCommandType(
-        index,
-        oldCommand,
-        newType,
-        this.props.protoInfo
-      );
-    },
+      changeCommandType: (index: number, oldCommand: any, newType: string) => {
+        changeCommandType(index, oldCommand, newType, props.protoInfo);
+      },
 
-    changeNumberField: (event: ChangeEvent<HTMLInputElement>) => {
-      const newValue = Number(event.target.value);
-      if (!isNaN(newValue)) {
-        const dotProp = event.target.dataset.dotProp as string;
-        this.props.changeCommandField(dotProp, newValue);
+      changeNumberField: (dotProp: string, input: string) => {
+        const newValue = Number(input);
+        if (!isNaN(newValue)) {
+          changeCommandField(dotProp, newValue);
+        }
+      },
+
+      addRepeatedField: (dotProp: string, type: string) => {
+        addRepeatedField(dotProp, type, props.protoInfo);
+      },
+
+      popRepeatedField: (dotProp: string) => {
+        popRepeatedField(dotProp);
       }
-    },
+    };
+  }, [
+    addRepeatedField,
+    changeCommandField,
+    changeCommandType,
+    deleteCommand,
+    popRepeatedField,
+    props.protoInfo
+  ]);
 
-    addRepeatedField: (event: MouseEvent<HTMLElement>) => {
-      const dotProp = event.currentTarget.dataset.dotProp as string;
-      const type = event.currentTarget.dataset.type as string;
-      this.props.addRepeatedField(dotProp, type, this.props.protoInfo);
-    },
+  return (
+    <div className="MissionPlanner">
+      <Commands onSortEnd={reorderCommand} distance={2} />
+    </div>
+  );
+};
 
-    popRepeatedField: (event: MouseEvent<HTMLElement>) => {
-      const dotProp = event.currentTarget.dataset.dotProp as string;
-      this.props.popRepeatedField(dotProp);
-    }
-  };
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(MissionPlanner);
+export default connectComponent(MissionPlanner);

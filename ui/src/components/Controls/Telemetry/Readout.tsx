@@ -4,17 +4,15 @@ interface ReadoutProps {
   data: { key: string; values: (number | string)[] }[];
 }
 
-class Readout extends React.Component<ReadoutProps> {
-  render() {
-    return (
-      <div className="Readout">
-        {this.props.data.map((comp, i) => (
-          <KeyValue key={i} keyName={comp["key"]} values={comp["values"]} />
-        ))}
-      </div>
-    );
-  }
-}
+const Readout = (props: ReadoutProps) => {
+  return (
+    <div className="Readout">
+      {props.data.map((comp, i) => (
+        <KeyValue key={i} keyName={comp["key"]} values={comp["values"]} />
+      ))}
+    </div>
+  );
+};
 
 export default Readout;
 
@@ -27,8 +25,8 @@ interface KeyValueProps {
 const KeyValue = (props: KeyValueProps) => {
   let valueString = "";
 
-  for (let i in props.values) {
-    valueString += props.values[i];
+  for (const value of props.values) {
+    valueString += value;
   }
 
   return (

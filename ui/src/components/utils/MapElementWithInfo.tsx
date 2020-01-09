@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { ComponentClass, FunctionComponent } from "react";
 import { InfoWindow } from "react-google-maps";
 
 interface Props {
@@ -6,34 +6,29 @@ interface Props {
   toggleOpen: (id: string) => void;
   name: string;
   infoPosition?: any;
-  Element: typeof Component;
+  Element: ComponentClass<any> | FunctionComponent<any>;
   [key: string]: any; //other props for the map element
 }
 
-class MapElementWithInfo extends Component<Props> {
-  toggleOpen = () => {
-    this.props.toggleOpen(this.props.name);
+const MapElementWithInfo = (props: Props) => {
+  const toggleOpen = () => {
+    props.toggleOpen(props.name);
   };
 
-  render() {
-    let info = this.props.isOpen[this.props.name] ? (
-      <InfoWindow
-        onCloseClick={this.toggleOpen}
-        position={this.props.infoPosition}
-      >
-        <div className="map-infobox">{this.props.children}</div>
-      </InfoWindow>
-    ) : null;
+  const info = props.isOpen[props.name] ? (
+    <InfoWindow onCloseClick={toggleOpen} position={props.infoPosition}>
+      <div className="map-infobox">{props.children}</div>
+    </InfoWindow>
+  ) : null;
 
-    return (
-      <span>
-        <this.props.Element {...this.props} onClick={this.toggleOpen}>
-          {!this.props.infoPosition ? info : null}
-        </this.props.Element>
-        {this.props.infoPosition ? info : null}
-      </span>
-    );
-  }
-}
+  return (
+    <span>
+      <props.Element {...props} onClick={toggleOpen}>
+        {!props.infoPosition ? info : null}
+      </props.Element>
+      {props.infoPosition ? info : null}
+    </span>
+  );
+};
 
 export default MapElementWithInfo;

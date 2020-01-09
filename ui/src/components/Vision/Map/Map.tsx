@@ -1,5 +1,5 @@
 /*global google*/
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import CustomMarker from "./CustomMarker";
 // import { Marker } from "react-google-maps";
 import GoogleMap from "../../utils/GoogleMap/GoogleMap";
@@ -8,8 +8,8 @@ import "./Map.css";
 
 // const google = window.google;
 
-class Map extends Component {
-  state = {
+const Map = () => {
+  const [state, setState] = useState({
     markers: [
       {
         position: {
@@ -28,7 +28,7 @@ class Map extends Component {
         data: "second"
       }
     ],
-    hmData: [],
+    hmData: new Array<google.maps.LatLng>(),
     hmGradient: [
       "rgba(0, 255, 255, 0)",
       "rgba(0, 255, 255, 1)",
@@ -60,12 +60,13 @@ class Map extends Component {
     },
     hasSelection: false,
     selectionComplete: false
-  };
+  });
 
-  componentDidMount() {
+  useEffect(() => {
     setTimeout(
       () =>
-        this.setState({
+        setState({
+          ...state,
           hmData: [
             new google.maps.LatLng(37.782551, -122.445368),
             new google.maps.LatLng(37.782745, -122.444586),
@@ -207,28 +208,22 @@ class Map extends Component {
         }),
       1000
     ); // Temporary: give time for google maps api to download
-  }
+  }, [state]);
 
-  toggleHeatmap = () => {
-    if (this.state.hmOpacity === 0) {
-      this.setState({
-        hmOpacity: 1,
-        hmHeatmapOn: true
-      });
-      return;
-    } else {
-      this.setState({
-        hmOpacity: 0,
-        hmHeatmapOn: false
-      });
-    }
-  };
+  // const toggleHeatmap = () => {
+  //   if (state.hmOpacity === 0) {
+  //     setState({ ...state, hmOpacity: 1, hmHeatmapOn: true });
+  //     return;
+  //   } else {
+  //     setState({ ...state, hmOpacity: 0, hmHeatmapOn: false });
+  //   }
+  // };
 
   // heatmapOptions = props => {
   //   if (props.open) {
   //     return (
   //       <div className="buttonPanel">
-  //         <button className="heatmap" onClick={this.toggleHeatmap}>
+  //         <button className="heatmap" onClick={toggleHeatmap}>
   //           Toggle Heatmap
   //         </button>
   //         <button className="heatmap">Set Radius</button>
@@ -237,103 +232,111 @@ class Map extends Component {
   //   } else {
   //     return (
   //       <div className="closedButtonPanel">
-  //         Heatmap: radius: {this.state.hmRadius}
-  //         opacity: {this.state.hmOpacity}
+  //         Heatmap: radius: {state.hmRadius}
+  //         opacity: {state.hmOpacity}
   //       </div>
   //     );
   //   }
   // };
 
-  mapDblClick = (event: any) => {
+  const mapDblClick = (event: any) => {
     // event.stopPropagation();
-    const hasSelection = this.state.hasSelection;
+    const hasSelection = state.hasSelection;
     // console.log(event.latLng.lat(), event.latLng.lng());
     const x = event.latLng.lat();
     const y = event.latLng.lng();
     if (!hasSelection) {
-      this.setState({
-        imageArea: { pixelX: x, pixelY: y },
+      setState({
+        ...state,
+        imageArea: { ...state.imageArea, pixelX: x, pixelY: y },
         hasSelection: !hasSelection
       });
-      console.log("1st", this.state.imageArea);
+      console.log("1st", state.imageArea);
     } else if (hasSelection) {
-      const width = x - this.state.imageArea.pixelX;
-      const height = y - this.state.imageArea.pixelY;
-      this.setState({
-        imageArea: { ...this.state.imageArea, width: width, height: height },
+      const width = x - state.imageArea.pixelX;
+      const height = y - state.imageArea.pixelY;
+      setState({
+        ...state,
+        imageArea: { ...state.imageArea, width: width, height: height },
         hasSelection: !hasSelection,
         selectionComplete: true
       });
-      console.log("2nd", this.state.imageArea);
+      console.log("2nd", state.imageArea);
     }
   };
 
-  handleCancelSelect = () => {
+  const handleCancelSelect = () => {
     console.log("right click");
-    this.setState({
-      imageArea: {},
+    setState({
+      ...state,
+      imageArea: {
+        pixelX: 0,
+        pixelY: 0,
+        lat: 0,
+        lnt: 0,
+        width: 0,
+        height: 0
+      },
       selectionComplete: false,
       hasSelection: false
     });
   };
 
-  render() {
-    let customMarkers;
-    if (this.state.markers) {
-      customMarkers = this.state.markers.map((marker, index) => {
-        console.log(marker.position);
-        return <CustomMarker marker={marker} key={index} />;
-      });
-    }
+  let customMarkers;
+  if (state.markers) {
+    customMarkers = state.markers.map((marker, index) => {
+      console.log(marker.position);
+      return <CustomMarker marker={marker} key={index} />;
+    });
+  }
 
-    console.log(customMarkers);
-    return (
-      <div className="VisionMap">
-        {/* <div className="buttonPanel">
-          <button className="heatmap" onClick={this.toggleHeatmap}>Toggle Heatmap</button>
+  console.log(customMarkers);
+  return (
+    <div className="VisionMap">
+      {/* <div className="buttonPanel">
+          <button className="heatmap" onClick={toggleHeatmap}>Toggle Heatmap</button>
           <button className="heatmap">Set Radius</button>
 
         </div> */}
-        {/* <div className="tagging">Tagging</div>
+      {/* <div className="tagging">Tagging</div>
         <div className="pipeline">Pipeline</div> */}
-        <div className="Map" onContextMenu={this.handleCancelSelect}>
-          {/*onClick={this.handleAreaSelect}*/}
-          <GoogleMap
-            defaultZoom={16}
-            defaultCenter={{ lat: 37.782551, lng: -122.445368 }}
-            defaultMapTypeId="customTiles"
-            defaultOptions={{
-              disableDefaultUI: true,
-              disableDoubleClickZoom: true,
-              scaleControl: true
+      <div className="Map" onContextMenu={handleCancelSelect}>
+        {/*onClick={handleAreaSelect}*/}
+        <GoogleMap
+          defaultZoom={16}
+          defaultCenter={{ lat: 37.782551, lng: -122.445368 }}
+          defaultMapTypeId="customTiles"
+          defaultOptions={{
+            disableDefaultUI: true,
+            disableDoubleClickZoom: true,
+            scaleControl: true
+          }}
+          onDblClick={mapDblClick}
+        >
+          {customMarkers}
+          <HeatmapLayer
+            options={{
+              data: state.hmData,
+              radius: state.hmRadius,
+              opacity: state.hmOpacity,
+              gradient: state.hmGradient,
+              dissipating: true
             }}
-            onDblClick={this.mapDblClick}
-          >
-            {customMarkers}
-            <HeatmapLayer
-              options={{
-                data: this.state.hmData,
-                radius: this.state.hmRadius,
-                opacity: this.state.hmOpacity,
-                gradient: this.state.hmGradient,
-                dissipating: true
-              }}
-            ></HeatmapLayer>
-          </GoogleMap>
-        </div>
-        {/* <div className="ImageCrop">
+          ></HeatmapLayer>
+        </GoogleMap>
+      </div>
+      {/* <div className="ImageCrop">
           <Cropper
-            image={this.state.cropValues.image}
-            crop={this.state.cropValues.crop}
-            zoom={this.state.cropValues.zoom}
-            aspect={this.state.cropValues.aspect}
-            onCropChange={this.onCropChange}
-            onCropComplete={this.onCropComplete}
-            onZoomChange={this.onZoomChange}
+            image={state.cropValues.image}
+            crop={state.cropValues.crop}
+            zoom={state.cropValues.zoom}
+            aspect={state.cropValues.aspect}
+            onCropChange={onCropChange}
+            onCropComplete={onCropComplete}
+            onZoomChange={onZoomChange}
           />
         </div> */}
-      </div>
-    );
-  }
-}
+    </div>
+  );
+};
 export default Map;

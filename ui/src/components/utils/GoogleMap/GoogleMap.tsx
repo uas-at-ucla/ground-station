@@ -1,12 +1,12 @@
-import React, { Component } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { withGoogleMap, GoogleMap } from "react-google-maps";
 
 import "./GoogleMap.css";
 import downloadToBrowser from "utils/downloadToBrowser";
 import google, { getLocalImageUrl } from "./google";
 
-// TODO: Google updates this from time to time. Use Chrome Dev Tools to find the number used for image urls in the satellite map here: https://developers.google.com/maps/documentation/javascript/maptypes
-const imageUrlV = "849";
+// TODO: Google updates this from time to time. Use Chrome Dev Tools "Network" tab to find the number used for image urls in the satellite map here: https://developers.google.com/maps/documentation/javascript/maptypes
+const imageUrlV = "862";
 
 function getCustomTilesMapType() {
   return new google.maps.ImageMapType({
@@ -31,25 +31,25 @@ function getCustomTilesMapType() {
   });
 }
 
-class GoogleMapWrapperComponent extends Component<GoogleMap["props"]> {
-  mapComponent: GoogleMap | null = null;
+const GoogleMapWrapperComponent = (props: GoogleMap["props"]) => {
+  const mapComponent = useRef<GoogleMap | null>(null);
 
   // pan smoothly when map center changes
-  componentDidUpdate(prevProps: GoogleMap["props"]) {
-    if (this.mapComponent) {
-      if (prevProps.center !== this.props.center && this.props.center) {
-        this.mapComponent.panTo(this.props.center);
+  useEffect(() => {
+    if (mapComponent.current) {
+      if (props.center) {
+        mapComponent.current.panTo(props.center);
       }
     }
-  }
+  }, [props.center]);
 
-  setMapType = (mapComponent: GoogleMap) => {
-    if (mapComponent) {
-      this.mapComponent = mapComponent;
+  const setMapType = (component: GoogleMap) => {
+    if (component) {
+      mapComponent.current = component;
       // google = window.google;
       const customTilesMapType = getCustomTilesMapType();
       const map =
-        mapComponent.context.__SECRET_MAP_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // lol don't worry
+        component.context.__SECRET_MAP_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // lol don't worry
       map.mapTypes.set("customTiles", customTilesMapType);
       // map.setMapTypeId('customTiles');
 
@@ -58,20 +58,19 @@ class GoogleMapWrapperComponent extends Component<GoogleMap["props"]> {
     }
   };
 
-  GoogleMapComponent = withGoogleMap(props => (
-    <GoogleMap {...props} ref={this.setMapType} />
-  ));
+  const GoogleMapComponent = useMemo(
+    () => withGoogleMap(props => <GoogleMap {...props} ref={setMapType} />),
+    []
+  );
 
-  render() {
-    return (
-      <this.GoogleMapComponent
-        containerElement={<div style={{ height: `100%` }} />}
-        mapElement={<div style={{ height: `100%` }} />}
-        {...this.props}
-      />
-    );
-  }
-}
+  return (
+    <GoogleMapComponent
+      containerElement={<div style={{ height: `100%` }} />}
+      mapElement={<div style={{ height: `100%` }} />}
+      {...props}
+    />
+  );
+};
 
 export default GoogleMapWrapperComponent;
 

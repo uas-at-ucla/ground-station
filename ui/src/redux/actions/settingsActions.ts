@@ -1,7 +1,7 @@
 import { SettingsState } from "redux/reducers/settingsReducer";
 import { transmit } from "./genericActions";
 
-export const updateSettings = (newSettings: SettingsState) => ({
+export const updateSettings = (newSettings: Partial<SettingsState>) => ({
   type: "UPDATE_SETTINGS" as const,
   payload: newSettings
 });

@@ -1,5 +1,4 @@
-import React, { Component } from "react";
-import { connect } from "react-redux";
+import React from "react";
 import "./Vision.css";
 import Map from "./Map/Map";
 import Tagging from "./Tagging/Tagging";
@@ -18,20 +17,18 @@ console.log(
 //   return { vision: state.vision };
 // };
 
-class Vision extends Component {
-  render() {
-    return (
-      <div className="Vision">
-        <div className="map-overlay">
-          <Tagging />
-        </div>
-        {/* <div className="image-crop">
+const Vision = () => {
+  return (
+    <div className="Vision">
+      <div className="map-overlay">
+        <Tagging />
+      </div>
+      {/* <div className="image-crop">
           <ImageCrop />
         </div> */}
-        <Map />
-      </div>
-    );
-  }
-}
+      <Map />
+    </div>
+  );
+};
 
-export default connect()(Vision);
+export default Vision;

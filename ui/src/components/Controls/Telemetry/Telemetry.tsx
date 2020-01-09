@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { connect } from "react-redux";
 
 import "./Telemetry.css";
@@ -6,6 +6,7 @@ import AttitudeIndicator from "./AttitudeIndicator/AttitudeIndicator";
 import Altimeter from "./Altimeter/Altimeter";
 import Readout from "./Readout";
 import { AppState } from "redux/store";
+import { ExtractPropsType } from "utils/reduxUtils";
 
 const FEET_PER_METER = 3.28084;
 const KNOTS_PER_METER_SECOND = 1.94384;
@@ -16,7 +17,8 @@ const mapStateToProps = (state: AppState) => {
   };
 };
 
-type Props = ReturnType<typeof mapStateToProps>;
+const connectComponent = connect(mapStateToProps);
+type Props = ExtractPropsType<typeof connectComponent>;
 
 const blankTelmet = {
   pingDelay: NaN,
@@ -35,83 +37,70 @@ const blankTelmet = {
   gpsVdop: 0
 };
 
-class Telemetry extends Component<Props> {
-  telmet = blankTelmet;
-
-  update() {
-    const rawTelmet = this.props.telemetry.droneTelemetry;
-    const pingDelay = this.props.telemetry.pingDelay;
-    if (rawTelmet != null) {
-      this.telmet = {
-        pingDelay: pingDelay !== undefined ? pingDelay : NaN,
-        autopilotState: rawTelmet["sensors"]["armed"]
-          ? rawTelmet["sensors"]["autopilot_state"]
-          : "Disarmed",
-        roll: rawTelmet["sensors"]["roll"],
-        pitch: rawTelmet["sensors"]["pitch"],
-        yaw: rawTelmet["sensors"]["yaw"],
-        speed:
-          rawTelmet["sensors"]["gps_ground_speed"] * KNOTS_PER_METER_SECOND,
-        gpsFix: rawTelmet["sensors"]["gps_fix"],
-        lat: rawTelmet["sensors"]["latitude"],
-        long: rawTelmet["sensors"]["longitude"],
-        heading: rawTelmet["sensors"]["heading"],
-        alt: rawTelmet["sensors"]["altitude"] * FEET_PER_METER,
-        satCount: rawTelmet["sensors"]["gps_satellite_count"],
-        gpsHdop: 0,
-        gpsVdop: 0
-      };
-    } else {
-      this.telmet = blankTelmet;
-    }
-    return this.telmet;
+const Telemetry = (props: Props) => {
+  let telmet = blankTelmet;
+  const rawTelmet = props.telemetry.droneTelemetry;
+  const pingDelay = props.telemetry.pingDelay;
+  if (rawTelmet != null) {
+    telmet = {
+      pingDelay: pingDelay !== undefined ? pingDelay : NaN,
+      autopilotState: rawTelmet["sensors"]["armed"]
+        ? rawTelmet["sensors"]["autopilot_state"]
+        : "Disarmed",
+      roll: rawTelmet["sensors"]["roll"],
+      pitch: rawTelmet["sensors"]["pitch"],
+      yaw: rawTelmet["sensors"]["yaw"],
+      speed: rawTelmet["sensors"]["gps_ground_speed"] * KNOTS_PER_METER_SECOND,
+      gpsFix: rawTelmet["sensors"]["gps_fix"],
+      lat: rawTelmet["sensors"]["latitude"],
+      long: rawTelmet["sensors"]["longitude"],
+      heading: rawTelmet["sensors"]["heading"],
+      alt: rawTelmet["sensors"]["altitude"] * FEET_PER_METER,
+      satCount: rawTelmet["sensors"]["gps_satellite_count"],
+      gpsHdop: 0,
+      gpsVdop: 0
+    };
   }
 
-  readoutData() {
-    return [
-      {
-        key: "Ping",
-        values: !isNaN(this.telmet.pingDelay)
-          ? [this.telmet.pingDelay, " ms"]
-          : ["Not Connected"]
-      },
-      {
-        key: "State",
-        values: [this.telmet.autopilotState]
-      },
-      {
-        key: "Ground Speed",
-        values: [this.telmet.speed.toFixed(3), " knots"]
-      },
-      {
-        key: "Altitude MSL",
-        values: [this.telmet.alt.toFixed(3), " feet"]
-      },
-      {
-        key: "GPS Fix",
-        values: [this.telmet.gpsFix ? "Yes" : "NO GPS FIX"]
-      },
-      {
-        key: "Satellite Count",
-        values: [this.telmet.satCount]
-      }
-    ];
-  }
+  // console.log(telmet);
+  // console.log(readoutData());
 
-  render() {
-    this.update();
+  return (
+    <span className="Telemetry">
+      <Readout
+        data={[
+          {
+            key: "Ping",
+            values: !isNaN(telmet.pingDelay)
+              ? [telmet.pingDelay, " ms"]
+              : ["Not Connected"]
+          },
+          {
+            key: "State",
+            values: [telmet.autopilotState]
+          },
+          {
+            key: "Ground Speed",
+            values: [telmet.speed.toFixed(3), " knots"]
+          },
+          {
+            key: "Altitude MSL",
+            values: [telmet.alt.toFixed(3), " feet"]
+          },
+          {
+            key: "GPS Fix",
+            values: [telmet.gpsFix ? "Yes" : "NO GPS FIX"]
+          },
+          {
+            key: "Satellite Count",
+            values: [telmet.satCount]
+          }
+        ]}
+      />
+      <AttitudeIndicator data={telmet} />
+      <Altimeter />
+    </span>
+  );
+};
 
-    // console.log(telmet);
-    // console.log(this.readoutData());
-
-    return (
-      <span className="Telemetry">
-        <Readout data={this.readoutData()} />
-        <AttitudeIndicator data={this.telmet} />
-        <Altimeter />
-      </span>
-    );
-  }
-}
-
-export default connect(mapStateToProps)(Telemetry);
+export default connectComponent(Telemetry);

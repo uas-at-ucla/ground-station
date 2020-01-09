@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import {
   MemoryRouter as Router, // MemoryRouter does not read or write to the address bar, which is good for Electron
   Route,
@@ -15,49 +15,47 @@ import Settings from "./Settings/Settings";
 
 const defaultPage = "/controls"; // "/vision"
 
-class App extends Component {
-  render() {
-    return (
-      <div>
-        <Router>
-          <div className="routerDiv">
-            <nav className="viewNav">
-              <ul>
-                <li>
-                  <Link to="/controls">
-                    <i className="fa fa-paper-plane"></i>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/vision">
-                    <i className="fa fa-camera"></i>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/analytics">
-                    <i className="fa fa-bar-chart"></i>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/settings">
-                    <i className="fa fa-cog"></i>
-                  </Link>
-                </li>
-              </ul>
-            </nav>
+const App = () => {
+  return (
+    <div>
+      <Router>
+        <div className="routerDiv">
+          <nav className="viewNav">
+            <ul>
+              <li>
+                <Link to="/controls">
+                  <i className="fa fa-paper-plane"></i>
+                </Link>
+              </li>
+              <li>
+                <Link to="/vision">
+                  <i className="fa fa-camera"></i>
+                </Link>
+              </li>
+              <li>
+                <Link to="/analytics">
+                  <i className="fa fa-bar-chart"></i>
+                </Link>
+              </li>
+              <li>
+                <Link to="/settings">
+                  <i className="fa fa-cog"></i>
+                </Link>
+              </li>
+            </ul>
+          </nav>
 
-            <Switch>
-              <Route path="/controls" component={Controls} />
-              <Route path="/vision" component={Vision} />
-              <Route path="/analytics" component={Analytics} />
-              <Route path="/settings" component={Settings} />
-              <Redirect to={defaultPage} />
-            </Switch>
-          </div>
-        </Router>
-      </div>
-    );
-  }
-}
+          <Switch>
+            <Route path="/controls" component={Controls} />
+            <Route path="/vision" component={Vision} />
+            <Route path="/analytics" component={Analytics} />
+            <Route path="/settings" component={Settings} />
+            <Redirect to={defaultPage} />
+          </Switch>
+        </div>
+      </Router>
+    </div>
+  );
+};
 
 export default App;

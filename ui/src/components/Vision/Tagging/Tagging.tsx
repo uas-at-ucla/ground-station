@@ -1,11 +1,12 @@
-import React, { Component, MouseEvent, ChangeEvent, FormEvent } from "react";
+import React, { MouseEvent, ChangeEvent, FormEvent, useState } from "react";
 import Select from "react-select";
 import "./Tagging.css";
 import ReactCrop, { Location, Area } from "react-easy-crop";
 import { Button } from "reactstrap";
-import { connect, DispatchProp } from "react-redux";
+import { connect } from "react-redux";
 import pathImport from "path";
 import fsImport from "fs";
+import { ExtractPropsType } from "utils/reduxUtils";
 const path: typeof pathImport = window.require("path");
 const fs: typeof fsImport = window.require("fs");
 const imageClipper = require("image-clipper"); // Use require when no TypeScript support
@@ -41,8 +42,11 @@ const initialAnnValues = {
   orient: ""
 };
 
-class Tagging extends Component<DispatchProp> {
-  state = {
+const connectComponent = connect();
+type Props = ExtractPropsType<typeof connectComponent>;
+
+const Tagging = (props: Props) => {
+  const [state, setState] = useState({
     formValues: initialAnnValues,
     annValues: initialAnnValues,
     selectedImage: "" /*testImage*/,
@@ -66,34 +70,38 @@ class Tagging extends Component<DispatchProp> {
     imagePath: "",
     croppedImagePath: "",
     imageName: ""
-  };
+  });
 
-  handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     const name = event.target.name as keyof typeof initialAnnValues;
     const value = event.target.value;
-    const formValues = this.state.formValues;
+    const formValues = state.formValues;
     formValues[name] = value;
     // console.log("click value: ", value);
-    this.setState({
+    setState({
+      ...state,
       formValues //, curValues
     });
   };
 
-  handleSelectChange = (
+  const handleSelectChange = (
     name: keyof typeof initialAnnValues,
     selectedOption: typeof shapeOptions[number]
   ) => {
     const value = selectedOption && selectedOption.value;
-    const formValues = this.state.formValues;
+    const formValues = state.formValues;
     formValues[name] = value;
     console.log(name + ` selected:`, value);
-    this.setState({
+    setState({
+      ...state,
       formValues //, curValues
     });
   };
-  handleRestore = () => {
-    this.setState({
+
+  const handleRestore = () => {
+    setState({
+      ...state,
       // croppedImage: null,
       crop: {
         x: 0,
@@ -105,22 +113,21 @@ class Tagging extends Component<DispatchProp> {
     });
   };
 
-  handleCropComplete = () => {
-    const crop: Area = this.state.croppedAreaPixels;
+  const handleCropComplete = () => {
+    const crop: Area = state.croppedAreaPixels;
     console.log("cropping...");
-    // let croppedImg = this.getCroppedImg(this.refImageCrop, crop);
+    // let croppedImg = getCroppedImg(refImageCrop, crop);
     // console.log("width", croppedImg.width);
-    const self = this;
-    imageClipper(this.state.selectedImage, function(this: any) {
+    imageClipper(state.selectedImage, function(this: any) {
       this.crop(crop.x, crop.y, crop.width, crop.height).toDataURL(
         (dataURL: string) => {
           const base64Data = dataURL.split(";base64,").pop();
           const extension = path
-            .extname(self.state.imagePath)
+            .extname(state.imagePath)
             .split(".")
             .pop();
           const croppedImagePath =
-            self.state.imagePath
+            state.imagePath
               .split(".")
               .slice(0, -1)
               .join(".") +
@@ -135,18 +142,18 @@ class Tagging extends Component<DispatchProp> {
                 console.log(err);
               } else {
                 console.log("Saved cropped image", croppedImagePath);
-                self.setState({ croppedImagePath: croppedImagePath });
+                setState({ ...state, croppedImagePath: croppedImagePath });
               }
             }
           );
         }
       );
     });
-    // this.setState({ displayImage: croppedImg, croppedImage: croppedImg })
+    // setState({...state, displayImage: croppedImg, croppedImage: croppedImg })
   };
 
-  // onImageLoaded = (image) => {
-  //   this.setState({
+  // const onImageLoaded = (image) => {
+  //   setState({...state,
   //     crop: makeAspectCrop({
   //       x: 0,
   //       y: 0,
@@ -157,18 +164,18 @@ class Tagging extends Component<DispatchProp> {
   //   });
   // }
 
-  handleOpen = () => {
+  const handleOpen = () => {
     // console.log("image cropper opened");
-    const displayCropper = !this.state.displayCropper;
-    // let displayImage = this.state.selectedImage;
-    this.setState({ displayCropper: displayCropper });
-    // this.setState({ displayImage: displayImage });
+    const displayCropper = !state.displayCropper;
+    // let displayImage = state.selectedImage;
+    setState({ ...state, displayCropper: displayCropper });
+    // setState({...state, displayImage: displayImage });
   };
 
-  handleSubmit = (event: FormEvent) => {
+  const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    const formValues = this.state.formValues;
-    const annValues = this.state.annValues;
+    const formValues = state.formValues;
+    const annValues = state.annValues;
 
     let key: keyof typeof formValues;
     for (key in formValues) {
@@ -178,40 +185,37 @@ class Tagging extends Component<DispatchProp> {
       }
     }
 
-    this.setState({
-      annValues,
-      formValues
-    });
+    setState({ ...state, annValues, formValues });
   };
 
-  handleInteropSubmit = () => {
-    this.props.dispatch({
+  const handleInteropSubmit = () => {
+    props.dispatch({
       type: "TRANSMIT",
       payload: {
         msg: "UPLOAD_IMAGE",
         data: {
-          ...this.state.annValues,
-          imageFile: this.state.croppedImagePath
+          ...state.annValues,
+          imageFile: state.croppedImagePath
         } // TODO get selected latitude & longitude
       }
     });
   };
 
-  onCropChange = (crop: Location) => {
-    this.setState({ crop });
+  const onCropChange = (crop: Location) => {
+    setState({ ...state, crop: { ...state.crop, ...crop } });
   };
 
-  onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
-    this.setState({ croppedAreaPixels: croppedAreaPixels });
+  const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
+    setState({ ...state, croppedAreaPixels: croppedAreaPixels });
     console.log("croppedAreaPixels", croppedAreaPixels);
-    // this.setState({crop: croppedArea});
+    // setState({...state, crop: croppedArea});
   };
 
-  onZoomChange = (zoom: number) => {
-    this.setState({ zoom });
+  const onZoomChange = (zoom: number) => {
+    setState({ ...state, zoom });
   };
 
-  handleListClick = (e: MouseEvent<HTMLElement>) => {
+  const handleListClick = (e: MouseEvent<HTMLElement>) => {
     const imageName = e.currentTarget.innerHTML;
     const imageP = path.join(imagePath, imageName);
     fs.readFile(imageP, (err, data) => {
@@ -225,187 +229,177 @@ class Tagging extends Component<DispatchProp> {
         .pop();
       const base64Image = data.toString("base64");
       const imgSrcString = `data:image/${extensionName};base64,${base64Image}`;
-      this.setState({
+      setState({
+        ...state,
         selectedImage: imgSrcString,
-        croppedImagePath: null,
+        croppedImagePath: "",
         // displayImage: imgSrcString,
         imagePath: imageP,
         imageName: imageName,
-        annValues: { ...this.state.annValues }
+        annValues: { ...state.annValues }
       });
     });
   };
 
-  render() {
-    return (
-      <div className="Annotations">
-        <h1>Annotations</h1>
-        <form id="Annotate" onSubmit={this.handleSubmit}>
-          <div className="Shape">
-            <label className="dualField">
-              {" "}
-              <span className="fieldVal">Shape: </span>{" "}
-              <span className="curVal">{this.state.annValues["shape"]}</span>
-              <br />
-              <Select
-                name="shape"
-                isSearchable={true}
-                placeholder="Shape"
-                onChange={(option: any) =>
-                  this.handleSelectChange("shape", option)
-                }
-                options={shapeOptions}
-                styles={selectStyles}
-              />
-            </label>
-            <label className="dualField">
-              {" "}
-              <span className="fieldVal">Color: </span>{" "}
-              <span className="curVal">{this.state.annValues["shapeCol"]}</span>
-              <br />
-              <Select
-                name="shapeCol"
-                isSearchable={true}
-                placeholder="Shape Color"
-                onChange={(option: any) =>
-                  this.handleSelectChange("shapeCol", option)
-                }
-                options={colorOptions}
-                styles={selectStyles}
-              />
-            </label>
-          </div>
-
-          <div className="Letter">
-            <label className="dualField">
-              {" "}
-              <span className="fieldVal">Letter: </span>{" "}
-              <span className="curVal">{this.state.annValues["letter"]}</span>
-              <br />
-              <input
-                type="text"
-                name="letter"
-                placeholder="Letter"
-                value={this.state.formValues["letter"]}
-                onChange={this.handleChange}
-              />
-            </label>
-            <label className="dualField">
-              {" "}
-              <span className="fieldVal">Color: </span>{" "}
-              <span className="curVal">
-                {this.state.annValues["letterCol"]}
-              </span>
-              <br />
-              <Select
-                name="letterCol"
-                isSearchable={true}
-                placeholder="Letter Color"
-                onChange={(option: any) =>
-                  this.handleSelectChange("letterCol", option)
-                }
-                options={colorOptions}
-                styles={selectStyles}
-              />
-            </label>
-          </div>
-
-          <div className="Orient">
-            <label className="singField">
-              {" "}
-              <span className="fieldVal">Orientation (N, NE, etc.): </span>{" "}
-              <span className="curVal">{this.state.annValues["orient"]}</span>
-              <br />
-              <input
-                type="text"
-                name="orient"
-                placeholder="Orientation"
-                value={this.state.formValues["orient"]}
-                onChange={this.handleChange}
-              />
-            </label>
-          </div>
-
-          <div className="saveButton">
-            <input
-              // options={colorOptions}
-              // styles={selectStyles}
-              // me="btn btn-primary"
-              type="submit"
-              value="Save"
+  return (
+    <div className="Annotations">
+      <h1>Annotations</h1>
+      <form id="Annotate" onSubmit={handleSubmit}>
+        <div className="Shape">
+          <label className="dualField">
+            {" "}
+            <span className="fieldVal">Shape: </span>{" "}
+            <span className="curVal">{state.annValues["shape"]}</span>
+            <br />
+            <Select
+              name="shape"
+              isSearchable={true}
+              placeholder="Shape"
+              onChange={(option: any) => handleSelectChange("shape", option)}
+              options={shapeOptions}
+              styles={selectStyles}
             />
-            {this.state.displayCropper && this.state.selectedImage !== "" ? (
-              <div>
-                <Button color="primary" onClick={this.handleRestore}>
-                  Restore
-                </Button>
-                <Button
-                  color="primary"
-                  keyboardFocused={true}
-                  onClick={this.handleCropComplete}
-                >
-                  Crop
-                </Button>
-                <Button
-                  color="success"
-                  keyboardFocused={true}
-                  onClick={this.handleInteropSubmit}
-                  disabled={!this.state.croppedImagePath}
-                >
-                  {this.state.croppedImagePath
-                    ? "Submit to Interop"
-                    : "Waiting for Crop"}
-                </Button>
-              </div>
-            ) : null}
-          </div>
-        </form>
-
-        <div className="imageList">
-          <div className="scroller">
-            <div>Selected: {this.state.imageName}</div>
-            <List
-              items={this.state.imageList}
-              onItemClick={this.handleListClick}
+          </label>
+          <label className="dualField">
+            {" "}
+            <span className="fieldVal">Color: </span>{" "}
+            <span className="curVal">{state.annValues["shapeCol"]}</span>
+            <br />
+            <Select
+              name="shapeCol"
+              isSearchable={true}
+              placeholder="Shape Color"
+              onChange={(option: any) => handleSelectChange("shapeCol", option)}
+              options={colorOptions}
+              styles={selectStyles}
             />
-          </div>
+          </label>
         </div>
 
-        <div className="imageButton">
-          <Button color="primary" onClick={this.handleOpen}>
-            {this.state.selectedImage !== ""
-              ? "Toggle image cropper"
-              : "Select an image first"}
-          </Button>
-          {this.state.displayCropper && this.state.selectedImage !== "" ? (
-            <div className="imageCrop">
-              <ReactCrop
-                image={this.state.selectedImage}
-                crop={this.state.crop}
-                zoom={this.state.zoom}
-                aspect={this.state.aspect}
-                onCropChange={this.onCropChange}
-                onCropComplete={this.onCropComplete}
-                onZoomChange={this.onZoomChange}
-                maxZoom={1000}
-                zoomSpeed={2}
-              />
+        <div className="Letter">
+          <label className="dualField">
+            {" "}
+            <span className="fieldVal">Letter: </span>{" "}
+            <span className="curVal">{state.annValues["letter"]}</span>
+            <br />
+            <input
+              type="text"
+              name="letter"
+              placeholder="Letter"
+              value={state.formValues["letter"]}
+              onChange={handleChange}
+            />
+          </label>
+          <label className="dualField">
+            {" "}
+            <span className="fieldVal">Color: </span>{" "}
+            <span className="curVal">{state.annValues["letterCol"]}</span>
+            <br />
+            <Select
+              name="letterCol"
+              isSearchable={true}
+              placeholder="Letter Color"
+              onChange={(option: any) =>
+                handleSelectChange("letterCol", option)
+              }
+              options={colorOptions}
+              styles={selectStyles}
+            />
+          </label>
+        </div>
+
+        <div className="Orient">
+          <label className="singField">
+            {" "}
+            <span className="fieldVal">Orientation (N, NE, etc.): </span>{" "}
+            <span className="curVal">{state.annValues["orient"]}</span>
+            <br />
+            <input
+              type="text"
+              name="orient"
+              placeholder="Orientation"
+              value={state.formValues["orient"]}
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+
+        <div className="saveButton">
+          <input
+            // options={colorOptions}
+            // styles={selectStyles}
+            // me="btn btn-primary"
+            type="submit"
+            value="Save"
+          />
+          {state.displayCropper && state.selectedImage !== "" ? (
+            <div>
+              <Button color="primary" onClick={handleRestore}>
+                Restore
+              </Button>
+              <Button
+                color="primary"
+                keyboardFocused={true}
+                onClick={handleCropComplete}
+              >
+                Crop
+              </Button>
+              <Button
+                color="success"
+                keyboardFocused={true}
+                onClick={handleInteropSubmit}
+                disabled={state.croppedImagePath === ""}
+              >
+                {state.croppedImagePath !== ""
+                  ? "Submit to Interop"
+                  : "Waiting for Crop"}
+              </Button>
             </div>
           ) : null}
-          <img
-            src={this.state.selectedImage}
-            style={{ display: "none" }}
-            // ref={img => {
-            //   this.refImageCrop = img;
-            // }}
-            alt=""
-          />
-          {/* <img src={this.state.croppedImage} alt="" /> */}
+        </div>
+      </form>
+
+      <div className="imageList">
+        <div className="scroller">
+          <div>Selected: {state.imageName}</div>
+          <List items={state.imageList} onItemClick={handleListClick} />
         </div>
       </div>
-    );
-  }
-}
+
+      <div className="imageButton">
+        <Button color="primary" onClick={handleOpen}>
+          {state.selectedImage !== ""
+            ? "Toggle image cropper"
+            : "Select an image first"}
+        </Button>
+        {state.displayCropper && state.selectedImage !== "" ? (
+          <div className="imageCrop">
+            <ReactCrop
+              image={state.selectedImage}
+              crop={state.crop}
+              zoom={state.zoom}
+              aspect={state.aspect}
+              onCropChange={onCropChange}
+              onCropComplete={onCropComplete}
+              onZoomChange={onZoomChange}
+              maxZoom={1000}
+              zoomSpeed={2}
+            />
+          </div>
+        ) : null}
+        <img
+          src={state.selectedImage}
+          style={{ display: "none" }}
+          // ref={img => {
+          //   refImageCrop = img;
+          // }}
+          alt=""
+        />
+        {/* <img src={state.croppedImage} alt="" /> */}
+      </div>
+    </div>
+  );
+};
 
 const shapeOptions = [
   { label: "Circle", value: "CIRCLE" },
@@ -469,4 +463,4 @@ const selectStyles = {
   menuList: (styles: any) => ({ ...styles, height: 200 })
 };
 
-export default connect()(Tagging);
+export default connectComponent(Tagging);

@@ -3,7 +3,7 @@ import * as externalActions from "redux/actions/externalActions";
 
 // TODO find (or make) a library to convert proto def to TypeScript def
 
-const electronRequire = window.require;
+const electronRequire = (window as Window).require;
 const protobuf = electronRequire ? electronRequire("protobufjs") : null;
 // const fs = electronRequire ? electronRequire("fs") : null;
 // const isDev = electronRequire ? electronRequire("electron-is-dev") : null;

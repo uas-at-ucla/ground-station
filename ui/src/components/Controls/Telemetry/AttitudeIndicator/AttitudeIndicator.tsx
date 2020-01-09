@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useRef } from "react";
 import "./AttitudeIndicator.css";
 import NavballImg from "./navball.png";
 import PositionRef from "./navball_pos_ref.svg";
@@ -25,29 +25,35 @@ interface Props {
   };
 }
 
-class Navball extends Component<Props> {
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(
-    fov,
-    1,
-    cameraDistance - sphereRadius,
-    cameraDistance + sphereRadius
-  );
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  ballContainer = new THREE.Object3D();
-  frameId = NaN;
+const Navball = (props: Props) => {
+  const scene = useRef(new THREE.Scene()).current;
 
-  navballDidMount = (navball: HTMLElement | null) => {
-    this.scene.add(this.camera);
-    this.camera.position.set(cameraDistance, 0, 0);
-    this.camera.up.set(0, 0, 1);
-    this.camera.lookAt(0, 0, 0);
+  const camera = useRef(
+    new THREE.PerspectiveCamera(
+      fov,
+      1,
+      cameraDistance - sphereRadius,
+      cameraDistance + sphereRadius
+    )
+  ).current;
 
-    this.renderer.setSize(WIDTH, HEIGHT);
-    navball && navball.appendChild(this.renderer.domElement);
+  const renderer = useRef(
+    new THREE.WebGLRenderer({ antialias: true, alpha: true })
+  ).current;
+
+  const ballContainer = useRef(new THREE.Object3D()).current;
+
+  const navballDidMount = (navball: HTMLElement | null) => {
+    scene.add(camera);
+    camera.position.set(cameraDistance, 0, 0);
+    camera.up.set(0, 0, 1);
+    camera.lookAt(0, 0, 0);
+
+    renderer.setSize(WIDTH, HEIGHT);
+    navball && navball.appendChild(renderer.domElement);
 
     const light = new THREE.AmbientLight(0xffffff, 1.5);
-    this.scene.add(light);
+    scene.add(light);
 
     const sphereGeom = new THREE.SphereGeometry(sphereRadius, 48, 32);
     const texture = new THREE.TextureLoader().load(NavballImg);
@@ -57,42 +63,45 @@ class Navball extends Component<Props> {
     const ball = new THREE.Mesh(sphereGeom, material);
     ball.position.set(0, 0, 0);
     ball.rotation.x = Math.PI / 2;
-    this.ballContainer.add(ball);
-    this.ballContainer.position.copy(ball.position);
-    this.scene.add(this.ballContainer);
+    ballContainer.add(ball);
+    ballContainer.position.copy(ball.position);
+    scene.add(ballContainer);
 
-    this.updateRotation();
+    updateRotation();
     setTimeout(() => {
-      this.frameId = requestAnimationFrame(this.animate);
-    }, 500); // Need to wait for something to be ready, not sure exactly what, but this is needed.
-  };
-
-  updateRotation = () => {
-    this.ballContainer.rotation.x = this.props.data["roll"];
-    this.ballContainer.rotation.y = -this.props.data["pitch"];
-    this.ballContainer.rotation.z = this.props.data["yaw"];
-  };
-
-  animate = () => {
-    this.renderer.render(this.scene, this.camera);
-    console.log("rendering");
-  };
-
-  render() {
-    this.updateRotation();
-    setTimeout(() => {
-      this.frameId = requestAnimationFrame(this.animate);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(animate); // Doesn't work on the first animation frame, but always ready by the third animation frame.
+        });
+      });
     }, 0);
-    return (
-      <div className="AttitudeIndicator">
-        <div className="navball-background"></div>
-        <div className="navball" ref={this.navballDidMount}></div>
-        <div className="position-ref-container">
-          <img className="position-ref" src={PositionRef} alt="" />
-        </div>
+  };
+
+  const updateRotation = () => {
+    ballContainer.rotation.x = props.data["roll"];
+    ballContainer.rotation.y = props.data["pitch"];
+    ballContainer.rotation.z = props.data["yaw"];
+  };
+
+  const animate = () => {
+    renderer.render(scene, camera);
+    // console.log("rendering");
+  };
+
+  updateRotation();
+  setTimeout(() => {
+    requestAnimationFrame(animate);
+  }, 0);
+
+  return (
+    <div className="AttitudeIndicator">
+      <div className="navball-background"></div>
+      <div className="navball" ref={navballDidMount}></div>
+      <div className="position-ref-container">
+        <img className="position-ref" src={PositionRef} alt="" />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default Navball;

@@ -15,8 +15,8 @@ import { loadGoogleMapsApi } from "./components/utils/GoogleMap/google";
 // declare Node.js properties of 'window' provided by Electron
 declare global {
   interface Window {
-    require: typeof require;
-    process: typeof process;
+    require?: typeof require;
+    process?: typeof process;
   }
 }
 
