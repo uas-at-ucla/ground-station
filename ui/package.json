@@ -61,6 +61,8 @@
     "@types/socket.io-client": "^1.4.32",
     "@typescript-eslint/eslint-plugin": "^2.14.0",
     "@typescript-eslint/parser": "^2.14.0",
+    "array-move": "^2.2.1",
+    "axios": "^0.19.1",
     "bootstrap": "^4.4.1",
     "check-dependencies": "^1.1.0",
     "concurrently": "^4.1.2",

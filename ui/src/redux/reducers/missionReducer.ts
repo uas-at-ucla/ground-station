@@ -1,35 +1,20 @@
 import produce from "immer";
-import { arrayMove } from "react-sortable-hoc";
+import arrayMove from "array-move";
 import { AppAction } from "../actions/actionTypes";
 
-interface MissionState {
-  timelineGrammar?: any; // TODO type
-  commands: any[]; // TODO type
-  defaultAltitude: number;
-  commandAnimate: { [s: string]: boolean };
-  droneProgram?: any;
-  missionCompiled: boolean;
-  missionUploaded: boolean;
-  lastDroppyCommand?: string;
-  interopData?: any; // TODO type
-  ugvDestination: {
-    lat: number;
-    lng: number;
-  };
-}
-
-const initialState: MissionState = {
-  timelineGrammar: undefined,
-  commands: [],
+const initialState = {
+  timelineGrammar: undefined as any,
+  commands: new Array<any>(),
   defaultAltitude: 100,
-  commandAnimate: {},
-  droneProgram: undefined,
+  commandAnimate: {} as { [s: string]: boolean },
+  droneProgram: undefined as any,
   missionCompiled: false,
   missionUploaded: false,
-  lastDroppyCommand: undefined,
-  interopData: undefined,
+  lastDroppyCommand: undefined as string | undefined,
+  interopData: undefined as any,
   ugvDestination: { lat: 38.14617, lng: -76.42642 } // Official competition location
 };
+export type MissionState = typeof initialState;
 
 export default produce((draftState: MissionState, action: AppAction) => {
   switch (action.type) {
@@ -130,4 +115,4 @@ export default produce((draftState: MissionState, action: AppAction) => {
       return;
     }
   }
-}, initialState) as ((a: any, b: any) => MissionState);
+}, initialState) as (a: any, b: any) => MissionState;

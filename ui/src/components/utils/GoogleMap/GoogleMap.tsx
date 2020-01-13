@@ -1,32 +1,35 @@
 import React, { useEffect, useRef, useMemo } from "react";
 import { withGoogleMap, GoogleMap } from "react-google-maps";
+import axios from "axios";
 
 import "./GoogleMap.css";
-import downloadToBrowser from "utils/downloadToBrowser";
-import google, { getLocalImageUrl } from "./google";
+import google from "./google";
+import { userDataPath, fs, path } from "utils/electronUtils";
 
 // TODO: Google updates this from time to time. Use Chrome Dev Tools "Network" tab to find the number used for image urls in the satellite map here: https://developers.google.com/maps/documentation/javascript/maptypes
 const imageUrlV = "862";
 
+const mapImagesFolder = path.join(userDataPath, "mapImages");
+const TILE_SIZE = 256;
+
+function getLocalImagePath(x: number, y: number, zoom: number) {
+  return `${mapImagesFolder}/${zoom}/mag-${zoom}_x-${x}_y-${y}.jpg`;
+}
+
+function getGoogleImageUrl(x: number, y: number, zoom: number) {
+  return `https://khms0.googleapis.com/kh?v=${imageUrlV}&hl=en-US&x=${x}&y=${y}&z=${zoom}`;
+}
+
 function getCustomTilesMapType() {
   return new google.maps.ImageMapType({
     getTileUrl: (coord, zoom) => {
-      let url = "";
-      try {
-        url = getLocalImageUrl(coord, zoom);
-        if (!url || url === "") {
-          throw new Error();
-        }
-      } catch (e) {
-        url = `https://khms0.googleapis.com/kh?v=${imageUrlV}&hl=en-US&x=${coord.x}&y=${coord.y}&z=${zoom}`;
+      const imagePath = getLocalImagePath(coord.x, coord.y, zoom);
+      if (fs.existsSync(imagePath)) {
+        return "file://" + imagePath;
       }
-
-      // UNCOMMENT TO TEST:
-      // tileLoaded(coord, zoom);
-
-      return url;
+      return getGoogleImageUrl(coord.x, coord.y, zoom);
     },
-    tileSize: new google.maps.Size(256, 256),
+    tileSize: new google.maps.Size(TILE_SIZE, TILE_SIZE),
     maxZoom: 20
   });
 }
@@ -52,9 +55,6 @@ const GoogleMapWrapperComponent = (props: GoogleMap["props"]) => {
         component.context.__SECRET_MAP_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // lol don't worry
       map.mapTypes.set("customTiles", customTilesMapType);
       // map.setMapTypeId('customTiles');
-
-      // UNCOMMENT TO TEST:
-      // downloadTileListOnClick(map);
     }
   };
 
@@ -74,60 +74,132 @@ const GoogleMapWrapperComponent = (props: GoogleMap["props"]) => {
 
 export default GoogleMapWrapperComponent;
 
-// For testing only:
-// Explanation: To use, uncomment the two "UNCOMMENT TO TEST" comments above.
-// When the the map is clicked, the position and URL of all google map tiles that were downloaded since the app started will be saved to tileUrls.json.
-// You would use this by panning around an area at ALL zoom levels you want, then clicking the map to save the URLs for the tiles in that area.
-// For example, you could record all the tiles for a certain airfield. Then use ground-station/tools/googleMapsDownloader.py to actually download the images.
-// Finally, you would update https://github.com/uas-at-ucla/google_maps_js_api with the new images.
-const tileBounds: {
-  [key: number]: { left: number; right: number; top: number; bottom: number };
-} = {};
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function tileLoaded(coord: { x: number; y: number }, zoom: number) {
-  if (!tileBounds[zoom]) {
-    tileBounds[zoom] = {
-      left: Infinity,
-      right: -Infinity,
-      top: Infinity,
-      bottom: -Infinity
-    };
-  }
-  if (coord.x < tileBounds[zoom].left) {
-    tileBounds[zoom].left = coord.x;
-  }
-  if (coord.x > tileBounds[zoom].right) {
-    tileBounds[zoom].right = coord.x;
-  }
-  if (coord.y < tileBounds[zoom].top) {
-    tileBounds[zoom].top = coord.y;
-  }
-  if (coord.y > tileBounds[zoom].bottom) {
-    tileBounds[zoom].bottom = coord.y;
-  }
+// Functions for downloading map images:
+
+const MIN_ZOOM = 0;
+
+// Code for calculating tile coordinates from https://developers-dot-devsite-v2-prod.appspot.com/maps/documentation/javascript/examples/map-coordinates
+function project(latLng: google.maps.LatLngLiteral) {
+  let siny = Math.sin((latLng.lat * Math.PI) / 180);
+
+  // Truncating to 0.9999 effectively limits latitude to 89.189. This is
+  // about a third of a tile past the edge of the world tile.
+  siny = Math.min(Math.max(siny, -0.9999), 0.9999);
+
+  return new google.maps.Point(
+    TILE_SIZE * (0.5 + latLng.lng / 360),
+    TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI))
+  );
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function downloadTileListOnClick(map: any) {
-  map.addListener("click", () => {
-    const tileUrls: {
-      [key: number]: {
-        x: number;
-        y: number;
-        url: string;
-      }[];
-    } = {};
-    for (const zoom in tileBounds) {
-      tileUrls[zoom] = [];
-      for (let x = tileBounds[zoom].left; x <= tileBounds[zoom].right; x++) {
-        for (let y = tileBounds[zoom].top; y <= tileBounds[zoom].bottom; y++) {
-          tileUrls[zoom].push({
-            x: x,
-            y: y,
-            url: `https://khms0.googleapis.com/kh?v=${imageUrlV}&hl=en-US&x=${x}&y=${y}&z=${zoom}`
-          });
+
+function getTileCoords(latLng: google.maps.LatLngLiteral, zoom: number) {
+  const scale = 1 << zoom;
+  const worldCoordinate = project(latLng);
+  return {
+    x: Math.floor((worldCoordinate.x * scale) / TILE_SIZE),
+    y: Math.floor((worldCoordinate.y * scale) / TILE_SIZE)
+  };
+}
+
+export function downloadMapImages(
+  topLeft: google.maps.LatLngLiteral,
+  bottomRight: google.maps.LatLngLiteral,
+  maxZoom: number,
+  callback: () => void
+) {
+  if (!fs.existsSync(userDataPath)) {
+    fs.mkdirSync(userDataPath);
+  }
+  if (!fs.existsSync(mapImagesFolder)) {
+    fs.mkdirSync(mapImagesFolder);
+  }
+
+  const zoomFolder = path.join(mapImagesFolder, MIN_ZOOM.toString());
+  if (!fs.existsSync(zoomFolder)) {
+    fs.mkdirSync(zoomFolder);
+  }
+  const topLeftCoords = getTileCoords(topLeft, MIN_ZOOM);
+  const bottomRightCoords = getTileCoords(bottomRight, MIN_ZOOM);
+  saveImages(
+    topLeft,
+    bottomRight,
+    maxZoom,
+    topLeftCoords.x,
+    topLeftCoords.y,
+    MIN_ZOOM,
+    topLeftCoords.y,
+    bottomRightCoords.x,
+    bottomRightCoords.y,
+    callback
+  );
+}
+
+function saveImages(
+  topLeft: google.maps.LatLngLiteral,
+  bottomRight: google.maps.LatLngLiteral,
+  maxZoom: number,
+  x: number,
+  y: number,
+  zoom: number,
+  top: number,
+  right: number,
+  bottom: number,
+  callback: () => void
+) {
+  console.log(getLocalImagePath(x, y, zoom));
+  const file = fs.createWriteStream(getLocalImagePath(x, y, zoom));
+
+  axios({
+    url: getGoogleImageUrl(x, y, zoom),
+    responseType: "arraybuffer"
+  }).then(response => {
+    file.end(new Buffer(response.data));
+    let error = false;
+    file.on("error", () => {
+      error = true;
+      throw new Error("Error saving image");
+    });
+    file.on("close", () => {
+      if (error) {
+        return;
+      }
+      y++;
+      if (y > bottom) {
+        y = top;
+        x++;
+        if (x > right) {
+          zoom++;
+          if (zoom > maxZoom) {
+            // store.dispatch(updateSettings({ mapDownloadingInProgess: false }));
+            // alert("Done saving map images");
+            callback();
+            return;
+          }
+          const zoomFolder = path.join(mapImagesFolder, zoom.toString());
+          if (!fs.existsSync(zoomFolder)) {
+            fs.mkdirSync(zoomFolder);
+          }
+          const topLeftCoords = getTileCoords(topLeft, zoom);
+          const bottomRightCoords = getTileCoords(bottomRight, zoom);
+          x = topLeftCoords.x;
+          y = topLeftCoords.y;
+          top = topLeftCoords.y;
+          right = bottomRightCoords.x;
+          bottom = bottomRightCoords.y;
         }
       }
-    }
-    downloadToBrowser("tileUrls.json", JSON.stringify(tileUrls));
+      saveImages(
+        topLeft,
+        bottomRight,
+        maxZoom,
+        x,
+        y,
+        zoom,
+        top,
+        right,
+        bottom,
+        callback
+      );
+    });
   });
 }

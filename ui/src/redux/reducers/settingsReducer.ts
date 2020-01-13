@@ -1,22 +1,11 @@
 import { AppAction } from "../actions/actionTypes";
 
-export interface SettingsState {
-  gndServerIp: string;
-  connectedGndServerIp: string;
-  gndServerConnected: boolean;
-  interopIp: string;
-  interopUsername: string;
-  interopPassword: string;
-  interopMissionId: number;
-  antennaPos: { lat: number; lng: number };
-}
-
 const isWebServer = window.location.protocol.startsWith("http");
 const defaultIP = "localhost";
 const socketHost = isWebServer ? window.location.hostname : defaultIP;
 const socketPort = 8081;
 
-const initialState: SettingsState = {
+const initialState = {
   gndServerIp: socketHost + ":" + socketPort,
   connectedGndServerIp: socketHost + ":" + socketPort,
   gndServerConnected: false,
@@ -24,8 +13,14 @@ const initialState: SettingsState = {
   interopUsername: "testuser",
   interopPassword: "testpass",
   interopMissionId: 2,
-  antennaPos: { lat: 0, lng: 0 }
+  antennaPos: { lat: 0, lng: 0 },
+  mapCapture: "off" as "off" | "topLeftCorner" | "bottomRightCorner",
+  mapCaptureMaxZoom: 20,
+  mapCaptureTopLeft: undefined as google.maps.LatLngLiteral | undefined,
+  mapCaptureBottomRight: undefined as google.maps.LatLngLiteral | undefined,
+  mapDownloadingInProgess: false
 };
+export type SettingsState = typeof initialState;
 
 export default function reducer(
   state = initialState,

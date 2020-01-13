@@ -4,11 +4,8 @@ import "./Tagging.css";
 import ReactCrop, { Location, Area } from "react-easy-crop";
 import { Button } from "reactstrap";
 import { connect } from "react-redux";
-import pathImport from "path";
-import fsImport from "fs";
 import { ExtractPropsType } from "utils/reduxUtils";
-const path: typeof pathImport = window.require("path");
-const fs: typeof fsImport = window.require("fs");
+import { relativePath, path, fs } from "utils/electronUtils";
 const imageClipper = require("image-clipper"); // Use require when no TypeScript support
 
 const ListItem = (props: {
@@ -28,10 +25,7 @@ const List = (props: {
     </ul>
   ) : null;
 
-const appPath = window.require("electron").remote.app.getAppPath();
-const imagePath = path
-  .join(appPath, "electron/files/testImages")
-  .replace("app.asar", "app.asar.unpacked");
+const imagePath = relativePath("electron/files/testImages");
 const images: string[] = fs.readdirSync(imagePath);
 
 const initialAnnValues = {

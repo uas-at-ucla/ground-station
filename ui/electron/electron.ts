@@ -50,7 +50,8 @@ function createWindow() {
     height: 600,
     icon: path.join(__dirname, "icon.png"),
     webPreferences: {
-      nodeIntegration: true // expose Node.js require() as window.require() in web app
+      nodeIntegration: true, // expose Node.js require() as window.require() in web app
+      webSecurity: false // allow access to files from local file system in development
     }
   });
 

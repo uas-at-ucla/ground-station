@@ -16,7 +16,9 @@ import {
 import { Marker } from "react-google-maps";
 
 import "./Settings.css";
-import GoogleMap from "components/utils/GoogleMap/GoogleMap";
+import GoogleMap, {
+  downloadMapImages
+} from "components/utils/GoogleMap/GoogleMap";
 import UasLogo from "components/utils/UasLogo/UasLogo";
 import * as settingsActions from "redux/actions/settingsActions";
 import * as genericActions from "redux/actions/genericActions";
@@ -81,10 +83,40 @@ const Settings = (props: Props) => {
     props.configureUgvDest(props.settings.antennaPos); // temporary, but convenient to use the same map
   };
 
-  const handleClickedMap = (event: any) => {
-    props.updateSettings(({
-      antennaPos: { lat: event.latLng.lat(), lng: event.latLng.lng() }
-    } as unknown) as AppState["settings"]);
+  const handleClickedMap = (event: google.maps.MouseEvent) => {
+    const pos = { lat: event.latLng.lat(), lng: event.latLng.lng() };
+    if (props.settings.mapCapture === "off") {
+      props.updateSettings({ antennaPos: pos });
+    } else if (props.settings.mapCapture === "topLeftCorner") {
+      props.updateSettings({ mapCaptureTopLeft: pos });
+    } else if (props.settings.mapCapture === "bottomRightCorner") {
+      props.updateSettings({ mapCaptureBottomRight: pos });
+    }
+  };
+
+  const endMapCapture = () => {
+    if (
+      props.settings.mapCaptureTopLeft &&
+      props.settings.mapCaptureBottomRight
+    ) {
+      props.updateSettings({
+        mapCapture: "off",
+        mapDownloadingInProgess: true
+      });
+      downloadMapImages(
+        props.settings.mapCaptureTopLeft,
+        props.settings.mapCaptureBottomRight,
+        props.settings.mapCaptureMaxZoom,
+        () => {
+          props.updateSettings({
+            mapDownloadingInProgess: false,
+            mapCaptureTopLeft: undefined,
+            mapCaptureBottomRight: undefined
+          });
+          alert("Done saving map images");
+        }
+      );
+    }
   };
 
   const connectedGroundServer = props.settings.gndServerConnected
@@ -227,6 +259,64 @@ const Settings = (props: Props) => {
             [DANGER] Reset Redux State
           </Button>
         </Col>
+        <Col>
+          {!props.settings.mapDownloadingInProgess ? (
+            props.settings.mapCapture === "off" ? (
+              <InputGroup>
+                <InputGroupAddon addonType="prepend">Max Zoom</InputGroupAddon>
+                <Input
+                  value={props.settings.mapCaptureMaxZoom}
+                  type="number"
+                  onChange={e =>
+                    props.updateSettings({
+                      mapCaptureMaxZoom: Number(e.target.value)
+                    })
+                  }
+                />
+                <InputGroupAddon addonType="append">
+                  <Button
+                    color="success"
+                    onClick={() =>
+                      props.updateSettings({ mapCapture: "topLeftCorner" })
+                    }
+                  >
+                    Capture Map Images
+                  </Button>
+                </InputGroupAddon>{" "}
+              </InputGroup>
+            ) : props.settings.mapCapture === "topLeftCorner" ? (
+              <Button
+                color="primary"
+                onClick={() =>
+                  props.updateSettings({ mapCapture: "bottomRightCorner" })
+                }
+                disabled={!props.settings.mapCaptureTopLeft}
+              >
+                Select Top Left (Click When Done)
+              </Button>
+            ) : (
+              <span>
+                <Button
+                  color="danger"
+                  onClick={endMapCapture}
+                  disabled={!props.settings.mapCaptureBottomRight}
+                >
+                  Select Bottom Right (Click When Done)
+                </Button>
+                <Button
+                  color="secondary"
+                  onClick={() => props.updateSettings({ mapCapture: "off" })}
+                >
+                  Cancel
+                </Button>
+              </span>
+            )
+          ) : (
+            <Button color="danger" disabled>
+              Downloading in Progess
+            </Button>
+          )}
+        </Col>
       </Row>
       <br />
       <Row>
@@ -267,6 +357,8 @@ const Settings = (props: Props) => {
               onDblClick={handleClickedMap}
             >
               <Marker position={props.settings.antennaPos} />
+              <Marker position={props.settings.mapCaptureTopLeft} />
+              <Marker position={props.settings.mapCaptureBottomRight} />
             </GoogleMap>
           </div>
         </Col>

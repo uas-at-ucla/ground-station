@@ -1,36 +1,21 @@
 import { AppAction } from "../actions/actionTypes";
 
-interface TelemetryState {
-  droneTelemetry?: any;
-  playback: boolean;
-  recording: boolean;
-  telemetryData: any[];
-  pingDelay?: number;
-  mapCenter: { lat: number; lng: number };
-  ugvStatus?: any;
-  setpoints: {
-    gimbal?: number;
-    deployment?: number;
-    latch?: boolean;
-    hotwire?: boolean;
-  };
-}
-
-const initialState: TelemetryState = {
-  droneTelemetry: undefined,
+const initialState = {
+  droneTelemetry: undefined as any,
   playback: false,
   recording: false,
-  telemetryData: [],
-  pingDelay: undefined,
+  telemetryData: new Array<any>(),
+  pingDelay: undefined as number | undefined,
   mapCenter: { lat: 38.147483, lng: -76.427778 },
-  ugvStatus: undefined,
+  ugvStatus: undefined as any,
   setpoints: {
-    gimbal: undefined,
-    deployment: undefined,
-    latch: undefined,
-    hotwire: undefined
+    gimbal: undefined as number | undefined,
+    deployment: undefined as number | undefined,
+    latch: undefined as boolean | undefined,
+    hotwire: undefined as boolean | undefined
   }
 };
+export type TelemetryState = typeof initialState;
 
 export default function reducer(
   state = initialState,
@@ -45,7 +30,7 @@ export default function reducer(
     }
     case "TELEMETRY": {
       if (!state.playback) {
-        let newState = { ...state, droneTelemetry: action.payload };
+        const newState = { ...state, droneTelemetry: action.payload };
         // if recording add to list
         if (state.recording) {
           newState.telemetryData.push(action.payload);

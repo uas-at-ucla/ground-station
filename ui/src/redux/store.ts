@@ -19,13 +19,13 @@ const reducer = combineReducers({
   telemetry: telemetryReducer,
   mission: missionReducer
 });
-export type AppState = ReturnType<typeof reducer>;
 
 // Apply communicator middleware for sending and receiving data from server
 const middleware = applyMiddleware(communicator);
 
 // Create store
 const store = createStore(reducer, composeWithDevTools(middleware));
+export type AppState = ReturnType<typeof store.getState>;
 
 // Reselect setup
 const selectors = {

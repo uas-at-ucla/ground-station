@@ -1,10 +1,7 @@
-// UNCOMMENT TO USE GOOGLE MAPS OFFLINE (1/2):
-// import "google_maps_js_api";
+const offlineMaps = true;
 
-export function getLocalImageUrl(coord: google.maps.Point, zoom: number) {
-  // UNCOMMENT TO USE GOOGLE MAPS OFFLINE (2/2):
-  // return require(`google_maps_js_api/map_images/${zoom}/mag-${zoom}_x-${coord.x}_y-${coord.y}.jpg`);
-  return "";
+if (offlineMaps) {
+  require("google_maps_js_api");
 }
 
 const googleMapsApiURL =
@@ -13,8 +10,8 @@ const googleMapsApiURL =
 const google = {} as GoogleMapsLoader.google;
 
 export function loadGoogleMapsApi(callback: () => void) {
-  if ((window as any).google) {
-    google.maps = (window as any).google.maps;
+  if (window.google) {
+    google.maps = window.google.maps;
     callback();
   } else {
     const script = document.createElement("script");
@@ -22,8 +19,8 @@ export function loadGoogleMapsApi(callback: () => void) {
     document.body.appendChild(script);
 
     script.onload = () => {
-      if ((window as any).google) {
-        google.maps = (window as any).google.maps;
+      if (window.google) {
+        google.maps = window.google.maps;
         if (callback) callback();
       } else {
         throw Error("Google Maps API didn't load correctly");
