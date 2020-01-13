@@ -9,7 +9,7 @@ import { userDataPath, fs, path } from "utils/electronUtils";
 // TODO: Google updates this from time to time. Use Chrome Dev Tools "Network" tab to find the number used for image urls in the satellite map here: https://developers.google.com/maps/documentation/javascript/maptypes
 const imageUrlV = "862";
 
-const mapImagesFolder = path.join(userDataPath, "mapImages");
+export const mapImagesFolder = path.join(userDataPath, "mapImages");
 const TILE_SIZE = 256;
 
 function getLocalImagePath(x: number, y: number, zoom: number) {

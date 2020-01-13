@@ -17,7 +17,8 @@ import { Marker } from "react-google-maps";
 
 import "./Settings.css";
 import GoogleMap, {
-  downloadMapImages
+  downloadMapImages,
+  mapImagesFolder
 } from "components/utils/GoogleMap/GoogleMap";
 import UasLogo from "components/utils/UasLogo/UasLogo";
 import * as settingsActions from "redux/actions/settingsActions";
@@ -275,6 +276,7 @@ const Settings = (props: Props) => {
                 />
                 <InputGroupAddon addonType="append">
                   <Button
+                    title={mapImagesFolder}
                     color="success"
                     onClick={() =>
                       props.updateSettings({ mapCapture: "topLeftCorner" })
