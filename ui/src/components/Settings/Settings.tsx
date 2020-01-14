@@ -307,7 +307,13 @@ const Settings = (props: Props) => {
                 </Button>
                 <Button
                   color="secondary"
-                  onClick={() => props.updateSettings({ mapCapture: "off" })}
+                  onClick={() =>
+                    props.updateSettings({
+                      mapCapture: "off",
+                      mapCaptureTopLeft: undefined,
+                      mapCaptureBottomRight: undefined
+                    })
+                  }
                 >
                   Cancel
                 </Button>
