@@ -20,11 +20,10 @@ const mapStateToProps = (state: AppState, props: OwnProps) => {
   const derivedData = selector(state);
   return {
     mission: state.mission,
-    protoInfo: derivedData.mission.protoInfo,
     interopData: state.mission.interopData,
     mainFlyZone: derivedData.mission.mainFlyZone,
     homeAltitude: state.telemetry.droneTelemetry
-      ? state.telemetry.droneTelemetry.sensors.home_altitude
+      ? state.telemetry.droneTelemetry.sensors.homeAltitude
       : null
   };
 };
@@ -41,10 +40,23 @@ const MissionPlanner = (props: Props) => {
     const defaultDrpHeight = defaultAlt;
     // const defaultHeight = defaultAlt;
 
-    for (let i = 0; i < props.interopData.mission.waypoints.length; i++) {
-      const lat = props.interopData.mission.waypoints[i].latitude;
-      const long = props.interopData.mission.waypoints[i].longitude;
-      let alt = props.interopData.mission.waypoints[i].altitude; // ft above MSL
+    if (!(props.interopData && props.homeAltitude !== null)) {
+      throw new Error("You weren't supposed to be able to click this button!");
+    }
+    for (let i = 0; i < props.interopData.mission.waypointsList.length; i++) {
+      const waypoint = props.interopData.mission.waypointsList[i];
+      if (
+        !(
+          waypoint.latitude &&
+          waypoint.longitude &&
+          waypoint.altitude !== undefined
+        )
+      ) {
+        throw new Error("Expected interop API protobuf fields to exist");
+      }
+      const lat = waypoint.latitude;
+      const long = waypoint.longitude;
+      let alt = waypoint.altitude; // ft above MSL
       alt = alt - props.homeAltitude * FEET_PER_METER; // convert to relative alt
       const defaultWaypointCommand = {
         goal: {
@@ -53,7 +65,7 @@ const MissionPlanner = (props: Props) => {
           altitude: alt
         }
       };
-      props.addWaypointCommand(defaultWaypointCommand, props.protoInfo);
+      // props.addWaypointCommand(defaultWaypointCommand, props.protoInfo); // TODO
     }
 
     // If Survey command is supported
@@ -73,6 +85,16 @@ const MissionPlanner = (props: Props) => {
     // }
     // props.addCommand("survey_command", search_command, props.protoInfo)
 
+    if (
+      !(
+        props.interopData.mission.airDropPos &&
+        props.interopData.mission.airDropPos.latitude &&
+        props.interopData.mission.airDropPos.longitude
+      )
+    ) {
+      throw new Error("Expected interop API protobuf fields to exist");
+    }
+
     const lat = props.interopData.mission.airDropPos.latitude;
     const long = props.interopData.mission.airDropPos.longitude;
     const airDropCommand = {
@@ -82,7 +104,7 @@ const MissionPlanner = (props: Props) => {
         altitude: defaultDrpHeight
       }
     };
-    props.addCommand("ugv_drop_command", airDropCommand, props.protoInfo);
+    // props.addCommand("ugv_drop_command", airDropCommand, props.protoInfo); // TODO
 
     // If OffAxis command is supported
     // var lat = props.interopData.mission.offAxisOdlcPos.latitude
@@ -104,7 +126,10 @@ const MissionPlanner = (props: Props) => {
   const Commands = SortableContainer(() => {
     return (
       <Container fluid>
-        {props.mission.interopData ? (
+        {props.mission.interopData &&
+        props.mainFlyZone &&
+        props.mainFlyZone.altitudeMin &&
+        props.mainFlyZone.altitudeMax ? (
           <div>
             {"Mission Altitude Range: " +
               props.mainFlyZone.altitudeMin +
@@ -124,9 +149,9 @@ const MissionPlanner = (props: Props) => {
         ) : null}
         <CommandList
           commands={props.mission.commands}
+          commandOrder={props.mission.commandOrder}
           programType={props.programType}
           className={props.className}
-          protoInfo={props.protoInfo}
           centerMapOnCommand={centerMapOnCommand}
           commandChangers={commandChangers}
           mutable={true}
@@ -151,61 +176,53 @@ const MissionPlanner = (props: Props) => {
         altitude: 100
       }
     };
-    props.addWaypointCommand(defaultWaypointCommand, props.protoInfo);
+    // props.addWaypointCommand(defaultWaypointCommand, props.protoInfo); // TODO
   };
 
   const reorderCommand = (indices: { oldIndex: number; newIndex: number }) => {
     props.reorderCommand(indices.oldIndex, indices.newIndex);
   };
 
-  const centerMapOnCommand = (index: number) => {
+  const centerMapOnCommand = (id: string) => {
     if (props.className === "SmallMissionPlanner") {
-      const command = props.mission.commands[index];
-      props.centerMapOnCommand(command, props.protoInfo);
-      setTimeout(() => props.commandStopAnimation(command), 1000);
+      props.centerMapOnCommand(props.mission.commands, id);
+      setTimeout(() => props.commandStopAnimation(id), 1000);
     }
   };
 
   const {
-    deleteCommand,
-    changeCommandType,
-    changeCommandField,
-    addRepeatedField,
-    popRepeatedField
+    deleteCommand
+    // changeCommandType,
+    // changeCommandField,
+    // addRepeatedField,
+    // popRepeatedField
   } = props;
   const commandChangers = useMemo(() => {
     return {
-      deleteCommand: (index: number) => {
-        deleteCommand(index);
-      },
-
-      changeCommandType: (index: number, oldCommand: any, newType: string) => {
-        changeCommandType(index, oldCommand, newType, props.protoInfo);
-      },
-
-      changeNumberField: (dotProp: string, input: string) => {
-        const newValue = Number(input);
-        if (!isNaN(newValue)) {
-          changeCommandField(dotProp, newValue);
-        }
-      },
-
-      addRepeatedField: (dotProp: string, type: string) => {
-        addRepeatedField(dotProp, type, props.protoInfo);
-      },
-
-      popRepeatedField: (dotProp: string) => {
-        popRepeatedField(dotProp);
+      deleteCommand: (id: string) => {
+        deleteCommand(id);
       }
+
+      // changeCommandType: (index: number, oldCommand: any, newType: string) => {
+      //   changeCommandType(index, oldCommand, newType, props.protoInfo);
+      // },
+
+      // changeNumberField: (dotProp: string, input: string) => {
+      //   const newValue = Number(input);
+      //   if (!isNaN(newValue)) {
+      //     changeCommandField(dotProp, newValue);
+      //   }
+      // },
+
+      // addRepeatedField: (dotProp: string, type: string) => {
+      //   addRepeatedField(dotProp, type, props.protoInfo);
+      // },
+
+      // popRepeatedField: (dotProp: string) => {
+      //   popRepeatedField(dotProp);
+      // }
     };
-  }, [
-    addRepeatedField,
-    changeCommandField,
-    changeCommandType,
-    deleteCommand,
-    popRepeatedField,
-    props.protoInfo
-  ]);
+  }, [deleteCommand]);
 
   return (
     <div className="MissionPlanner">

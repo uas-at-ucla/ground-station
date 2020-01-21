@@ -45,18 +45,18 @@ const Telemetry = (props: Props) => {
     telmet = {
       pingDelay: pingDelay !== undefined ? pingDelay : NaN,
       autopilotState: rawTelmet["sensors"]["armed"]
-        ? rawTelmet["sensors"]["autopilot_state"]
+        ? rawTelmet["sensors"]["autopilotState"]
         : "Disarmed",
       roll: rawTelmet["sensors"]["roll"],
       pitch: rawTelmet["sensors"]["pitch"],
       yaw: rawTelmet["sensors"]["yaw"],
-      speed: rawTelmet["sensors"]["gps_ground_speed"] * KNOTS_PER_METER_SECOND,
-      gpsFix: rawTelmet["sensors"]["gps_fix"],
+      speed: rawTelmet["sensors"]["gpsGroundSpeed"] * KNOTS_PER_METER_SECOND,
+      gpsFix: rawTelmet["sensors"]["gpsFix"],
       lat: rawTelmet["sensors"]["latitude"],
       long: rawTelmet["sensors"]["longitude"],
       heading: rawTelmet["sensors"]["heading"],
       alt: rawTelmet["sensors"]["altitude"] * FEET_PER_METER,
-      satCount: rawTelmet["sensors"]["gps_satellite_count"],
+      satCount: rawTelmet["sensors"]["gpsSatelliteCount"],
       gpsHdop: 0,
       gpsVdop: 0
     };

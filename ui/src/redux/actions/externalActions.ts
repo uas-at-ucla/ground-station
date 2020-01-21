@@ -31,8 +31,3 @@ export const basicServerAction = (
   payload: data
 });
 basicServerAction.basicMessages = basicMessages;
-
-export const timelineProtoLoaded = (timelineProto: any) => ({
-  type: "TIMELINE_PROTO_LOADED" as const,
-  payload: timelineProto
-});

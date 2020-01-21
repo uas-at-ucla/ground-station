@@ -25,8 +25,7 @@ const mapStateToProps = (state: AppState) => {
     missionUploaded: state.mission.missionUploaded,
     dropReady: state.telemetry.droneTelemetry ? true : null, //state.telemetry.droneTelemetry.output.deploy
     lastDroppyCommand: state.mission.lastDroppyCommand,
-    ugvStatus: state.telemetry.ugvStatus,
-    protoInfo: selector(state).mission.protoInfo
+    ugvStatus: state.telemetry.ugvStatus
   };
 };
 
@@ -79,8 +78,8 @@ const MissionPlannerContainer = (props: Props) => {
         <div>
           UGV is Still?{" "}
           {props.ugvStatus
-            ? props.ugvStatus.is_still != null
-              ? props.ugvStatus.is_still
+            ? props.ugvStatus.isStill != null
+              ? props.ugvStatus.isStill
                 ? "YES"
                 : "NO"
               : "UNKNOWN"
@@ -98,16 +97,17 @@ const MissionPlannerContainer = (props: Props) => {
         <TabPane tabId="drone">
           <div className="SmallMissionPlanner">
             <Container fluid>
-              <CommandList
-                commands={props.droneProgram ? props.droneProgram.commands : []}
+              {/* TODO figure out how to get DroneProgram working with this <CommandList
+                commands={
+                  props.droneProgram ? props.droneProgram.commandsList : []
+                }
                 programType="DroneProgram"
                 className="SmallMissionPlanner"
-                protoInfo={props.protoInfo}
                 centerMapOnCommand={() => {
-                  /*TODO*/
+                  //TODO
                 }}
                 mutable={false}
-              />
+              /> */}
             </Container>
           </div>
         </TabPane>

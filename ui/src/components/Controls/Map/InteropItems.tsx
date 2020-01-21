@@ -26,21 +26,17 @@ const mapStateToProps = (state: AppState, props: OwnProps) => {
   return {
     interopData: state.mission.interopData,
     ugvDestination: state.mission.ugvDestination,
-    protoInfo: derivedData.mission.protoInfo,
     mainFlyZone: derivedData.mission.mainFlyZone,
     defaultAltitude: state.mission.defaultAltitude,
     homeAltitude: state.telemetry.droneTelemetry
-      ? state.telemetry.droneTelemetry.sensors.home_altitude
+      ? state.telemetry.droneTelemetry.sensors.homeAltitude
       : null
   };
 };
 
 const mapDispatchToProps = missionActions;
 
-const connectComponent = connect(
-  mapStateToProps,
-  mapDispatchToProps
-);
+const connectComponent = connect(mapStateToProps, mapDispatchToProps);
 type Props = ExtractPropsType<typeof connectComponent>;
 
 const InteropItems = (props: Props) => {
@@ -52,7 +48,7 @@ const InteropItems = (props: Props) => {
         altitude: alt ? alt : props.defaultAltitude
       }
     };
-    props.addWaypointCommand(defaultWaypointCommand, props.protoInfo);
+    // props.addWaypointCommand(defaultWaypointCommand, props.protoInfo); // TODO
   };
 
   if (props.interopData) {
@@ -72,7 +68,7 @@ const InteropItems = (props: Props) => {
       boundaryCoordinates.reverse();
     }
 
-    const flyZonePolygons = props.interopData.mission.flyZones.map(
+    const flyZonePolygons = props.interopData.mission.flyZonesList.map(
       (flyZone: any) => {
         return flyZone.boundaryPoints.map((coord: any) => {
           return { lat: coord.latitude, lng: coord.longitude };
@@ -83,7 +79,7 @@ const InteropItems = (props: Props) => {
     // let searchCenterLat = 0;
     // let searchCenterLng = 0;
     // const searchNum = props.interopData.mission.searchGridPoints.length;
-    const searchGridPoints = props.interopData.mission.searchGridPoints.map(
+    const searchGridPoints = props.interopData.mission.searchGridPointsList.map(
       (coord: any) => {
         // searchCenterLat += coord.latitude;
         // searchCenterLng += coord.longitude;
@@ -92,6 +88,22 @@ const InteropItems = (props: Props) => {
     );
     // searchCenterLng = searchCenterLng / searchNum;
     // searchCenterLat = searchCenterLat / searchNum;
+
+    if (
+      !(
+        props.interopData.mission.airDropPos &&
+        props.interopData.mission.airDropPos.latitude &&
+        props.interopData.mission.airDropPos.longitude &&
+        props.interopData.mission.emergentLastKnownPos &&
+        props.interopData.mission.emergentLastKnownPos.latitude &&
+        props.interopData.mission.emergentLastKnownPos.longitude &&
+        props.interopData.mission.offAxisOdlcPos &&
+        props.interopData.mission.offAxisOdlcPos.latitude &&
+        props.interopData.mission.offAxisOdlcPos.longitude
+      )
+    ) {
+      throw new Error("Expected interop API protobuf fields to exist");
+    }
 
     const airDropPos = {
       lat: props.interopData.mission.airDropPos.latitude,
@@ -234,7 +246,7 @@ const InteropItems = (props: Props) => {
             </Button>
           </MapElementWithInfo> */}
 
-        {props.interopData.mission.stationaryObstacles.map(
+        {props.interopData.mission.stationaryObstaclesList.map(
           (obstacle: any, index: number) => (
             <MapElementWithInfo
               key={index}
@@ -266,8 +278,13 @@ const InteropItems = (props: Props) => {
           )
         )}
 
-        {props.interopData.mission.waypoints.map(
-          (coord: any, index: number) => (
+        {props.interopData.mission.waypointsList.map((coord, index) => {
+          if (
+            !(coord.latitude && coord.longitude && coord.altitude !== undefined)
+          ) {
+            throw new Error("Expected interop API protobuf fields to exist");
+          }
+          return (
             <MapElementWithInfo
               key={index}
               Element={Marker}
@@ -293,21 +310,26 @@ const InteropItems = (props: Props) => {
               </div>
               <Button
                 size="sm"
-                onClick={() =>
+                onClick={() => {
+                  if (!(coord.latitude && coord.longitude && coord.altitude)) {
+                    throw new Error(
+                      "Expected interop API protobuf fields to exist"
+                    );
+                  }
                   addWaypointCommand(
                     coord.latitude,
                     coord.longitude,
                     props.homeAltitude != null
                       ? coord.altitude - props.homeAltitude * FEET_PER_METER
                       : coord.altitude
-                  )
-                }
+                  );
+                }}
               >
                 Add to Mission
               </Button>
             </MapElementWithInfo>
-          )
-        )}
+          );
+        })}
       </span>
     );
   } else {

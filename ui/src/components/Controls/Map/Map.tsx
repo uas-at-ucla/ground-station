@@ -18,8 +18,7 @@ const mapStateToProps = (state: AppState) => {
     defaultAltitude: state.mission.defaultAltitude,
     mapCenter: state.telemetry.mapCenter,
     commandPoints: derivedData.mission.commandPoints,
-    droneProgramPath: derivedData.mission.droneProgramPath,
-    protoInfo: derivedData.mission.protoInfo
+    droneProgramPath: derivedData.mission.droneProgramPath
   };
 };
 
@@ -39,13 +38,14 @@ const Map = (props: Props) => {
     setOpen({});
   };
 
-  const deleteCommand = (index: number) => {
-    props.deleteCommand(index);
+  const deleteCommand = (id: string) => {
+    props.deleteCommand(id);
   };
 
   const commandDragged = (event: any, dotProp: string) => {
-    props.changeCommandField(dotProp + ".goal.latitude", event.latLng.lat());
-    props.changeCommandField(dotProp + ".goal.longitude", event.latLng.lng());
+    // TODO
+    // props.changeCommandField(dotProp + ".goal.latitude", event.latLng.lat());
+    // props.changeCommandField(dotProp + ".goal.longitude", event.latLng.lng());
   };
 
   const mapDblClick = (event: google.maps.MouseEvent) => {
@@ -60,7 +60,7 @@ const Map = (props: Props) => {
         altitude: props.defaultAltitude
       }
     };
-    props.addFlyThroughCommand(defaultWaypointCommand, props.protoInfo);
+    // props.addFlyThroughCommand(defaultWaypointCommand, props.protoInfo); // TODO
   };
 
   const commandPointPolyCoords = props.commandPoints
@@ -114,7 +114,10 @@ const Map = (props: Props) => {
                     </div>
                     <div>{commandPoint.infobox.content}</div>
 
-                    <Button onClick={() => deleteCommand(index)} color="danger">
+                    <Button
+                      onClick={() => deleteCommand(commandPoint.id)}
+                      color="danger"
+                    >
                       <i
                         className="fa fa-trash"
                         style={{ pointerEvents: "none" }}

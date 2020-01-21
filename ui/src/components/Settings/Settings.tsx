@@ -349,12 +349,15 @@ const Settings = (props: Props) => {
             <GoogleMap
               defaultZoom={17}
               center={
-                /*if*/ props.interopData
+                props.interopData &&
+                props.interopData.mission.airDropPos &&
+                props.interopData.mission.airDropPos.latitude &&
+                props.interopData.mission.airDropPos.longitude
                   ? {
                       lat: props.interopData.mission.airDropPos.latitude,
                       lng: props.interopData.mission.airDropPos.longitude
                     }
-                  : /*else*/ defaultMapCenter
+                  : defaultMapCenter
               }
               defaultMapTypeId="customTiles"
               defaultOptions={{

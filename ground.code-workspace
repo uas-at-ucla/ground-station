@@ -29,6 +29,9 @@
     "eslint.autoFixOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true
+    },
+    "protoc": {
+      "options": ["--proto_path=tools/protobuf"]
     }
   }
 }

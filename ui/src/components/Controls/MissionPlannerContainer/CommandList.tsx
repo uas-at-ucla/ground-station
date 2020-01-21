@@ -3,34 +3,37 @@ import { Button } from "reactstrap";
 import { Row, Col, Input, InputGroup, InputGroupAddon } from "reactstrap";
 import { SortableElement } from "react-sortable-hoc";
 
+import { MissionState } from "redux/reducers/missionReducer";
+import { GroundCommand } from "protobuf/drone/timeline_grammar_pb";
+
 interface CommandChangersType {
-  deleteCommand: (index: number) => void;
-  changeCommandType: (index: number, oldCommand: any, newType: string) => void;
-  changeNumberField: (dotProp: string, input: string) => void;
-  addRepeatedField: (dotProp: string, type: string) => void;
-  popRepeatedField: (dotProp: string) => void;
+  deleteCommand: (id: string) => void;
+  // changeCommandType: (index: number, oldCommand: any, newType: string) => void;
+  // changeNumberField: (dotProp: string, input: string) => void;
+  // addRepeatedField: (dotProp: string, type: string) => void;
+  // popRepeatedField: (dotProp: string) => void;
 }
 
 interface CommandListProps {
   className: string;
-  commands: any[];
+  commands: MissionState["commands"];
+  commandOrder: MissionState["commandOrder"];
   programType: string;
   mutable: boolean;
-  protoInfo: any;
-  centerMapOnCommand: (i: number) => void;
+  centerMapOnCommand: (id: string) => void;
   commandChangers?: CommandChangersType;
 }
 
 interface CommandRowProps {
   className: string;
   key: string;
-  command: any;
+  command: GroundCommand.AsObject;
+  cmdId: string;
   programType: string;
   index: number;
   myIndex: number;
   mutable: boolean;
-  protoInfo: any;
-  centerMapOnCommand: (i: number) => void;
+  centerMapOnCommand: (id: string) => void;
   commandChangers?: CommandChangersType;
 }
 
@@ -45,18 +48,18 @@ const CommandList = (props: CommandListProps) => {
   }
   return (
     <span className="CommandList">
-      {props.commands.map((command, index: number) => (
+      {props.commandOrder.map((cmdId, index) => (
         <CommandRowElement
           className={props.className}
-          key={command.id}
+          key={cmdId}
           centerMapOnCommand={props.centerMapOnCommand}
           commandChangers={props.commandChangers}
-          command={command}
+          command={props.commands[cmdId]}
+          cmdId={cmdId}
           programType={props.programType}
           index={index}
           myIndex={index}
           mutable={props.mutable}
-          protoInfo={props.protoInfo}
         ></CommandRowElement>
       ))}
     </span>
@@ -69,7 +72,7 @@ export default CommandList;
 const CommandRowImpure = (props: CommandRowProps) => {
   const centerMapOnCommand = () => {
     console.log(props);
-    props.centerMapOnCommand(props.myIndex);
+    props.centerMapOnCommand(props.cmdId);
   };
 
   // Helper components
@@ -96,9 +99,9 @@ const CommandRowImpure = (props: CommandRowProps) => {
               value={value}
               type="number"
               readOnly={!props.mutable}
-              onChange={e =>
-                props.commandChangers &&
-                props.commandChangers.changeNumberField(dotProp, e.target.value)
+              onChange={
+                e => props.commandChangers
+                // TODO && props.commandChangers.changeNumberField(dotProp, e.target.value)
               }
             ></Input>
             {units ? (
@@ -137,18 +140,18 @@ const CommandRowImpure = (props: CommandRowProps) => {
         ))}
         <Button
           className="input"
-          onClick={() =>
-            props.commandChangers &&
-            props.commandChangers.addRepeatedField(dotProp, type)
+          onClick={
+            () => props.commandChangers
+            // TODO && props.commandChangers.addRepeatedField(dotProp, type)
           }
         >
           +
         </Button>
         <Button
           className="input"
-          onClick={() =>
-            props.commandChangers &&
-            props.commandChangers.popRepeatedField(dotProp)
+          onClick={
+            () => props.commandChangers
+            // TODO && props.commandChangers.popRepeatedField(dotProp)
           }
         >
           -
@@ -168,64 +171,65 @@ const CommandRowImpure = (props: CommandRowProps) => {
     type: string;
     object: any;
   }) => {
-    // Recursively create HTML based on protobuf definition
-    const timelineGrammar = props.protoInfo.timelineGrammar;
-    if (timelineGrammar[type]) {
-      // object is a protobuf defined object
-      return (
-        <Row>
-          {name !== "" ? (
-            <Col xs="auto" className="name">
-              {name}:
-            </Col>
-          ) : null}
-          {Object.keys(timelineGrammar[type].fields).map(fieldName => {
-            const field = timelineGrammar[type].fields[fieldName];
-            const fieldDotProp = dotProp + "." + fieldName;
-            const fieldProps = {
-              name: fieldName,
-              dotProp: fieldDotProp,
-              type: field.type,
-              object: object[fieldName]
-            };
-            return (
-              <Col xs="auto" className="field-container" key={fieldName}>
-                {field.rule === "repeated" ? (
-                  <RepeatedField {...fieldProps} />
-                ) : field.rule === "required" ? (
-                  <Field {...fieldProps} />
-                ) : (
-                  (() => {
-                    throw new Error(
-                      "No support for timeline_grammar rule '" +
-                        field.rule +
-                        "' yet!"
-                    );
-                  })()
-                )}
-              </Col>
-            );
-          })}
-        </Row>
-      );
-    } else if (type === "double") {
-      return (
-        <NumberField
-          name={name}
-          dotProp={dotProp}
-          value={object}
-          units={props.protoInfo.fieldUnits[props.programType][name]}
-        />
-      );
-    } else if (type === "bool") {
-      return (
-        <span style={{ color: object ? undefined : "dimgray" }}>{name}</span>
-      ); // does not support modification because there are no bools in a GroundProgram
-    } else {
-      throw new Error(
-        "No support for timeline_grammar type '" + type + "' yet!"
-      );
-    }
+    return <span></span>; // TODO
+    // // Recursively create HTML based on protobuf definition
+    // const timelineGrammar = props.protoInfo.timelineGrammar;
+    // if (timelineGrammar[type]) {
+    //   // object is a protobuf defined object
+    //   return (
+    //     <Row>
+    //       {name !== "" ? (
+    //         <Col xs="auto" className="name">
+    //           {name}:
+    //         </Col>
+    //       ) : null}
+    //       {Object.keys(timelineGrammar[type].fields).map(fieldName => {
+    //         const field = timelineGrammar[type].fields[fieldName];
+    //         const fieldDotProp = dotProp + "." + fieldName;
+    //         const fieldProps = {
+    //           name: fieldName,
+    //           dotProp: fieldDotProp,
+    //           type: field.type,
+    //           object: object[fieldName]
+    //         };
+    //         return (
+    //           <Col xs="auto" className="field-container" key={fieldName}>
+    //             {field.rule === "repeated" ? (
+    //               <RepeatedField {...fieldProps} />
+    //             ) : field.rule === "required" ? (
+    //               <Field {...fieldProps} />
+    //             ) : (
+    //               (() => {
+    //                 throw new Error(
+    //                   "No support for timeline_grammar rule '" +
+    //                     field.rule +
+    //                     "' yet!"
+    //                 );
+    //               })()
+    //             )}
+    //           </Col>
+    //         );
+    //       })}
+    //     </Row>
+    //   );
+    // } else if (type === "double") {
+    //   return (
+    //     <NumberField
+    //       name={name}
+    //       dotProp={dotProp}
+    //       value={object}
+    //       units={props.protoInfo.fieldUnits[props.programType][name]}
+    //     />
+    //   );
+    // } else if (type === "bool") {
+    //   return (
+    //     <span style={{ color: object ? undefined : "dimgray" }}>{name}</span>
+    //   ); // does not support modification because there are no bools in a GroundProgram
+    // } else {
+    //   throw new Error(
+    //     "No support for timeline_grammar type '" + type + "' yet!"
+    //   );
+    // }
   };
 
   const command = props.command;
@@ -241,7 +245,8 @@ const CommandRowImpure = (props: CommandRowProps) => {
           color="danger"
           size="sm"
           onClick={() =>
-            props.commandChangers && props.commandChangers.deleteCommand(index)
+            props.commandChangers &&
+            props.commandChangers.deleteCommand(props.cmdId)
           }
         >
           <i className="fa fa-minus"></i>
@@ -252,35 +257,38 @@ const CommandRowImpure = (props: CommandRowProps) => {
       </Col>
       <Col xs="auto" className="command-column command-type command-header">
         <span className="value">
-          {props.protoInfo.commandAbbr[command.name]}
+          {"TODO"}
+          {/* props.protoInfo.commandAbbr[command.name] TODO */}
         </span>
         <Input
           type="select"
           className="input"
-          value={command.name}
+          value={"command.name TODO"}
           readOnly={!props.mutable}
-          onChange={e =>
-            props.commandChangers &&
-            props.commandChangers.changeCommandType(
-              index,
-              command,
-              e.target.value
-            )
+          onChange={
+            e => props.commandChangers
+            // TODO && props.commandChangers.changeCommandType(
+            //   index,
+            //   command,
+            //   e.target.value
+            // )
           }
         >
-          {props.protoInfo.commandNames.map((commandName: string) => (
+          {/* {props.protoInfo.commandNames.map((commandName: string) => (
             <option value={commandName} key={commandName}>
               {props.protoInfo.commandAbbr[commandName]}
             </option>
-          ))}
+          ))} */}
         </Input>
       </Col>
       <Col xs="auto" className="command-column">
         <Field
           name=""
-          dotProp={index + "." + command.name}
-          type={command.type}
-          object={command[command.name]}
+          dotProp={index + ". + command.name TODO"}
+          type={"command.type TODO"}
+          object={
+            command[Object.keys(command)[0] as keyof GroundCommand.AsObject]
+          }
         />
       </Col>
     </Row>
