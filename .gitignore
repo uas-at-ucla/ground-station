@@ -1,1 +1,6 @@
 *.pyc
+
+# Kotlin server Gradle & Intellij files
+kotlin_server/.gradle/
+kotlin_server/build/
+kotlin_server/.idea/
