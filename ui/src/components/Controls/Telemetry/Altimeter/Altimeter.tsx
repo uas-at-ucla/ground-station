@@ -28,7 +28,12 @@ const Altimeter = (props: Props) => {
 
   let min = 0;
   let max = Infinity;
-  if (props.telemetry && props.interopData) {
+  if (
+    props.telemetry &&
+    props.interopData &&
+    props.mainFlyZone.altitudeMin &&
+    props.mainFlyZone.altitudeMax
+  ) {
     const homeAlt = props.telemetry.sensors.homeAltitude * FEET_PER_METER;
     min = props.mainFlyZone.altitudeMin - homeAlt;
     max = props.mainFlyZone.altitudeMax - homeAlt;

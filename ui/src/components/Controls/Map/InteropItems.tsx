@@ -13,6 +13,7 @@ import bomb from "./icons/bomb_drop.png";
 import wheel from "./icons/wheel.png";
 import blueMarker from "./icons/blue_marker.png";
 import { ExtractPropsType } from "utils/reduxUtils";
+import { Position } from "protobuf/interop/interop_api_pb";
 
 const FEET_PER_METER = 3.28084;
 
@@ -52,25 +53,28 @@ const InteropItems = (props: Props) => {
   };
 
   if (props.interopData) {
-    const boxCenter = props.mainFlyZone.boundaryPoints[0];
+    const boxCenter = props.mainFlyZone.boundaryPointsList[0] as Required<
+      Position.AsObject
+    >;
     const boxCoordinates = [
       { lat: boxCenter.latitude + 0.1, lng: boxCenter.longitude + 0.1 },
       { lat: boxCenter.latitude + 0.1, lng: boxCenter.longitude - 0.1 },
       { lat: boxCenter.latitude - 0.1, lng: boxCenter.longitude - 0.1 },
       { lat: boxCenter.latitude - 0.1, lng: boxCenter.longitude + 0.1 }
     ];
-    const boundaryCoordinates = props.mainFlyZone.boundaryPoints.map(
-      (coord: any) => {
-        return { lat: coord.latitude, lng: coord.longitude };
-      }
-    );
+    const boundaryCoordinates = (props.mainFlyZone
+      .boundaryPointsList as Required<Position.AsObject>[]).map(coord => {
+      return { lat: coord.latitude, lng: coord.longitude };
+    });
     if (!props.mainFlyZone.isClockwise) {
       boundaryCoordinates.reverse();
     }
 
     const flyZonePolygons = props.interopData.mission.flyZonesList.map(
-      (flyZone: any) => {
-        return flyZone.boundaryPoints.map((coord: any) => {
+      flyZone => {
+        return (flyZone.boundaryPointsList as Required<
+          Position.AsObject
+        >[]).map(coord => {
           return { lat: coord.latitude, lng: coord.longitude };
         });
       }
@@ -79,13 +83,12 @@ const InteropItems = (props: Props) => {
     // let searchCenterLat = 0;
     // let searchCenterLng = 0;
     // const searchNum = props.interopData.mission.searchGridPoints.length;
-    const searchGridPoints = props.interopData.mission.searchGridPointsList.map(
-      (coord: any) => {
-        // searchCenterLat += coord.latitude;
-        // searchCenterLng += coord.longitude;
-        return { lat: coord.latitude, lng: coord.longitude };
-      }
-    );
+    const searchGridPoints = (props.interopData.mission
+      .searchGridPointsList as Required<Position.AsObject>[]).map(coord => {
+      // searchCenterLat += coord.latitude;
+      // searchCenterLng += coord.longitude;
+      return { lat: coord.latitude, lng: coord.longitude };
+    });
     // searchCenterLng = searchCenterLng / searchNum;
     // searchCenterLat = searchCenterLat / searchNum;
 
@@ -215,7 +218,7 @@ const InteropItems = (props: Props) => {
           }}
         />
 
-        {flyZonePolygons.map((path: any, index: number) => (
+        {flyZonePolygons.map((path, index) => (
           <Polygon
             key={index}
             path={path}

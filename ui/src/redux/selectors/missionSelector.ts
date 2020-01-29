@@ -2,16 +2,9 @@ import { createSelector } from "reselect";
 import { createObjectSelector } from "reselect-map";
 
 import { AppState } from "../store";
-import {
-  GroundCommand,
-  DroneCommand
-} from "protobuf/drone/timeline_grammar_pb";
+import { DroneCommand } from "protobuf/drone/timeline_grammar_pb";
 import { Position3D } from "protobuf/drone/mission_commands_pb";
 import { FlyZone, Position } from "protobuf/interop/interop_api_pb";
-
-function getCommandName(cmd: GroundCommand.AsObject) {
-  Object.keys(cmd).filter(key => key !== "id");
-}
 
 // createObjectSelector is more efficient because it only recalculates for commands that have changed
 export const commandMarkers = createObjectSelector(
@@ -114,14 +107,14 @@ export const droneProgramPath = createSelector(
 export const mainFlyZone = createSelector(
   [(state: AppState) => state.mission.interopData],
   interopData => {
-    if (!interopData) {
-      return null;
-    }
-    let maxArea = -1;
     let mainFlyZone: FlyZone.AsObject & { isClockwise: boolean } = {
       boundaryPointsList: [],
       isClockwise: false
     };
+    if (!interopData) {
+      return mainFlyZone;
+    }
+    let maxArea = -1;
     for (const flyZone of interopData.mission.flyZonesList) {
       const area = polygonArea(
         flyZone.boundaryPointsList as Required<Position.AsObject>[]

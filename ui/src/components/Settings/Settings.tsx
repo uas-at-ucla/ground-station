@@ -23,8 +23,21 @@ import GoogleMap, {
 import UasLogo from "components/utils/UasLogo/UasLogo";
 import * as settingsActions from "redux/actions/settingsActions";
 import * as genericActions from "redux/actions/genericActions";
+import * as externalActions from "redux/actions/externalActions";
 import { AppState } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
+
+function convertToInteropProtobufJson(interopJson: any) {
+  for (const key in interopJson) {
+    if (typeof interopJson[key] === "object") {
+      convertToInteropProtobufJson(interopJson[key]);
+    }
+    if (Array.isArray(interopJson[key])) {
+      interopJson[`${key}List`] = interopJson[key];
+      delete interopJson[key];
+    }
+  }
+}
 
 const defaultMapCenter = { lat: 34.0689, lng: -118.4452 };
 
@@ -35,7 +48,11 @@ const mapStateToProps = (state: AppState) => {
   };
 };
 
-const mapDispatchToProps = { ...settingsActions, ...genericActions };
+const mapDispatchToProps = {
+  ...settingsActions,
+  ...genericActions,
+  ...externalActions
+};
 
 const connectComponent = connect(mapStateToProps, mapDispatchToProps);
 type Props = ExtractPropsType<typeof connectComponent>;
@@ -374,6 +391,42 @@ const Settings = (props: Props) => {
           </div>
         </Col>
       </Row>
+
+      <Button
+        onClick={() => {
+          const xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState === 4 && this.status === 200) {
+              console.log("RECEIVED RESPONSE FROM BACKEND");
+              console.log(this.responseText);
+            }
+          };
+          xhttp.open("GET", "http://localhost:8080/get-request", true);
+          xhttp.send();
+        }}
+      >
+        Send GET request
+      </Button>
+      <Button
+        onClick={() => {
+          const xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState === 4 && this.status === 200) {
+              console.log("RECEIVED RESPONSE FROM BACKEND");
+              console.log(this.responseText);
+              const interopMission = JSON.parse(this.responseText);
+              convertToInteropProtobufJson(interopMission);
+              props.basicServerAction("INTEROP_DATA", {
+                mission: interopMission
+              });
+            }
+          };
+          xhttp.open("POST", "http://localhost:8080/post-request", true);
+          xhttp.send(JSON.stringify({ message: "sample message", data: 1234 }));
+        }}
+      >
+        Send POST request
+      </Button>
     </Container>
   );
 };
