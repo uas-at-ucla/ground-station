@@ -15,6 +15,7 @@ import io.ktor.routing.post
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import kotlinserver.interop.Interop
+import kotlinserver.model.Mission
 import kotlinserver.model.Telemetry
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -49,6 +50,7 @@ fun Application.module() {
 
             val json = Json(JsonConfiguration.Stable)
             val dataObject = json.parse(Message.serializer(), data)
+            val test = json.stringify(Message.serializer(), dataObject)
             println("Received post from frontend with message: ${dataObject.message} and data: ${dataObject.data}")
 
             // Send message to interop
@@ -57,12 +59,14 @@ fun Application.module() {
             if (interop.connect()) {
                 println("Interop connected")
             }
-            println(interop.getTeams()!![0].toString())
-            println(interop.getMission(1))
+
+            val mission = interop.getMission(1)!!
+//            println("Mission received: ${mission.toString()}")
 //            val telemetry = Telemetry(6.0, 12.0, 3.0, 4.0)
 //            println(interop.uploadTelemetry(telemetry))
 
-            call.respondText("Responding to post")
+
+            call.respondText(json.stringify(Mission.serializer(), mission))
         }
     }
 }
