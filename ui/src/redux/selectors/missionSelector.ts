@@ -149,7 +149,7 @@ export const mainFlyZone = createSelector(
       const area = polygonArea(flyZone.boundaryPoints);
       if (area > maxArea) {
         maxArea = area;
-        mainFlyZone = flyZone;
+        mainFlyZone = { ...flyZone };
       }
     }
     mainFlyZone.isClockwise = polygonIsClockwise(mainFlyZone.boundaryPoints);

@@ -23,6 +23,7 @@ import GoogleMap, {
 import UasLogo from "components/utils/UasLogo/UasLogo";
 import * as settingsActions from "redux/actions/settingsActions";
 import * as genericActions from "redux/actions/genericActions";
+import * as externalActions from "redux/actions/externalActions";
 import { AppState } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
 
@@ -35,7 +36,11 @@ const mapStateToProps = (state: AppState) => {
   };
 };
 
-const mapDispatchToProps = { ...settingsActions, ...genericActions };
+const mapDispatchToProps = {
+  ...settingsActions,
+  ...genericActions,
+  ...externalActions
+};
 
 const connectComponent = connect(mapStateToProps, mapDispatchToProps);
 type Props = ExtractPropsType<typeof connectComponent>;
@@ -373,35 +378,38 @@ const Settings = (props: Props) => {
       </Row>
 
       <Button
-          onClick={() => {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-              if (this.readyState === 4 && this.status === 200) {
-                console.log("RECEIVED RESPONSE FROM BACKEND");
-                console.log(this.responseText);
-              }
-            };
-            xhttp.open("GET", "http://localhost:8080/get-request", true);
-            xhttp.send();
-          }}
-        >
-          Send GET request
-        </Button>
-        <Button
-          onClick={() => {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-              if (this.readyState === 4 && this.status === 200) {
-                console.log("RECEIVED RESPONSE FROM BACKEND");
-                console.log(this.responseText);
-              }
-            };
-            xhttp.open("POST", "http://localhost:8080/post-request", true);
-            xhttp.send(JSON.stringify({ message: "sample message", data: 1234 }));
-          }}
-        >
-          Send POST request
-        </Button>
+        onClick={() => {
+          const xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState === 4 && this.status === 200) {
+              console.log("RECEIVED RESPONSE FROM BACKEND");
+              console.log(this.responseText);
+            }
+          };
+          xhttp.open("GET", "http://localhost:8080/get-request", true);
+          xhttp.send();
+        }}
+      >
+        Send GET request
+      </Button>
+      <Button
+        onClick={() => {
+          const xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState === 4 && this.status === 200) {
+              console.log("RECEIVED RESPONSE FROM BACKEND");
+              console.log(this.responseText);
+              props.basicServerAction("INTEROP_DATA", {
+                mission: JSON.parse(this.responseText)
+              });
+            }
+          };
+          xhttp.open("POST", "http://localhost:8080/post-request", true);
+          xhttp.send(JSON.stringify({ message: "sample message", data: 1234 }));
+        }}
+      >
+        Send POST request
+      </Button>
     </Container>
   );
 };
