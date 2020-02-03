@@ -371,37 +371,6 @@ const Settings = (props: Props) => {
           </div>
         </Col>
       </Row>
-
-      <Button
-          onClick={() => {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-              if (this.readyState === 4 && this.status === 200) {
-                console.log("RECEIVED RESPONSE FROM BACKEND");
-                console.log(this.responseText);
-              }
-            };
-            xhttp.open("GET", "http://localhost:8080/get-request", true);
-            xhttp.send();
-          }}
-        >
-          Send GET request
-        </Button>
-        <Button
-          onClick={() => {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-              if (this.readyState === 4 && this.status === 200) {
-                console.log("RECEIVED RESPONSE FROM BACKEND");
-                console.log(this.responseText);
-              }
-            };
-            xhttp.open("POST", "http://localhost:8080/post-request", true);
-            xhttp.send(JSON.stringify({ message: "sample message", data: 1234 }));
-          }}
-        >
-          Send POST request
-        </Button>
     </Container>
   );
 };

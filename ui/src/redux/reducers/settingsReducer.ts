@@ -1,6 +1,6 @@
 import { AppAction } from "../actions/actionTypes";
 
-const isWebServer = window.location.protocol.startsWith("http");
+const isWebServer = window.location.protocol.startsWith("http"); // may need to change now that we use websockets instead of socket.io
 const defaultIP = "localhost";
 const socketHost = isWebServer ? window.location.hostname : defaultIP;
 const socketPort = 8081;
@@ -9,7 +9,7 @@ const initialState = {
   gndServerIp: socketHost + ":" + socketPort,
   connectedGndServerIp: socketHost + ":" + socketPort,
   gndServerConnected: false,
-  interopIp: "134.209.2.203:8000",
+  interopIp: "167.71.120.140:8000", // used to be "134.209.2.203:8000"
   interopUsername: "testuser",
   interopPassword: "testpass",
   interopMissionId: 2,
