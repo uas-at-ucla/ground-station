@@ -77,7 +77,7 @@ class Interop {
         val response = mClient.get<HttpStatement>("${mInteropURL}/api/missions/${missionId}").execute()
         return parseResponse(response, Mission.serializer())
     }
-    
+
 
     /**
      * Uploads UAV telemetry data to interop.

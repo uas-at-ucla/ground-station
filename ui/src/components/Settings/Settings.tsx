@@ -23,6 +23,7 @@ import GoogleMap, {
 import UasLogo from "components/utils/UasLogo/UasLogo";
 import * as settingsActions from "redux/actions/settingsActions";
 import * as genericActions from "redux/actions/genericActions";
+import * as externalActions from "redux/actions/externalActions";
 import { AppState } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
 
@@ -35,7 +36,11 @@ const mapStateToProps = (state: AppState) => {
   };
 };
 
-const mapDispatchToProps = { ...settingsActions, ...genericActions };
+const mapDispatchToProps = {
+  ...settingsActions,
+  ...genericActions,
+  ...externalActions
+};
 
 const connectComponent = connect(mapStateToProps, mapDispatchToProps);
 type Props = ExtractPropsType<typeof connectComponent>;
