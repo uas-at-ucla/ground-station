@@ -10,52 +10,48 @@ import io.ktor.client.statement.HttpStatement
 import io.ktor.client.statement.readText
 import io.ktor.content.TextContent
 import io.ktor.http.ContentType
-import io.ktor.http.Cookie
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.setCookie
-import kotlinserver.model.*
+import kotlinserver.model.interop.*
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.list
-import kotlinx.serialization.serializer
 
 class Interop {
 
-    // Interop setup credentials
-    // IP, port, username, and password are all specified within Flightdeck. We should get these values from
-    // Flightdeck instead of hard-coding them here; this should be a POST request when clicking the "Connect to Interop"
-    // button. This will require direct modification of front-end code; until then, interop credentials will need
-    // to remain hard-coded.
-    private val mInteropIP = "167.71.120.140" // at competition, replace this with IP address given at setup time
-    private val mInteropPort = "8000"
-    private val mInteropURL = "http://${mInteropIP}:${mInteropPort}"
-    private val mInteropUsername = "testuser" // also replace with username given at check-in
-    private val mInteropPassword = "testpass" // same as interop username
-
     // Data members
-    private val mClient = HttpClient() {
+    private var mInteropURL = ""
+    private var mConnected = false
+    private val mJson = Json(JsonConfiguration.Stable)
+    private val mClient = HttpClient {
         // Allows for dynamic storage of cookies after logging in
         install(HttpCookies) {
             storage = AcceptAllCookiesStorage()
         }
     }
-    private val mJson = Json(JsonConfiguration.Stable)
 
     /**
      * Connects to the interop server. Must be called before any API requests can be sent.
+     * Also deals with basic configuration, such as storing the interop server's IP address.
      * Endpoint: POST /api/login
      *
+     * @param ip the IP address of the interop server to connect to
+     * @param username login information for interop
+     * @param password login information for interop
      * @return true if a connection was successfully established, false otherwise
      */
-    suspend fun connect(): Boolean {
+    suspend fun connect(ip: String, username: String, password: String): Boolean {
+        mInteropURL = "http://$ip"
         val requestBody = mJson.stringify(
             LoginRequest.serializer(),
-            LoginRequest(username = mInteropUsername, password = mInteropPassword)
+            LoginRequest(username = username, password = password)
         )
+        println("Trying to connect")
         val response = postRequest("/api/login", requestBody)
-        return response.status == HttpStatusCode.OK
+        println("Connected!")
+        mConnected = response.status == HttpStatusCode.OK
+        return mConnected
     }
 
     /**
@@ -65,6 +61,7 @@ class Interop {
      * @return a list of all teams with their status and information
      */
     suspend fun getTeams(): List<Team>? {
+        if (!mConnected) return null
         val response = mClient.get<HttpStatement>("${mInteropURL}/api/teams").execute()
         return parseResponse(response, Team.serializer().list, "Teams") // type required since deserializing list
     }
@@ -76,9 +73,11 @@ class Interop {
      * @param missionId is the ID of the mission to fetch
      */
     suspend fun getMission(missionId: Int): Mission? {
+        if (!mConnected) return null
         val response = mClient.get<HttpStatement>("${mInteropURL}/api/missions/${missionId}").execute()
         return parseResponse(response, Mission.serializer())
     }
+    
 
     /**
      * Uploads UAV telemetry data to interop.
@@ -88,6 +87,7 @@ class Interop {
      * @return true if telemetry was successfully uploaded via HTTP, false otherwise
      */
     suspend fun uploadTelemetry(telemetry: Telemetry): Boolean {
+        if (!mConnected) return false
         val response = postRequest("/api/telemetry", mJson.stringify(Telemetry.serializer(), telemetry))
         return response.status == HttpStatusCode.OK
     }
@@ -99,13 +99,10 @@ class Interop {
      * @param odlc is the data to upload
      * @return the response data from interop
      */
-    suspend fun uploadODLC(odlc: ODLC) {
+    suspend fun uploadODLC(odlc: ODLC): DurableODLC? {
+        if (!mConnected) return null
         val response = postRequest("/api/odlcs", mJson.stringify(ODLC.serializer(), odlc))
-        // TODO (Return response from ODLC POST request)
-    }
-
-    suspend fun updateODLC(id: Int) {
-
+        return parseResponse(response, DurableODLC.serializer())
     }
 
     /**
@@ -122,7 +119,14 @@ class Interop {
         type: String = T::class.java.simpleName
     ): T? {
         return if (response.status == HttpStatusCode.OK) {
-            mJson.parse(deserializer, response.readText())
+            val responseText = response.readText()
+            try {
+                mJson.parse(deserializer, responseText)
+            } catch (se : SerializationException) {
+                println("Failed to parse interop server's response: $se")
+                println(responseText)
+                null
+            }
         } else {
             println("Unable to get $type: ${response.status}")
             null

@@ -18,31 +18,34 @@ object Communicator {
      *
      * @param message is the message to handle
      * @param interop is the interop server to possibly forward requests to
-     * @return true if we successfully handled the message, false otherwise
+     * @return a stringified JSON to respond to UI, or null if there either there is no response necessary
+     * or an error occurred
      *
-     * Reasons to return false: unable to parse message from UI, bad response from interop
+     * Reasons for errors: unable to parse message from UI, bad response from interop
      */
-    suspend fun handleMessage(message: WebsocketFormattedMessage, interop: Interop): Boolean {
+    suspend fun handleMessage(message: WebsocketFormattedMessage, interop: Interop): String? {
         val type = message.type
 
         if (message.data != null) {
             when (type) {
                 "CONNECT_TO_INTEROP" -> {
-                    val data = parseMessageData(message.data, ConnectToInterop.serializer()) ?: return false
+                    val data = parseMessageData(message.data, ConnectToInterop.serializer()) ?: return null
                     if (interop.connect(data.ip, data.username, data.password)) {
-                        println("Interop connected")
+                        println("Interop connected at ip ${data.ip}, user ${data.username}")
                     } else {
-                        println("Failed to connect to interop")
+                        println("Failed to connect to interop at ip ${data.ip}, user ${data.username}")
                     }
 
-                    println(interop.getMission(1))
+//                    println(interop.getMission(1))
                     println(interop.getTeams()!![0])
                     println(interop.uploadTelemetry(Telemetry(6.0, 12.0, 3.0, 4.0)))
+
+                    return interop.getMission(1).toString()
                 }
             }
         }
 
-        return true
+        return null
     }
 
     /**

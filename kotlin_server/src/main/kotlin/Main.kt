@@ -1,76 +1,61 @@
 package kotlinserver
 
 import io.ktor.application.Application
-import io.ktor.application.call
 import io.ktor.application.install
-import io.ktor.features.CORS
-import io.ktor.features.CallLogging
-import io.ktor.features.DefaultHeaders
-import io.ktor.http.*
-import io.ktor.request.receiveText
-import io.ktor.response.respondText
-import io.ktor.routing.Routing
-import io.ktor.routing.get
-import io.ktor.routing.post
+import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.cio.websocket.pingPeriod
+import io.ktor.http.cio.websocket.readText
+import io.ktor.http.cio.websocket.timeout
+import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.websocket.WebSockets
+import io.ktor.websocket.webSocket
+import kotlinserver.Communicator.handleMessage
 import kotlinserver.interop.Interop
-import kotlinserver.model.Mission
-import kotlinserver.model.Telemetry
-import kotlinx.serialization.Serializable
+import kotlinserver.model.ui.WebsocketFormattedMessage
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
-
-// for testing
-@Serializable
-data class Message(
-    val message: String,
-    val data: Int
-)
+import java.time.Duration
 
 fun Application.module() {
+    val json = Json(JsonConfiguration.Stable)
     val interop = Interop()
 
-    install(DefaultHeaders)
-    install(CallLogging)
+    install(WebSockets)
 
-    // CORS is required since the front-end is currently a separate webapp. We can integrate the front-end
-    // as a resource of this JVM project to try and get rid of the need for CORS
-    install(CORS) {
-        header(HttpHeaders.AccessControlAllowOrigin)
-        anyHost()
-    }
-    install(Routing) {
-        get("/get-request") {
-            call.respondText("Responding to get")
-            println("Received get from frontend")
-        }
-        post("/post-request") {
-            val data = call.receiveText()
-
-            val json = Json(JsonConfiguration.Stable)
-            val dataObject = json.parse(Message.serializer(), data)
-            val test = json.stringify(Message.serializer(), dataObject)
-            println("Received post from frontend with message: ${dataObject.message} and data: ${dataObject.data}")
-
-            // Send message to interop
-            // Presumably, messages will be sent to interop when this server receives an update
-            // in telemetry from the drone; i.e., the drone sends a post request to this server
-            if (interop.connect()) {
-                println("Interop connected")
+    routing {
+        webSocket("/ui") {
+            println("UI connected")
+            try {
+                for (frame in incoming) {
+                    when (frame) {
+                        is Frame.Text -> {
+                            val contents = frame.readText()
+                            try {
+                                println("Received message")
+                                val contentJson = json.parse(WebsocketFormattedMessage.serializer(), contents)
+                                handleMessage(contentJson, interop)?.run {
+                                    outgoing.send(Frame.Text(this))
+                                }
+                            } catch (se: SerializationException) {
+                                println("Unable to parse message: $se")
+                                println(contents)
+                            }
+                        }
+                    }
+                }
+            } catch (ex : ClosedReceiveChannelException) {
+                println("Connection closed: ${closeReason.await()}")
             }
-
-            val mission = interop.getMission(1)!!
-//            println("Mission received: ${mission.toString()}")
-//            val telemetry = Telemetry(6.0, 12.0, 3.0, 4.0)
-//            println(interop.uploadTelemetry(telemetry))
-
-
-            call.respondText(json.stringify(Mission.serializer(), mission))
+            println("End of websocket code ${closeReason.await()}")
         }
+        // webSocket("/uav") {} // handle more WebSockets in different ways by adding additional routes like this
     }
 }
 
 fun main() {
-    embeddedServer(Netty, 8080, host = "0.0.0.0", module = Application::module).start(wait = true)
+    embeddedServer(Netty, 8081, host = "0.0.0.0", module = Application::module).start(wait = true)
 }
