@@ -47,9 +47,7 @@ class Interop {
             LoginRequest.serializer(),
             LoginRequest(username = username, password = password)
         )
-        println("Trying to connect")
         val response = postRequest("/api/login", requestBody)
-        println("Connected!")
         mConnected = response.status == HttpStatusCode.OK
         return mConnected
     }

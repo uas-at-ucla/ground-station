@@ -27,16 +27,22 @@ class Communicator {
     };
 
     this.socket.onmessage = event => {
-      console.log("Received message from server: ", event.data);
+      // NOTE: the following will fail if server sends malformed response
+      // JSON syntax expected: {type: externalActions.basicMessage (String), data: {SomeJSON} }
+      const message = JSON.parse(event.data);
+      console.log(message);
+      this.store.dispatch(
+        externalActions.basicServerAction(message.type, message.data)
+      );
     };
-
-    // Need to convert the following event triggers from socket.io to websocket syntax
 
     // for (const message of externalActions.basicServerAction.basicMessages) {
     //   this.socket.on(message, (data: any) => {
     //     this.store.dispatch(externalActions.basicServerAction(message, data));
     //   });
     // }
+
+    // Need to convert the following event triggers from socket.io to websocket syntax
 
     // this.socket.on("MISSION_COMPILE_ERROR", () => {
     //   alert("FAILED to compile mission!");
