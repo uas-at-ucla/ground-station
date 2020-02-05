@@ -14,7 +14,7 @@ const initialState = {
   interopIp: "167.71.120.140:8000", // used to be "134.209.2.203:8000"
   interopUsername: "testuser",
   interopPassword: "testpass",
-  interopMissionId: 2,
+  interopMissionId: 1,
   antennaPos: { lat: 0, lng: 0 },
   mapCapture: "off" as "off" | "topLeftCorner" | "bottomRightCorner",
   mapCaptureMaxZoom: 20,
