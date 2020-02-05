@@ -30,7 +30,7 @@ const VehicleMarkers = (props: Props) => {
         <span>
           <Circle
             center={pos}
-            radius={props.telemetry.sensors.gps_eph}
+            radius={props.telemetry.sensors.gpsEph}
             options={{ clickable: false }}
           />
           <Marker

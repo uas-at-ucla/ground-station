@@ -12,10 +12,7 @@ import { ExtractPropsType } from "utils/reduxUtils";
 
 const mapDispatchToProps = genericActions;
 
-const connectComponent = connect(
-  null,
-  mapDispatchToProps
-);
+const connectComponent = connect(null, mapDispatchToProps);
 type Props = ExtractPropsType<typeof connectComponent>;
 
 const Controls = (props: Props) => {

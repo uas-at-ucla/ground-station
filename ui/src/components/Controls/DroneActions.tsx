@@ -46,16 +46,15 @@ const mapStateToProps = (state: AppState) => {
 
 const mapDispatchToProps = droneActions;
 
-const connectComponent = connect(
-  mapStateToProps,
-  mapDispatchToProps
-);
+const connectComponent = connect(mapStateToProps, mapDispatchToProps);
 type Props = ExtractPropsType<typeof connectComponent>;
 
 const DroneActions = (props: Props) => {
   const [doShowModal, setShowModal] = useState(false);
   const [message, setMessage] = useState("");
-  const action = useRef(() => {});
+  const action = useRef(() => {
+    /**/
+  });
   const [showSetpointModal, setShowSetpointModal] = useState(false);
   const [setpointInputs, setSetpointInputs] = useState({
     gimbal: 0.0,
@@ -112,12 +111,12 @@ const DroneActions = (props: Props) => {
   };
 
   const sendSetpoint = (e: MouseEvent<HTMLButtonElement>) => {
-    const name = e.currentTarget.name as keyof (typeof setpointMsgs);
+    const name = e.currentTarget.name as keyof typeof setpointMsgs;
     props.sendSetpoint(setpointMsgs[name], setpointInputs[name]);
   };
 
   const compileMission = () => {
-    props.compileMission(props.missionCommands);
+    // props.compileMission(props.missionCommands); // TODO
   };
 
   return (

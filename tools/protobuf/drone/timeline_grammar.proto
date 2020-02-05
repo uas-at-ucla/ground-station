@@ -1,0 +1,76 @@
+// From https://github.com/uas-at-ucla/avionics/blob/master/src/ground_controls/timeline/timeline_grammar.proto
+
+syntax = "proto2";
+package drone;
+
+import "drone/mission_commands.proto";
+
+// Ground language /////////////////////////////////////////////////////////////
+// This is the timeline representation for a mission, as received from the
+// ground. Ground timeline commands are abstract and should only convey the
+// high objectives of what the mission requires and the current state of the
+// field.
+
+// GroundProgram is the message that is created by the groundstation,
+// serialized, and sent to the timeline compiler. It contains the list of
+// commands to execute and characteristics of the field, as received by the
+// interop server.
+message GroundProgram {
+  repeated GroundCommand  commands         = 1;
+  repeated StaticObstacle static_obstacles = 2;
+  repeated Position2D     field_boundary   = 3;
+}
+
+// GroundCommand wraps all of the valid commands that are possible for ground
+// language. Only one of the fields for the oneof command can be set at a time,
+// so whichever one is set will determine the type of this command.
+message GroundCommand {
+  oneof command {
+    WaypointCommand       waypoint_command         = 1;
+    FlyThroughCommand     fly_through_command      = 2;
+    UgvDropCommand        ugv_drop_command         = 3;
+    SurveyCommand         survey_command           = 4;
+    OffAxisCommand        off_axis_command         = 5;
+    WaitCommand           wait_command             = 6;
+    LandAtLocationCommand land_at_location_command = 7;
+  }
+}
+
+message UgvDropCommand {
+  required Position3D goal = 1;
+}
+
+message WaitCommand {
+  required double time = 1;
+}
+
+message LandAtLocationCommand {
+  required Position3D goal = 1;
+}
+
+// Drone language //////////////////////////////////////////////////////////////
+message DroneProgram {
+  repeated DroneCommand commands = 1;
+}
+
+message DroneCommand {
+  oneof command {
+    NothingCommand         nothing_command           = 1;
+    SleepCommand           sleep_command             = 2;
+    TriggerBombDropCommand trigger_bomb_drop_command = 3;
+    TriggerAlarmCommand    trigger_alarm_command     = 4;
+    TranslateCommand       translate_command         = 5;
+    LandCommand            land_command              = 6;
+  }
+}
+
+message TranslateCommand {
+  required Position3D goal         = 1;
+  required bool       come_to_stop = 2;
+}
+
+message TriggerBombDropCommand {}
+
+message TriggerAlarmCommand {}
+
+message LandCommand {}

@@ -27,6 +27,18 @@ import * as externalActions from "redux/actions/externalActions";
 import { AppState } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
 
+function convertToInteropProtobufJson(interopJson: any) {
+  for (const key in interopJson) {
+    if (typeof interopJson[key] === "object") {
+      convertToInteropProtobufJson(interopJson[key]);
+    }
+    if (Array.isArray(interopJson[key])) {
+      interopJson[`${key}List`] = interopJson[key];
+      delete interopJson[key];
+    }
+  }
+}
+
 const defaultMapCenter = { lat: 34.0689, lng: -118.4452 };
 
 const mapStateToProps = (state: AppState) => {
@@ -354,12 +366,15 @@ const Settings = (props: Props) => {
             <GoogleMap
               defaultZoom={17}
               center={
-                /*if*/ props.interopData
+                props.interopData &&
+                props.interopData.mission.airDropPos &&
+                props.interopData.mission.airDropPos.latitude &&
+                props.interopData.mission.airDropPos.longitude
                   ? {
                       lat: props.interopData.mission.airDropPos.latitude,
                       lng: props.interopData.mission.airDropPos.longitude
                     }
-                  : /*else*/ defaultMapCenter
+                  : defaultMapCenter
               }
               defaultMapTypeId="customTiles"
               defaultOptions={{

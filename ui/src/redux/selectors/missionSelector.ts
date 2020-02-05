@@ -1,112 +1,79 @@
 import { createSelector } from "reselect";
 import { createObjectSelector } from "reselect-map";
+
 import { AppState } from "../store";
-
-export const protoInfo = createSelector(
-  [(state: AppState) => state.mission.timelineGrammar],
-  timelineGrammar => {
-    // Create objects that make it easy to get info about the proto definition
-    if (!timelineGrammar) {
-      return null;
-    }
-    const groundCommandNames =
-      timelineGrammar.GroundCommand.oneofs.command.oneof;
-    const commandAbbr: { [s: string]: string } = {};
-    for (const commandName of groundCommandNames) {
-      const commandType =
-        timelineGrammar.GroundCommand.fields[commandName].type;
-      commandAbbr[commandName] = commandType.replace("Command", "");
-    }
-    const droneCommandNames = timelineGrammar.DroneCommand.oneofs.command.oneof;
-    for (const commandName of droneCommandNames) {
-      const commandType = timelineGrammar.DroneCommand.fields[commandName].type;
-      commandAbbr[commandName] = commandType.replace("Command", "");
-    }
-    return {
-      timelineGrammar: timelineGrammar,
-      commandNames: groundCommandNames,
-      commandAbbr: commandAbbr,
-      fieldUnits: {
-        DroneProgram: {
-          altitude: "m"
-        },
-        GroundProgram: {
-          altitude: "ft"
-        }
-      },
-      locationFields: ["goal", "ground_target", "photographer_location"]
-    };
-  }
-);
-
-export const commandsById = createSelector(
-  [(state: AppState) => state.mission.commands],
-  commands =>
-    commands.reduce((map, cmd) => {
-      map[cmd.id] = cmd;
-      return map;
-    }, {})
-);
+import { DroneCommand } from "protobuf/drone/timeline_grammar_pb";
+import { Position3D } from "protobuf/drone/mission_commands_pb";
+import { FlyZone, Position } from "protobuf/interop/interop_api_pb";
 
 // createObjectSelector is more efficient because it only recalculates for commands that have changed
 export const commandMarkers = createObjectSelector(
-  [commandsById, protoInfo],
-  (cmd: any, protoInfo) => {
-    if (!protoInfo) {
-      return null;
+  [(state: AppState) => state.mission.commands],
+  cmd => {
+    //TODO this might be hard
+    let location: Position3D.AsObject | null = null;
+    let label: google.maps.MarkerLabel | null = null;
+
+    if (cmd.flyThroughCommand) {
+      location = cmd.flyThroughCommand.goal;
+    } else if (cmd.landAtLocationCommand) {
+      location = cmd.landAtLocationCommand.goal;
+      label = {
+        fontFamily: "Fontawesome",
+        text: "\uf063",
+        fontSize: "15px"
+      };
+    } else if (cmd.offAxisCommand) {
+      location = cmd.offAxisCommand.goal;
+    } else if (cmd.ugvDropCommand) {
+      location = cmd.ugvDropCommand.goal;
+      label = {
+        fontFamily: "Fontawesome",
+        text: "\uf187",
+        fontSize: "15px"
+      };
+    } else if (cmd.waypointCommand) {
+      location = cmd.waypointCommand.goal;
+      label = {
+        fontFamily: "Fontawesome",
+        text: "\uf192",
+        fontSize: "15px"
+      };
     }
-    for (const locationField of protoInfo.locationFields) {
-      if (cmd[cmd.name][locationField]) {
-        let label = null;
-        if (cmd.type === "WaypointCommand") {
-          label = {
-            fontFamily: "Fontawesome",
-            text: "\uf192",
-            fontSize: "15px"
-          };
-        } else if (cmd.type === "UgvDropCommand") {
-          label = {
-            fontFamily: "Fontawesome",
-            text: "\uf187",
-            fontSize: "15px"
-          };
-        } else if (cmd.type === "LandAtLocationCommand") {
-          label = {
-            fontFamily: "Fontawesome",
-            text: "\uf063",
-            fontSize: "15px"
-          };
-        }
-        const location = cmd[cmd.name][locationField];
-        return {
-          altitude: location.altitude,
-          position: {
-            lat: location.latitude,
-            lng: location.longitude
-          },
-          label: label
-        };
-      }
+
+    if (location) {
+      return {
+        altitude: location.altitude,
+        position: {
+          lat: location.latitude,
+          lng: location.longitude
+        },
+        label: label
+      };
     }
     return null; // if cmd does not have a location (e.g. a SleepCommand)
   }
 );
 
 export const commandPoints = createSelector(
-  [(state: AppState) => state.mission.commands, commandMarkers, protoInfo],
-  (commands, commandMarkers: any, protoInfo) => {
-    return commands.map((cmd, index) => {
-      const marker = commandMarkers[cmd.id];
-      if (!marker || !protoInfo) {
+  [
+    (state: AppState) => state.mission.commands,
+    (state: AppState) => state.mission.commandOrder,
+    commandMarkers
+  ],
+  (commands, commandOrder, commandMarkers) => {
+    return commandOrder.map((cmdId, index) => {
+      const marker = (commandMarkers as any)[cmdId]; // TODO (problems with createObjectSelector, we probably want to ditch that and move this code into the actual Map component)
+      if (!marker) {
         return null;
       }
       return {
-        id: cmd.id,
-        name: cmd.name,
+        id: cmdId,
+        name: "TODO", //TODO
         marker: marker,
         infobox: {
           position: marker.position,
-          title: index + 1 + ": " + protoInfo.commandAbbr[cmd.name],
+          title: index + 1 + ": " + "", // TODO protoInfo.commandAbbr[cmd.name]
           content: "Altitude: " + marker.altitude + " ft rel"
         }
       };
@@ -115,21 +82,21 @@ export const commandPoints = createSelector(
 );
 
 export const droneProgramPath = createSelector(
-  [(state: AppState) => state.mission.droneProgram, protoInfo],
-  (droneProgram, protoInfo) => {
-    if (!droneProgram || !protoInfo) {
+  [(state: AppState) => state.mission.droneProgram],
+  droneProgram => {
+    if (!droneProgram) {
       return [];
     }
     const path = [];
-    for (const cmd of droneProgram.commands) {
-      for (const locationField of protoInfo.locationFields) {
-        if (cmd[cmd.name][locationField]) {
-          const location = cmd[cmd.name][locationField];
+    for (const cmd of droneProgram.commandsList) {
+      const cmdType = Object.keys(cmd)[0] as keyof DroneCommand.AsObject;
+      if (cmdType === "translateCommand") {
+        const location = cmd[cmdType]?.goal;
+        if (location) {
           path.push({
             lat: location.latitude,
             lng: location.longitude
           });
-          break;
         }
       }
     }
@@ -140,19 +107,26 @@ export const droneProgramPath = createSelector(
 export const mainFlyZone = createSelector(
   [(state: AppState) => state.mission.interopData],
   interopData => {
+    let mainFlyZone: FlyZone.AsObject & { isClockwise: boolean } = {
+      boundaryPointsList: [],
+      isClockwise: false
+    };
     if (!interopData) {
-      return null;
+      return mainFlyZone;
     }
     let maxArea = -1;
-    let mainFlyZone = null;
-    for (const flyZone of interopData.mission.flyZones) {
-      const area = polygonArea(flyZone.boundaryPoints);
+    for (const flyZone of interopData.mission.flyZonesList) {
+      const area = polygonArea(
+        flyZone.boundaryPointsList as Required<Position.AsObject>[]
+      );
       if (area > maxArea) {
         maxArea = area;
-        mainFlyZone = { ...flyZone };
+        mainFlyZone = { ...flyZone, isClockwise: false };
       }
     }
-    mainFlyZone.isClockwise = polygonIsClockwise(mainFlyZone.boundaryPoints);
+    mainFlyZone.isClockwise = polygonIsClockwise(
+      mainFlyZone.boundaryPointsList as Required<Position.AsObject>[]
+    );
     return mainFlyZone;
   }
 );

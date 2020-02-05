@@ -1,6 +1,7 @@
 {
     "parser": "@typescript-eslint/parser",
     "extends": [
+        "react-app", // Start with default config from create-react-app
         "eslint:recommended", // ESLint base recommended rules
         "plugin:@typescript-eslint/eslint-recommended", // Disable ESLint rules that conflict with @typescript-eslint rules
         "plugin:@typescript-eslint/recommended", // @typescript-eslint recommended rules
@@ -21,9 +22,10 @@
     },
     "plugins": ["no-autofix", "react-hooks"],
     "rules": {
-        "@typescript-eslint/explicit-function-return-type": 0, // Typescript does an amazing job at inferring function return types, so this almost never needed
-        "@typescript-eslint/no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false, "typedefs": false }], // Sometimes it makes sense to use a class/function/type above its definition for organizational reasons
-        "@typescript-eslint/no-var-requires": 0, // Require shouldn't be used most of the time, but it is needed to import packages that don't support TypeScript, including our very own google-maps-js-api
+        "@typescript-eslint/explicit-function-return-type": 0, // Typescript does an amazing job at inferring function return types, so this almost never needed.
+        "@typescript-eslint/no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false, "typedefs": false }], // Sometimes it makes sense to use a class/function/type above its definition for organizational reasons.
+        "@typescript-eslint/no-var-requires": 0, // Require shouldn't be used most of the time, but it is needed to import packages that don't support TypeScript.
+        "@typescript-eslint/camelcase": "warn", // Not the end of the world. This can just be a warning instead of an error.
         "prefer-const": "off",
         "no-autofix/prefer-const": "error",
         "react-hooks/rules-of-hooks": "error",

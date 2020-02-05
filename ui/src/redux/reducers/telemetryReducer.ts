@@ -1,13 +1,23 @@
+import produce from "immer";
+
 import { AppAction } from "../actions/actionTypes";
+import { Sensors, Output } from "protobuf/drone/messages_pb";
+import { Mission } from "protobuf/interop/interop_api_pb";
+import { UGV_Message } from "protobuf/ugv/ugv_messages_pb";
 
 const initialState = {
-  droneTelemetry: undefined as any,
+  droneTelemetry: undefined as
+    | { sensors: Sensors.AsObject; output: Output.AsObject }
+    | undefined,
   playback: false,
   recording: false,
-  telemetryData: new Array<any>(),
+  telemetryData: new Array<{
+    sensors: Sensors.AsObject;
+    output: Output.AsObject;
+  }>(),
   pingDelay: undefined as number | undefined,
   mapCenter: { lat: 38.147483, lng: -76.427778 },
-  ugvStatus: undefined as any,
+  ugvStatus: undefined as UGV_Message.AsObject["status"],
   setpoints: {
     gimbal: undefined as number | undefined,
     deployment: undefined as number | undefined,
@@ -17,98 +27,89 @@ const initialState = {
 };
 export type TelemetryState = typeof initialState;
 
-export default function reducer(
-  state = initialState,
-  action: AppAction
-): TelemetryState {
+export default produce((state: TelemetryState, action: AppAction) => {
   switch (action.type) {
     case "RESET_REDUX_STATE": {
-      return initialState;
+      Object.assign(state, initialState);
+      return;
     }
     case "PING": {
-      return { ...state, pingDelay: action.payload };
+      state.pingDelay = action.payload;
+      return;
     }
     case "TELEMETRY": {
       if (!state.playback) {
-        const newState = { ...state, droneTelemetry: action.payload };
+        state.droneTelemetry = action.payload;
         // if recording add to list
         if (state.recording) {
-          newState.telemetryData.push(action.payload);
+          state.telemetryData.push(action.payload);
         }
-        return newState;
-      } else {
-        return state;
       }
+      return;
     }
     case "TOGGLE_PLAYBACK": {
-      return { ...state, playback: !state.playback };
+      state.playback = !state.playback;
+      return;
     }
     case "TOGGLE_RECORD": {
-      return { ...state, recording: !state.recording };
+      state.recording = !state.recording;
+      return;
     }
     case "PLAYBACK": {
-      return { ...state, droneTelemetry: action.payload };
+      state.droneTelemetry = action.payload;
+      return;
     }
     case "GIMBAL_SETPOINT": {
-      return {
-        ...state,
-        setpoints: { ...state.setpoints, gimbal: action.payload }
-      };
+      state.setpoints.gimbal = action.payload;
+      return;
     }
     case "DEPLOYMENT_MOTOR_SETPOINT": {
-      return {
-        ...state,
-        setpoints: { ...state.setpoints, deployment: action.payload }
-      };
+      state.setpoints.deployment = action.payload;
+      return;
     }
     case "LATCH_SETPOINT": {
-      return {
-        ...state,
-        setpoints: { ...state.setpoints, latch: action.payload }
-      };
+      state.setpoints.latch = action.payload;
+      return;
     }
     case "HOTWIRE_SETPOINT": {
-      return {
-        ...state,
-        setpoints: { ...state.setpoints, hotwire: action.payload }
-      };
+      state.setpoints.hotwire = action.payload;
+      return;
     }
     case "CENTER_ON_DRONE": {
       if (state.droneTelemetry) {
-        return {
-          ...state,
-          mapCenter: {
-            lat: state.droneTelemetry.sensors.latitude,
-            lng: state.droneTelemetry.sensors.longitude
-          }
+        state.mapCenter = {
+          lat: state.droneTelemetry.sensors.latitude,
+          lng: state.droneTelemetry.sensors.latitude
         };
-      } else {
-        return state;
       }
+      return;
     }
     case "CENTER_ON_COMMAND": {
-      return { ...state, mapCenter: action.payload.pos };
+      state.mapCenter = action.payload.pos;
+      return;
     }
     case "INTEROP_DATA": {
-      if (!action.payload) {
-        return state;
-      }
-      return {
-        ...state,
-        mapCenter: {
-          lat: action.payload.mission.airDropPos.latitude,
-          lng: action.payload.mission.airDropPos.longitude
+      if (action.payload) {
+        const mission = action.payload.mission as Mission.AsObject;
+        if (
+          mission.airDropPos &&
+          mission.airDropPos.latitude &&
+          mission.airDropPos.longitude
+        ) {
+          state.mapCenter = {
+            lat: mission.airDropPos.latitude,
+            lng: mission.airDropPos.longitude
+          };
         }
-      };
+      }
+      return;
     }
     case "UGV_MESSAGE": {
-      if (action.payload.status === undefined) {
-        return state;
+      const ugvMessage = action.payload as UGV_Message.AsObject;
+      if (ugvMessage.status !== undefined) {
+        state.ugvStatus = ugvMessage.status;
       }
-      return { ...state, ugvStatus: action.payload.status };
-    }
-    default: {
-      return state;
+      return;
     }
   }
-}
+}, initialState) as (a: any, b: any) => TelemetryState;

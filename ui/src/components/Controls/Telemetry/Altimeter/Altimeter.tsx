@@ -22,14 +22,19 @@ type Props = ExtractPropsType<typeof connectComponent>;
 const Altimeter = (props: Props) => {
   let relAltitude = 0;
   if (props.telemetry) {
-    relAltitude = props.telemetry.sensors.relative_altitude * FEET_PER_METER;
+    relAltitude = props.telemetry.sensors.relativeAltitude * FEET_PER_METER;
   }
   const percentage = (relAltitude / MAX_ALT) * 100;
 
   let min = 0;
   let max = Infinity;
-  if (props.telemetry && props.interopData) {
-    const homeAlt = props.telemetry.sensors.home_altitude * FEET_PER_METER;
+  if (
+    props.telemetry &&
+    props.interopData &&
+    props.mainFlyZone.altitudeMin &&
+    props.mainFlyZone.altitudeMax
+  ) {
+    const homeAlt = props.telemetry.sensors.homeAltitude * FEET_PER_METER;
     min = props.mainFlyZone.altitudeMin - homeAlt;
     max = props.mainFlyZone.altitudeMax - homeAlt;
   }

@@ -1,3 +1,5 @@
+import produce from "immer";
+
 import { AppAction } from "../actions/actionTypes";
 
 const isWebServer = window.location.protocol.startsWith("http"); // may need to change now that we use websockets instead of socket.io
@@ -22,28 +24,27 @@ const initialState = {
 };
 export type SettingsState = typeof initialState;
 
-export default function reducer(
-  state = initialState,
-  action: AppAction
-): SettingsState {
+export default produce((state: SettingsState, action: AppAction) => {
   switch (action.type) {
     case "RESET_REDUX_STATE": {
-      return initialState;
+      Object.assign(state, initialState);
+      return;
     }
     case "UPDATE_SETTINGS": {
-      return { ...state, ...action.payload };
+      Object.assign(state, action.payload);
+      return;
     }
     case "CONNECT_TO_GND_SERVER": {
-      return { ...state, connectedGndServerIp: state.gndServerIp };
+      state.connectedGndServerIp = state.gndServerIp;
+      return;
     }
     case "GND_SERVER_CONNECTED": {
-      return { ...state, gndServerConnected: true };
+      state.gndServerConnected = true;
+      return;
     }
     case "GND_SERVER_DISCONNECTED": {
-      return { ...state, gndServerConnected: false };
-    }
-    default: {
-      return state;
+      state.gndServerConnected = false;
+      return;
     }
   }
-}
+}, initialState) as (a: any, b: any) => SettingsState;

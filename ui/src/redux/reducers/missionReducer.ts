@@ -1,117 +1,115 @@
 import produce from "immer";
 import arrayMove from "array-move";
+
 import { AppAction } from "../actions/actionTypes";
+import {
+  GroundCommand,
+  DroneProgram
+} from "protobuf/drone/timeline_grammar_pb";
+import { Mission } from "protobuf/interop/interop_api_pb";
 
 const initialState = {
-  timelineGrammar: undefined as any,
-  commands: new Array<any>(),
+  commands: {} as { [id: string]: GroundCommand.AsObject },
+  commandOrder: new Array<string>(),
   defaultAltitude: 100,
   commandAnimate: {} as { [s: string]: boolean },
-  droneProgram: undefined as any,
+  droneProgram: undefined as DroneProgram.AsObject | undefined,
   missionCompiled: false,
   missionUploaded: false,
   lastDroppyCommand: undefined as string | undefined,
-  interopData: undefined as any,
+  interopData: undefined as
+    | { mission: Mission.AsObject; ip: string }
+    | undefined,
   ugvDestination: { lat: 38.14617, lng: -76.42642 } // Official competition location
 };
 export type MissionState = typeof initialState;
 
-export default produce((draftState: MissionState, action: AppAction) => {
+export default produce((state: MissionState, action: AppAction) => {
   switch (action.type) {
     case "RESET_REDUX_STATE": {
-      const timelineGrammar = draftState.timelineGrammar;
-      Object.assign(draftState, initialState);
-      draftState.timelineGrammar = timelineGrammar;
-      return;
-    }
-    case "TIMELINE_PROTO_LOADED": {
-      draftState.timelineGrammar = action.payload;
+      Object.assign(state, initialState);
       return;
     }
     case "INTEROP_DATA": {
-      draftState.interopData = action.payload;
+      state.interopData = action.payload;
       return;
     }
     case "ADD_COMMAND": {
-      draftState.commands.push(action.payload);
-      draftState.missionCompiled = false;
+      state.commands[action.payload.id] = action.payload.command;
+      state.commandOrder.push(action.payload.id);
+      state.missionCompiled = false;
       return;
     }
     case "DELETE_COMMAND": {
-      draftState.commands.splice(action.payload, 1);
-      draftState.missionCompiled = false;
+      delete state.commands[action.payload];
+      state.commandOrder.splice(state.commandOrder.indexOf(action.payload), 1);
+      state.missionCompiled = false;
       return;
     }
     case "REORDER_COMMAND": {
-      draftState.commands = arrayMove(
-        draftState.commands,
+      state.commandOrder = arrayMove(
+        state.commandOrder,
         action.payload.oldIndex,
         action.payload.newIndex
       );
-      draftState.missionCompiled = false;
+      state.missionCompiled = false;
       return;
     }
-    case "CHANGE_COMMAND_TYPE": {
-      draftState.commands[action.payload.index] = action.payload.newCommand;
-      draftState.missionCompiled = false;
-      return;
-    }
-    case "CHANGE_COMMAND_FIELD": {
-      const dotProp = action.payload.dotProp.split(".");
-      const field = dotProp.pop() as string;
-      dotProp.reduce((o: any, i: string) => o[i], draftState.commands)[field] =
-        action.payload.newValue; // TODO ugly
-      draftState.missionCompiled = false;
-      if (action.payload.dotProp.endsWith("altitude")) {
-        draftState.defaultAltitude = action.payload.newValue;
-      }
-      return;
-    }
-    case "ADD_REPEATED_FIELD": {
-      const dotProp = action.payload.dotProp.split(".");
-      dotProp
-        .reduce((o: any, i: string) => o[i], draftState.commands)
-        .push(action.payload.newObject);
-      draftState.missionCompiled = false;
-      return;
-    }
-    case "POP_REPEATED_FIELD": {
-      const dotProp = action.payload.dotProp.split(".");
-      dotProp.reduce((o: any, i: string) => o[i], draftState.commands).pop();
-      draftState.missionCompiled = false;
-      return;
-    }
+    // case "CHANGE_COMMAND_TYPE": {
+    //   state.commands[action.payload.index] = action.payload.newCommand;
+    //   state.missionCompiled = false;
+    //   return;
+    // }
+    // case "CHANGE_COMMAND_FIELD": {
+    //   const dotProp = action.payload.dotProp.split(".");
+    //   const field = dotProp.pop() as string;
+    //   dotProp.reduce((o: any, i) => o[i], state.commands)[field] =
+    //     action.payload.newValue; // TODO ugly
+    //   state.missionCompiled = false;
+    //   if (action.payload.dotProp.endsWith("altitude")) {
+    //     state.defaultAltitude = action.payload.newValue;
+    //   }
+    //   return;
+    // }
+    // case "ADD_REPEATED_FIELD": {
+    //   const dotProp = action.payload.dotProp.split(".");
+    //   dotProp
+    //     .reduce((o: any, i) => o[i], state.commands)
+    //     .push(action.payload.newObject);
+    //   state.missionCompiled = false;
+    //   return;
+    // }
+    // case "POP_REPEATED_FIELD": {
+    //   const dotProp = action.payload.dotProp.split(".");
+    //   dotProp.reduce((o: any, i) => o[i], state.commands).pop();
+    //   state.missionCompiled = false;
+    //   return;
+    // }
     case "CENTER_ON_COMMAND": {
-      draftState.commandAnimate[action.payload.id] = true;
+      state.commandAnimate[action.payload.id] = true;
       return;
     }
     case "COMMAND_STOP_ANIMATION": {
-      draftState.commandAnimate[action.payload.id] = false;
+      state.commandAnimate[action.payload.id] = false;
       return;
     }
     case "COMPILED_DRONE_PROGRAM":
     case "UPLOADED_DRONE_PROGRAM": {
-      const droneProgram = action.payload;
-      if (!droneProgram.commands) {
-        droneProgram.commands = [];
+      const droneProgram = action.payload as DroneProgram.AsObject;
+      if (!droneProgram.commandsList) {
+        droneProgram.commandsList = [];
       }
-      droneProgram.commands.array.forEach((command: any, index: any) => {
-        command.name = Object.keys(command)[0];
-        command.type =
-          draftState.timelineGrammar.DroneCommand.fields[command.name].type;
-        command.id = index;
-      });
-      draftState.droneProgram = droneProgram;
+      state.droneProgram = droneProgram;
       if (action.type === "UPLOADED_DRONE_PROGRAM") {
-        draftState.missionUploaded = true;
+        state.missionUploaded = true;
       } else {
-        draftState.missionCompiled = true;
-        draftState.missionUploaded = false;
+        state.missionCompiled = true;
+        state.missionUploaded = false;
       }
       return;
     }
     case "DROPPY_COMMAND_RECEIVED": {
-      draftState.lastDroppyCommand = action.payload;
+      state.lastDroppyCommand = action.payload;
       return;
     }
   }
