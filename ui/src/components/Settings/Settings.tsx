@@ -27,18 +27,6 @@ import * as externalActions from "redux/actions/externalActions";
 import { AppState } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
 
-function convertToInteropProtobufJson(interopJson: any) {
-  for (const key in interopJson) {
-    if (typeof interopJson[key] === "object") {
-      convertToInteropProtobufJson(interopJson[key]);
-    }
-    if (Array.isArray(interopJson[key])) {
-      interopJson[`${key}List`] = interopJson[key];
-      delete interopJson[key];
-    }
-  }
-}
-
 const defaultMapCenter = { lat: 34.0689, lng: -118.4452 };
 
 const mapStateToProps = (state: AppState) => {

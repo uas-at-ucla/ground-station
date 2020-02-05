@@ -24,9 +24,12 @@ import kotlinx.serialization.json.JsonObject
 // [ ] "UGV_MESSAGE",
 // [ ] "DROPPY_COMMAND_RECEIVED"
 
-// Messages client expects us to handle:
-// [X] CONNECT_TO_INTEROP
-// ...find more message types in UI code
+
+// Messages we can send to UI
+/*
+TELEMETRY
+INTEROP_DATA
+ */
 
 // Object class to prevent multiple instances of these functions & keep Main.kt clean
 object UICommunicator {
@@ -47,6 +50,8 @@ object UICommunicator {
 
     // Message types client can send to us
     const val CONNECT_TO_INTEROP = "CONNECT_TO_INTEROP"
+    const val SENSORS = "SENSORS"
+
 
     // Static data members
     val mJson = Json(JsonConfiguration.Stable)
@@ -103,6 +108,7 @@ object UICommunicator {
 
     /**
      * Helper function for creating the return message to the UI
+     * The return message is a stringified WebsocketFormattedMessage
      *
      * @param type is the basicMessage type that the UI expects
      * @param data is the associated data for the message type

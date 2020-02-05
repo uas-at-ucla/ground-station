@@ -8,6 +8,18 @@ import {
 } from "protobuf/drone/timeline_grammar_pb";
 import { Mission } from "protobuf/interop/interop_api_pb";
 
+function convertInteropToProtobufJson(interopJson: any) {
+  for (const key in interopJson) {
+    if (typeof interopJson[key] === "object") {
+      convertInteropToProtobufJson(interopJson[key]);
+    }
+    if (Array.isArray(interopJson[key])) {
+      interopJson[`${key}List`] = interopJson[key];
+      delete interopJson[key];
+    }
+  }
+}
+
 const initialState = {
   commands: {} as { [id: string]: GroundCommand.AsObject },
   commandOrder: new Array<string>(),
@@ -31,6 +43,7 @@ export default produce((state: MissionState, action: AppAction) => {
       return;
     }
     case "INTEROP_DATA": {
+      convertInteropToProtobufJson(action.payload);
       state.interopData = action.payload;
       return;
     }
