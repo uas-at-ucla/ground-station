@@ -16,8 +16,8 @@ def exit_if_error(*args, **kwargs):
         sys.exit(exit_code)
 
 def build_server():
-    os.chdir("server")
-    npm_install.npm_install()
+    os.chdir("kotlin_server")
+    exit_if_error(["./gradlew", "build"])
     os.chdir("..")
 
 def build_ui():
@@ -31,13 +31,15 @@ def build(args=None):
     print("done building")
 
 def run_all(args):
-    build()
+    print("Not done yet")
+    # build()
     # run all-web (w/o Electron) if web option specified. Otherwise, run all (w/ Electron).
-    exit_if_error([npm_cmd, "run", "all"+args.web], cwd="server")
+    # exit_if_error([npm_cmd, "run", "all"+args.web], cwd="server")
 
 def run_server(args):
-    build_server()
-    exit_if_error([npm_cmd, "run", "start"], cwd="server")
+    os.chdir("kotlin_server")
+    exit_if_error(["./gradlew", "run"])
+    os.chdir("..")
 
 def run_ui(args):
     build_ui()
