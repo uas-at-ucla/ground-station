@@ -56,11 +56,11 @@ export default produce((state: MissionState, action: AppAction) => {
       state.missionCompiled = false;
       return;
     }
-    // case "CHANGE_COMMAND_TYPE": {
-    //   state.commands[action.payload.index] = action.payload.newCommand;
-    //   state.missionCompiled = false;
-    //   return;
-    // }
+    case "CHANGE_COMMAND_TYPE": {
+      state.commands[action.payload.id] = action.payload.newCommand;
+      state.missionCompiled = false;
+      return;
+    }
     case "CHANGE_COMMAND_FIELD": {
       const dotProp = action.payload.dotProp.split(".");
       const field = dotProp.pop() as string;

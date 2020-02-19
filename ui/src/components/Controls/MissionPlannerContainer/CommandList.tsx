@@ -22,7 +22,11 @@ const GROUND_CMD_TYPES: Record<keyof GroundCommand.AsObject, string> = {
 
 interface CommandChangersType {
   deleteCommand: (id: string) => void;
-  // changeCommandType: (index: number, oldCommand: any, newType: string) => void;
+  changeCommandType: (
+    id: string,
+    command: GroundCommand.AsObject,
+    newType: keyof GroundCommand.AsObject
+  ) => void;
   changeNumberField: (
     dotProp: string,
     input: string,
@@ -353,13 +357,13 @@ const CommandRowImpure = (props: CommandRowProps) => {
           className="input"
           value={cmdType}
           readOnly={!props.mutable}
-          onChange={
-            e => props.commandChangers
-            // TODO && props.commandChangers.changeCommandType(
-            //   index,
-            //   command,
-            //   e.target.value
-            // )
+          onChange={e =>
+            props.commandChangers &&
+            props.commandChangers.changeCommandType(
+              props.cmdId,
+              props.command as GroundCommand.AsObject,
+              e.target.value as keyof GroundCommand.AsObject
+            )
           }
         >
           {Object.entries(GROUND_CMD_TYPES).map(

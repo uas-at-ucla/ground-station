@@ -2,6 +2,44 @@ import shortid from "shortid";
 
 import { MissionState } from "redux/reducers/missionReducer";
 import { GroundCommand } from "protobuf/drone/timeline_grammar_pb";
+import { Position2D, Position3D } from "protobuf/drone/mission_commands_pb";
+
+const dummyPosition2D: Position2D.AsObject = {
+  latitude: 0,
+  longitude: 0
+};
+
+const dummyPosition3D: Position3D.AsObject = {
+  latitude: 0,
+  longitude: 0,
+  altitude: 0
+};
+
+const makeDefaultCommand: () => Required<GroundCommand.AsObject> = () => ({
+  flyThroughCommand: {
+    goal: dummyPosition3D
+  },
+  landAtLocationCommand: {
+    goal: dummyPosition3D
+  },
+  offAxisCommand: {
+    goal: dummyPosition3D,
+    subjectLocation: dummyPosition2D
+  },
+  surveyCommand: {
+    altitude: 0,
+    surveyPolygonList: []
+  },
+  ugvDropCommand: {
+    goal: dummyPosition3D
+  },
+  waitCommand: {
+    time: 0
+  },
+  waypointCommand: {
+    goal: dummyPosition3D
+  }
+});
 
 export const centerMapOnCommand = (
   commands: MissionState["commands"],
@@ -58,22 +96,36 @@ export const reorderCommand = (oldIndex: number, newIndex: number) => ({
   }
 });
 
-// export const changeCommandType = (
-//   index: number,
-//   oldCommand: any,
-//   newName: string,
-//   protoInfo: any
-// ) => ({
-//   type: "CHANGE_COMMAND_TYPE" as const,
-//   payload: {
-//     index: index,
-//     newCommand: createCommand(
-//       newName,
-//       setLocationFields(oldCommand[oldCommand.name], protoInfo),
-//       protoInfo
-//     )
-//   }
-// });
+export const changeCommandType = (
+  id: string,
+  command: GroundCommand.AsObject,
+  newType: keyof GroundCommand.AsObject
+) => {
+  const oldType = Object.keys(command)[0] as keyof GroundCommand.AsObject;
+  const newCommand: GroundCommand.AsObject = {
+    [newType]: makeDefaultCommand()[newType]
+  };
+  if (
+    oldType !== "waitCommand" &&
+    oldType !== "surveyCommand" &&
+    newType !== "waitCommand" &&
+    newType !== "surveyCommand"
+  ) {
+    const oldCmdObj = command[oldType];
+    const newCmdObj = newCommand[newType];
+    if (!oldCmdObj || !newCmdObj) {
+      throw new Error("Impossible!");
+    }
+    newCmdObj.goal = oldCmdObj.goal;
+  }
+  return {
+    type: "CHANGE_COMMAND_TYPE" as const,
+    payload: {
+      id: id,
+      newCommand: newCommand
+    }
+  };
+};
 
 export const changeCommandField = (
   dotProp: string,

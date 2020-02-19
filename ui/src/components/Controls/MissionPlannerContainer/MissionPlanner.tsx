@@ -9,6 +9,7 @@ import { selector, AppState } from "redux/store";
 import CommandList from "./CommandList";
 import { ExtractPropsType } from "utils/reduxUtils";
 import { Position } from "protobuf/interop/interop_api_pb";
+import { GroundCommand } from "protobuf/drone/timeline_grammar_pb";
 
 const FEET_PER_METER = 3.28084;
 
@@ -68,7 +69,7 @@ const Commands = SortableContainer((props: Props) => {
 
   const {
     deleteCommand,
-    // changeCommandType,
+    changeCommandType,
     changeCommandField
     // addRepeatedField,
     // popRepeatedField
@@ -79,9 +80,13 @@ const Commands = SortableContainer((props: Props) => {
         deleteCommand(id);
       },
 
-      // changeCommandType: (index: number, oldCommand: any, newType: string) => {
-      //   changeCommandType(index, oldCommand, newType, props.protoInfo);
-      // },
+      changeCommandType: (
+        id: string,
+        command: GroundCommand.AsObject,
+        newType: keyof GroundCommand.AsObject
+      ) => {
+        changeCommandType(id, command, newType);
+      },
 
       changeNumberField: (
         dotProp: string,
@@ -102,7 +107,7 @@ const Commands = SortableContainer((props: Props) => {
       //   popRepeatedField(dotProp);
       // }
     };
-  }, [changeCommandField, deleteCommand]);
+  }, [changeCommandField, changeCommandType, deleteCommand]);
 
   const autoGenerate = () => {
     //console.log(props.interopData.mission);
