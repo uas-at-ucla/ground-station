@@ -4,40 +4,40 @@ import { MissionState } from "redux/reducers/missionReducer";
 import { GroundCommand } from "protobuf/drone/timeline_grammar_pb";
 import { Position2D, Position3D } from "protobuf/drone/mission_commands_pb";
 
-const dummyPosition2D: Position2D.AsObject = {
+const makeDummyPosition2D: () => Position2D.AsObject = () => ({
   latitude: 0,
   longitude: 0
-};
+});
 
-const dummyPosition3D: Position3D.AsObject = {
+const makeDummyPosition3D: () => Position3D.AsObject = () => ({
   latitude: 0,
   longitude: 0,
   altitude: 0
-};
+});
 
 const makeDefaultCommand: () => Required<GroundCommand.AsObject> = () => ({
   flyThroughCommand: {
-    goal: dummyPosition3D
+    goal: makeDummyPosition3D()
   },
   landAtLocationCommand: {
-    goal: dummyPosition3D
+    goal: makeDummyPosition3D()
   },
   offAxisCommand: {
-    goal: dummyPosition3D,
-    subjectLocation: dummyPosition2D
+    goal: makeDummyPosition3D(),
+    subjectLocation: makeDummyPosition2D()
   },
   surveyCommand: {
     altitude: 0,
     surveyPolygonList: []
   },
   ugvDropCommand: {
-    goal: dummyPosition3D
+    goal: makeDummyPosition3D()
   },
   waitCommand: {
     time: 0
   },
   waypointCommand: {
-    goal: dummyPosition3D
+    goal: makeDummyPosition3D()
   }
 });
 

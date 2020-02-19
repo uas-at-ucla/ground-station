@@ -111,79 +111,61 @@ const Commands = SortableContainer((props: Props) => {
 
   const autoGenerate = () => {
     //console.log(props.interopData.mission);
-    const defaultAlt = props.mission.defaultAltitude;
-    const defaultDrpHeight = defaultAlt;
-    // const defaultHeight = defaultAlt;
-
     if (!(props.interopData && props.homeAltitude !== null)) {
       throw new Error("You weren't supposed to be able to click this button!");
     }
-    for (let i = 0; i < props.interopData.mission.waypointsList.length; i++) {
-      const waypoint = props.interopData.mission.waypointsList[i] as Required<
-        Position.AsObject
-      >;
-      const lat = waypoint.latitude;
-      const long = waypoint.longitude;
-      let alt = waypoint.altitude; // ft above MSL
-      alt = alt - props.homeAltitude * FEET_PER_METER; // convert to relative alt
+
+    const targetAltitude = props.mission.defaultAltitude;
+
+    for (const waypoint of props.interopData.mission.waypointsList as Required<
+      Position.AsObject
+    >[]) {
+      const altitude = waypoint.altitude - props.homeAltitude * FEET_PER_METER; // convert to relative alt
       props.addCommand({
         waypointCommand: {
           goal: {
-            latitude: lat,
-            longitude: long,
-            altitude: alt
+            latitude: waypoint.latitude,
+            longitude: waypoint.longitude,
+            altitude: altitude
           }
         }
       });
     }
 
-    // If Survey command is supported
-    // var search_grid = []
-    // for (i = 0; i < props.interopData.mission.searchGridPoints.length; i++){
-    //   var lat = props.interopData.mission.searchGridPoints[i].latitude
-    //   var long = props.interopData.mission.searchGridPoints[i].longitude
-    //   let search_point = {
-    //     latitude: lat,
-    //     longitude: long
-    //   }
-    //   search_grid.push(search_point)
-    // }
-    // let search_command = {
-    //   altitude: default_alt,
-    //   survey_polygon: search_grid
-    // }
-    // props.addCommand("survey_command", search_command, props.protoInfo)
+    props.addCommand({
+      surveyCommand: {
+        altitude: targetAltitude,
+        surveyPolygonList: props.interopData.mission
+          .searchGridPointsList as Required<Position.AsObject>[]
+      }
+    });
 
     const airDropPos = props.interopData.mission.airDropPos as Required<
       Position.AsObject
     >;
-    const lat = airDropPos.latitude;
-    const long = airDropPos.longitude;
     props.addCommand({
       ugvDropCommand: {
         goal: {
-          latitude: lat,
-          longitude: long,
-          altitude: defaultDrpHeight
+          latitude: airDropPos.latitude,
+          longitude: airDropPos.longitude,
+          altitude: targetAltitude
         }
       }
     });
 
-    // If OffAxis command is supported
-    // var lat = props.interopData.mission.offAxisOdlcPos.latitude
-    // var long = props.interopData.mission.offAxisOdlcPos.longitude
-    // let off_axis_command = {
-    //   photographer_location: {
-    //     latitude: lat,
-    //     longitude: long,
-    //     altitude: defaultHeight
-    //   },
-    //   subject_location: {
-    //     latitude: lat,
-    //     longitude: long,
-    //   }
-    // }
-    // props.addCommand("off_axis_command", off_axis_command, props.protoInfo)
+    const offAxisPos = props.interopData.mission.offAxisOdlcPos as Required<
+      Position.AsObject
+    >;
+    props.addCommand({
+      offAxisCommand: {
+        goal: {
+          latitude: offAxisPos.latitude,
+          longitude: offAxisPos.longitude,
+          altitude: targetAltitude
+        },
+        subjectLocation: offAxisPos
+      }
+    });
   };
 
   return (

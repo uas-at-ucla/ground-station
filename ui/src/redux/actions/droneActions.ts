@@ -1,4 +1,5 @@
 import { transmit } from "./genericActions";
+import { GroundProgram } from "protobuf/drone/timeline_grammar_pb";
 
 const DroneStates = {
   TAKEOFF: "TAKEOFF",
@@ -40,8 +41,8 @@ export const droppyResetLatch = () =>
   changeDroppyState(DroppyStates.RESET_LATCH);
 export const droppyStopCut = () => changeDroppyState(DroppyStates.STOP_CUT);
 
-export const compileMission = (commands: any[]) =>
-  transmit("COMPILE_GROUND_PROGRAM", commands);
+export const compileMission = (groundProgram: GroundProgram.AsObject) =>
+  transmit("COMPILE_GROUND_PROGRAM", groundProgram);
 export const uploadMission = () => transmit("UPLOAD_MISSION");
 export const runMission = () => transmit("RUN_MISSION");
 export const pauseMission = () => transmit("PAUSE_MISSION");

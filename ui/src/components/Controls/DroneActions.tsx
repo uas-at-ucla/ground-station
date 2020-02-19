@@ -21,6 +21,11 @@ import {
 import * as droneActions from "redux/actions/droneActions";
 import { AppState } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
+import {
+  FlyZone,
+  Position,
+  StationaryObstacle
+} from "protobuf/interop/interop_api_pb";
 
 const disableBtns = false; // set to true to disable buttons when they shouldn't be triggered based on drone state
 const setpointMsgs = {
@@ -32,7 +37,9 @@ const setpointMsgs = {
 
 const mapStateToProps = (state: AppState) => {
   return {
+    interopData: state.mission.interopData,
     missionCommands: state.mission.commands,
+    missionCommandOrder: state.mission.commandOrder,
     missionCompiled: state.mission.missionCompiled,
     missionUploaded: state.mission.missionUploaded,
     dropReady: state.telemetry.droneTelemetry ? true : null, //state.telemetry.droneTelemetry.output.deploy
@@ -116,7 +123,27 @@ const DroneActions = (props: Props) => {
   };
 
   const compileMission = () => {
-    // props.compileMission(props.missionCommands); // TODO
+    props.compileMission({
+      commandsList: props.missionCommandOrder.map(
+        id => props.missionCommands[id]
+      ),
+      fieldBoundaryList: props.interopData
+        ? ((props.interopData.mission.flyZonesList[0] as Required<
+            FlyZone.AsObject
+          >).boundaryPointsList as Required<Position.AsObject>[])
+        : [],
+      staticObstaclesList: props.interopData
+        ? (props.interopData.mission.stationaryObstaclesList as Required<
+            StationaryObstacle.AsObject
+          >[]).map(obstacle => ({
+            location: {
+              latitude: obstacle.latitude,
+              longitude: obstacle.longitude
+            },
+            cylinderRadius: obstacle.radius
+          }))
+        : []
+    });
   };
 
   return (
