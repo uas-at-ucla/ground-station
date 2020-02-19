@@ -42,10 +42,9 @@ const Map = (props: Props) => {
     props.deleteCommand(id);
   };
 
-  const commandDragged = (event: any, dotProp: string) => {
-    // TODO
-    // props.changeCommandField(dotProp + ".goal.latitude", event.latLng.lat());
-    // props.changeCommandField(dotProp + ".goal.longitude", event.latLng.lng());
+  const commandDragged = (event: google.maps.MouseEvent, dotProp: string) => {
+    props.changeCommandField(dotProp + ".latitude", event.latLng.lat());
+    props.changeCommandField(dotProp + ".longitude", event.latLng.lng());
   };
 
   const mapDblClick = (event: google.maps.MouseEvent) => {
@@ -53,14 +52,15 @@ const Map = (props: Props) => {
   };
 
   const addFlyThroughCommand = (lat: number, lng: number) => {
-    const defaultWaypointCommand = {
-      goal: {
-        latitude: lat,
-        longitude: lng,
-        altitude: props.defaultAltitude
+    props.addCommand({
+      flyThroughCommand: {
+        goal: {
+          latitude: lat,
+          longitude: lng,
+          altitude: props.defaultAltitude
+        }
       }
-    };
-    // props.addFlyThroughCommand(defaultWaypointCommand, props.protoInfo); // TODO
+    });
   };
 
   const commandPointPolyCoords = props.commandPoints
@@ -86,12 +86,15 @@ const Map = (props: Props) => {
         <VehicleMarkers />
         <InteropItems isOpen={isOpen} toggleOpen={toggleOpen} />
 
-        {props.commandPoints.map((commandPoint, index) =>
+        {props.commandPoints.map(commandPoint =>
           commandPoint ? (
             <Marker
               draggable={true}
               onDragEnd={event =>
-                commandDragged(event, index + "." + commandPoint.name)
+                commandDragged(
+                  event,
+                  commandPoint.id + "." + commandPoint.name + ".goal"
+                )
               }
               {...commandPoint.marker}
               key={commandPoint.id}
@@ -108,10 +111,7 @@ const Map = (props: Props) => {
                   onCloseClick={() => toggleOpen(commandPoint.id)}
                 >
                   <div className="map-infobox">
-                    <div>
-                      {/* TODO: add title */}
-                      {commandPoint.infobox.title}
-                    </div>
+                    <div>{commandPoint.infobox.title}</div>
                     <div>{commandPoint.infobox.content}</div>
 
                     <Button

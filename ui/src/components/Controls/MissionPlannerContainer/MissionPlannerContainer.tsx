@@ -12,7 +12,7 @@ import {
 } from "reactstrap";
 import { connect } from "react-redux";
 
-import { selector, AppState } from "redux/store";
+import { AppState } from "redux/store";
 import "./MissionPlannerContainer.css";
 import MissionPlanner from "./MissionPlanner";
 import CommandList from "./CommandList";
@@ -88,26 +88,21 @@ const MissionPlannerContainer = (props: Props) => {
         {/* <span>Mission Status: {props.missionStatus}</span> */}
         <TabPane tabId="plan">
           <div className="SmallMissionPlanner">
-            <MissionPlanner
-              className="SmallMissionPlanner"
-              programType="GroundProgram"
-            />
+            <MissionPlanner className="SmallMissionPlanner" />
           </div>
         </TabPane>
         <TabPane tabId="drone">
           <div className="SmallMissionPlanner">
             <Container fluid>
-              {/* TODO figure out how to get DroneProgram working with this <CommandList
-                commands={
+              <CommandList
+                droneCommands={
                   props.droneProgram ? props.droneProgram.commandsList : []
                 }
-                programType="DroneProgram"
                 className="SmallMissionPlanner"
                 centerMapOnCommand={() => {
                   //TODO
                 }}
-                mutable={false}
-              /> */}
+              />
             </Container>
           </div>
         </TabPane>
@@ -117,10 +112,7 @@ const MissionPlannerContainer = (props: Props) => {
         <ModalHeader toggle={close}>Mission Planner</ModalHeader>
         <ModalBody>
           <div className="BigMissionPlanner">
-            <MissionPlanner
-              className="BigMissionPlanner"
-              programType="GroundProgram"
-            />
+            <MissionPlanner className="BigMissionPlanner" />
           </div>
         </ModalBody>
       </Modal>

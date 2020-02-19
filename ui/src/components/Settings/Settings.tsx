@@ -27,7 +27,10 @@ import * as externalActions from "redux/actions/externalActions";
 import { AppState } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
 
-const defaultMapCenter = { lat: 34.0689, lng: -118.4452 };
+const defaultMapCenter = {
+  lat: 34.0689,
+  lng: -118.4452
+};
 
 const mapStateToProps = (state: AppState) => {
   return {

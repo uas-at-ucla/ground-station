@@ -8,18 +8,6 @@ import {
 } from "protobuf/drone/timeline_grammar_pb";
 import { Mission } from "protobuf/interop/interop_api_pb";
 
-function convertInteropToProtobufJson(interopJson: any) {
-  for (const key in interopJson) {
-    if (typeof interopJson[key] === "object") {
-      convertInteropToProtobufJson(interopJson[key]);
-    }
-    if (Array.isArray(interopJson[key])) {
-      interopJson[`${key}List`] = interopJson[key];
-      delete interopJson[key];
-    }
-  }
-}
-
 const initialState = {
   commands: {} as { [id: string]: GroundCommand.AsObject },
   commandOrder: new Array<string>(),
@@ -30,7 +18,7 @@ const initialState = {
   missionUploaded: false,
   lastDroppyCommand: undefined as string | undefined,
   interopData: undefined as
-    | { mission: Mission.AsObject; ip: string }
+    | { mission: Required<Mission.AsObject>; ip: string }
     | undefined,
   ugvDestination: { lat: 38.14617, lng: -76.42642 } // Official competition location
 };
@@ -73,17 +61,17 @@ export default produce((state: MissionState, action: AppAction) => {
     //   state.missionCompiled = false;
     //   return;
     // }
-    // case "CHANGE_COMMAND_FIELD": {
-    //   const dotProp = action.payload.dotProp.split(".");
-    //   const field = dotProp.pop() as string;
-    //   dotProp.reduce((o: any, i) => o[i], state.commands)[field] =
-    //     action.payload.newValue; // TODO ugly
-    //   state.missionCompiled = false;
-    //   if (action.payload.dotProp.endsWith("altitude")) {
-    //     state.defaultAltitude = action.payload.newValue;
-    //   }
-    //   return;
-    // }
+    case "CHANGE_COMMAND_FIELD": {
+      const dotProp = action.payload.dotProp.split(".");
+      const field = dotProp.pop() as string;
+      dotProp.reduce((o: any, i) => o[i], state.commands)[field] =
+        action.payload.newValue;
+      state.missionCompiled = false;
+      if (action.payload.isAltitude) {
+        state.defaultAltitude = action.payload.newValue;
+      }
+      return;
+    }
     // case "ADD_REPEATED_FIELD": {
     //   const dotProp = action.payload.dotProp.split(".");
     //   dotProp
@@ -125,5 +113,20 @@ export default produce((state: MissionState, action: AppAction) => {
       state.lastDroppyCommand = action.payload;
       return;
     }
+    default: {
+      return;
+    }
   }
 }, initialState) as (a: any, b: any) => MissionState;
+
+function convertInteropToProtobufJson(interopJson: any) {
+  for (const key in interopJson) {
+    if (typeof interopJson[key] === "object") {
+      convertInteropToProtobufJson(interopJson[key]);
+    }
+    if (Array.isArray(interopJson[key])) {
+      interopJson[`${key}List`] = interopJson[key];
+      delete interopJson[key];
+    }
+  }
+}

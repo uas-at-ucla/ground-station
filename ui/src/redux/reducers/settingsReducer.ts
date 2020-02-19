@@ -46,5 +46,8 @@ export default produce((state: SettingsState, action: AppAction) => {
       state.gndServerConnected = false;
       return;
     }
+    default: {
+      return;
+    }
   }
 }, initialState) as (a: any, b: any) => SettingsState;

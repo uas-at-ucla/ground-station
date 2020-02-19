@@ -13,7 +13,7 @@ import bomb from "./icons/bomb_drop.png";
 import wheel from "./icons/wheel.png";
 import blueMarker from "./icons/blue_marker.png";
 import { ExtractPropsType } from "utils/reduxUtils";
-import { Position } from "protobuf/interop/interop_api_pb";
+import { Position, StationaryObstacle } from "protobuf/interop/interop_api_pb";
 
 const FEET_PER_METER = 3.28084;
 
@@ -42,14 +42,15 @@ type Props = ExtractPropsType<typeof connectComponent>;
 
 const InteropItems = (props: Props) => {
   const addWaypointCommand = (lat: number, lng: number, alt?: number) => {
-    const defaultWaypointCommand = {
-      goal: {
-        latitude: lat,
-        longitude: lng,
-        altitude: alt ? alt : props.defaultAltitude
+    props.addCommand({
+      waypointCommand: {
+        goal: {
+          latitude: lat,
+          longitude: lng,
+          altitude: alt ? alt : props.defaultAltitude
+        }
       }
-    };
-    // props.addWaypointCommand(defaultWaypointCommand, props.protoInfo); // TODO
+    });
   };
 
   if (props.interopData) {
@@ -92,35 +93,26 @@ const InteropItems = (props: Props) => {
     // searchCenterLng = searchCenterLng / searchNum;
     // searchCenterLat = searchCenterLat / searchNum;
 
-    if (
-      !(
-        props.interopData.mission.airDropPos &&
-        props.interopData.mission.airDropPos.latitude &&
-        props.interopData.mission.airDropPos.longitude &&
-        props.interopData.mission.emergentLastKnownPos &&
-        props.interopData.mission.emergentLastKnownPos.latitude &&
-        props.interopData.mission.emergentLastKnownPos.longitude &&
-        props.interopData.mission.offAxisOdlcPos &&
-        props.interopData.mission.offAxisOdlcPos.latitude &&
-        props.interopData.mission.offAxisOdlcPos.longitude
-      )
-    ) {
-      throw new Error("Expected interop API protobuf fields to exist");
-    }
-
+    const interopAirDropPos = props.interopData.mission.airDropPos as Required<
+      Position.AsObject
+    >;
     const airDropPos = {
-      lat: props.interopData.mission.airDropPos.latitude,
-      lng: props.interopData.mission.airDropPos.longitude
+      lat: interopAirDropPos.latitude,
+      lng: interopAirDropPos.longitude
     };
 
+    const interopEmergentPos = props.interopData.mission
+      .emergentLastKnownPos as Required<Position.AsObject>;
     const emergentPos = {
-      lat: props.interopData.mission.emergentLastKnownPos.latitude,
-      lng: props.interopData.mission.emergentLastKnownPos.longitude
+      lat: interopEmergentPos.latitude,
+      lng: interopEmergentPos.longitude
     };
 
+    const interopOffAxisPos = props.interopData.mission
+      .offAxisOdlcPos as Required<Position.AsObject>;
     const offAxisPos = {
-      lat: props.interopData.mission.offAxisOdlcPos.latitude,
-      lng: props.interopData.mission.offAxisOdlcPos.longitude
+      lat: interopOffAxisPos.latitude,
+      lng: interopOffAxisPos.longitude
     };
 
     return (
@@ -249,44 +241,40 @@ const InteropItems = (props: Props) => {
             </Button>
           </MapElementWithInfo> */}
 
-        {props.interopData.mission.stationaryObstaclesList.map(
-          (obstacle: any, index: number) => (
-            <MapElementWithInfo
-              key={index}
-              Element={Circle}
-              name={`obstacle-${index}`}
-              isOpen={props.isOpen}
-              toggleOpen={props.toggleOpen}
-              defaultOptions={{
-                strokeColor: "#FF0000",
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: "#FF0000",
-                fillOpacity: 0.5
-              }}
-              radius={obstacle.radius / FEET_PER_METER}
-              center={{ lat: obstacle.latitude, lng: obstacle.longitude }}
-              infoPosition={{
-                lat: obstacle.latitude,
-                lng: obstacle.longitude
-              }}
-            >
-              Obstacle{" "}
-              {"(" + obstacle.latitude + ", " + obstacle.longitude + ")"}
-              <br />
-              {"Height: " + obstacle.height + " ft AMSL"}
-              <br />
-              {"Radius: " + obstacle.radius + " ft"}
-            </MapElementWithInfo>
-          )
-        )}
+        {(props.interopData.mission.stationaryObstaclesList as Required<
+          StationaryObstacle.AsObject
+        >[]).map((obstacle, index) => (
+          <MapElementWithInfo
+            key={index}
+            Element={Circle}
+            name={`obstacle-${index}`}
+            isOpen={props.isOpen}
+            toggleOpen={props.toggleOpen}
+            defaultOptions={{
+              strokeColor: "#FF0000",
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: "#FF0000",
+              fillOpacity: 0.5
+            }}
+            radius={obstacle.radius / FEET_PER_METER}
+            center={{ lat: obstacle.latitude, lng: obstacle.longitude }}
+            infoPosition={{
+              lat: obstacle.latitude,
+              lng: obstacle.longitude
+            }}
+          >
+            Obstacle {"(" + obstacle.latitude + ", " + obstacle.longitude + ")"}
+            <br />
+            {"Height: " + obstacle.height + " ft AMSL"}
+            <br />
+            {"Radius: " + obstacle.radius + " ft"}
+          </MapElementWithInfo>
+        ))}
 
-        {props.interopData.mission.waypointsList.map((coord, index) => {
-          if (
-            !(coord.latitude && coord.longitude && coord.altitude !== undefined)
-          ) {
-            throw new Error("Expected interop API protobuf fields to exist");
-          }
+        {(props.interopData.mission.waypointsList as Required<
+          Position.AsObject
+        >[]).map((coord, index) => {
           return (
             <MapElementWithInfo
               key={index}
@@ -314,11 +302,6 @@ const InteropItems = (props: Props) => {
               <Button
                 size="sm"
                 onClick={() => {
-                  if (!(coord.latitude && coord.longitude && coord.altitude)) {
-                    throw new Error(
-                      "Expected interop API protobuf fields to exist"
-                    );
-                  }
                   addWaypointCommand(
                     coord.latitude,
                     coord.longitude,

@@ -111,5 +111,8 @@ export default produce((state: TelemetryState, action: AppAction) => {
       }
       return;
     }
+    default: {
+      return;
+    }
   }
 }, initialState) as (a: any, b: any) => TelemetryState;

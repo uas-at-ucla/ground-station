@@ -9,13 +9,7 @@ export const centerMapOnCommand = (
 ) => {
   const cmd = commands[cmdId];
   const cmdType = Object.keys(cmd)[0] as keyof GroundCommand.AsObject;
-  if (
-    cmdType === "flyThroughCommand" ||
-    cmdType === "landAtLocationCommand" ||
-    cmdType === "offAxisCommand" ||
-    cmdType === "ugvDropCommand" ||
-    cmdType === "waypointCommand"
-  ) {
+  if (cmdType !== "waitCommand" && cmdType !== "surveyCommand") {
     const location = cmd[cmdType]?.goal;
     if (location) {
       return {
@@ -81,13 +75,18 @@ export const reorderCommand = (oldIndex: number, newIndex: number) => ({
 //   }
 // });
 
-// export const changeCommandField = (dotProp: string, newValue: any) => ({
-//   type: "CHANGE_COMMAND_FIELD" as const,
-//   payload: {
-//     dotProp: dotProp,
-//     newValue: newValue
-//   }
-// });
+export const changeCommandField = (
+  dotProp: string,
+  newValue: number,
+  isAltitude?: boolean
+) => ({
+  type: "CHANGE_COMMAND_FIELD" as const,
+  payload: {
+    dotProp: dotProp,
+    newValue: newValue,
+    isAltitude: isAltitude
+  }
+});
 
 // export const addRepeatedField = (
 //   dotProp: string,

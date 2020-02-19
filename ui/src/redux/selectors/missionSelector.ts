@@ -6,39 +6,47 @@ import { DroneCommand } from "protobuf/drone/timeline_grammar_pb";
 import { Position3D } from "protobuf/drone/mission_commands_pb";
 import { FlyZone, Position } from "protobuf/interop/interop_api_pb";
 
+//TODO Start relying less on reducers and put this logic in components.
+
 // createObjectSelector is more efficient because it only recalculates for commands that have changed
 export const commandMarkers = createObjectSelector(
   [(state: AppState) => state.mission.commands],
   cmd => {
-    //TODO this might be hard
-    let location: Position3D.AsObject | null = null;
+    let location: Position3D.AsObject | undefined = undefined;
     let label: google.maps.MarkerLabel | null = null;
 
-    if (cmd.flyThroughCommand) {
-      location = cmd.flyThroughCommand.goal;
-    } else if (cmd.landAtLocationCommand) {
-      location = cmd.landAtLocationCommand.goal;
-      label = {
-        fontFamily: "Fontawesome",
-        text: "\uf063",
-        fontSize: "15px"
-      };
-    } else if (cmd.offAxisCommand) {
-      location = cmd.offAxisCommand.goal;
-    } else if (cmd.ugvDropCommand) {
-      location = cmd.ugvDropCommand.goal;
-      label = {
-        fontFamily: "Fontawesome",
-        text: "\uf187",
-        fontSize: "15px"
-      };
-    } else if (cmd.waypointCommand) {
-      location = cmd.waypointCommand.goal;
-      label = {
-        fontFamily: "Fontawesome",
-        text: "\uf192",
-        fontSize: "15px"
-      };
+    const cmdType = Object.keys(cmd)[0] as keyof typeof cmd;
+
+    if (cmdType !== "waitCommand" && cmdType !== "surveyCommand") {
+      location = cmd[cmdType]?.goal;
+    }
+
+    switch (cmdType) {
+      case "surveyCommand":
+      case "waitCommand":
+      case "flyThroughCommand":
+      case "offAxisCommand":
+        break;
+      case "landAtLocationCommand":
+        label = {
+          fontFamily: "Fontawesome",
+          text: "\uf063",
+          fontSize: "15px"
+        };
+        break;
+      case "ugvDropCommand":
+        label = {
+          fontFamily: "Fontawesome",
+          text: "\uf187",
+          fontSize: "15px"
+        };
+        break;
+      case "waypointCommand":
+        label = {
+          fontFamily: "Fontawesome",
+          text: "\uf192",
+          fontSize: "15px"
+        };
     }
 
     if (location) {
@@ -67,13 +75,14 @@ export const commandPoints = createSelector(
       if (!marker) {
         return null;
       }
+      const cmdType = Object.keys(commands[cmdId])[0];
       return {
         id: cmdId,
-        name: "TODO", //TODO
+        name: cmdType,
         marker: marker,
         infobox: {
           position: marker.position,
-          title: index + 1 + ": " + "", // TODO protoInfo.commandAbbr[cmd.name]
+          title: index + 1 + ": " + cmdType,
           content: "Altitude: " + marker.altitude + " ft rel"
         }
       };

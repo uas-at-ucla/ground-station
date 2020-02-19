@@ -26,6 +26,7 @@
         "@typescript-eslint/no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false, "typedefs": false }], // Sometimes it makes sense to use a class/function/type above its definition for organizational reasons.
         "@typescript-eslint/no-var-requires": 0, // Require shouldn't be used most of the time, but it is needed to import packages that don't support TypeScript.
         "@typescript-eslint/camelcase": "warn", // Not the end of the world. This can just be a warning instead of an error.
+        "@typescript-eslint/switch-exhaustiveness-check": "error",
         "prefer-const": "off",
         "no-autofix/prefer-const": "error",
         "react-hooks/rules-of-hooks": "error",

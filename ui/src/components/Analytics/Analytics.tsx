@@ -7,6 +7,7 @@ import { AppState } from "redux/store";
 import * as analyticsActions from "redux/actions/analyticsActions";
 import downloadToBrowser from "utils/downloadToBrowser";
 import { ExtractPropsType } from "utils/reduxUtils";
+import { TelemetryState } from "redux/reducers/telemetryReducer";
 import "./Analytics.css";
 
 const mapStateToProps = (state: AppState) => {
@@ -19,7 +20,7 @@ const mapStateToProps = (state: AppState) => {
   };
 };
 
-let loadedTelemetry: any;
+let loadedTelemetry: TelemetryState["droneTelemetry"][];
 // var telemetryData = [];
 // var recording = false;
 // var usingLoaded = false;
@@ -36,8 +37,6 @@ const Analytics = (props: Props) => {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const saveInteropMission = () => {
-    // TODO: add the interop data to mapStateToProps (see Map.js)
-    // Save it to a file using JSON.stringify and downloadToBrowser
     // console.log(this.props.interopData)
     downloadToBrowser(
       "interop.json",
@@ -46,7 +45,6 @@ const Analytics = (props: Props) => {
   };
 
   const loadInteropMission = () => {
-    // TODO load JSON data from a file
     // this.props.loadInteropData({ type: 'INTEROP_DATA', payload: data });
 
     const reader = new FileReader();
