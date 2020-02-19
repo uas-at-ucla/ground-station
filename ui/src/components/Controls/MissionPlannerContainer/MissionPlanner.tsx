@@ -5,6 +5,7 @@ import { Container } from "reactstrap";
 import { SortableContainer } from "react-sortable-hoc";
 
 import * as missionActions from "redux/actions/missionActions";
+import { RepeatedFieldNamesAndValues } from "redux/actions/missionActions";
 import { selector, AppState } from "redux/store";
 import CommandList from "./CommandList";
 import { ExtractPropsType } from "utils/reduxUtils";
@@ -70,9 +71,9 @@ const Commands = SortableContainer((props: Props) => {
   const {
     deleteCommand,
     changeCommandType,
-    changeCommandField
-    // addRepeatedField,
-    // popRepeatedField
+    changeCommandField,
+    addRepeatedField,
+    popRepeatedField
   } = props;
   const commandChangers = useMemo(() => {
     return {
@@ -97,17 +98,26 @@ const Commands = SortableContainer((props: Props) => {
         if (!isNaN(newValue)) {
           changeCommandField(dotProp, newValue, isAltitude);
         }
+      },
+
+      addRepeatedField: (
+        dotProp: string,
+        fieldName: RepeatedFieldNamesAndValues["name"]
+      ) => {
+        addRepeatedField(dotProp, fieldName);
+      },
+
+      popRepeatedField: (dotProp: string) => {
+        popRepeatedField(dotProp);
       }
-
-      // addRepeatedField: (dotProp: string, type: string) => {
-      //   addRepeatedField(dotProp, type, props.protoInfo);
-      // },
-
-      // popRepeatedField: (dotProp: string) => {
-      //   popRepeatedField(dotProp);
-      // }
     };
-  }, [changeCommandField, changeCommandType, deleteCommand]);
+  }, [
+    addRepeatedField,
+    changeCommandField,
+    changeCommandType,
+    deleteCommand,
+    popRepeatedField
+  ]);
 
   const autoGenerate = () => {
     //console.log(props.interopData.mission);

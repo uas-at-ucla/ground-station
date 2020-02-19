@@ -72,20 +72,20 @@ export default produce((state: MissionState, action: AppAction) => {
       }
       return;
     }
-    // case "ADD_REPEATED_FIELD": {
-    //   const dotProp = action.payload.dotProp.split(".");
-    //   dotProp
-    //     .reduce((o: any, i) => o[i], state.commands)
-    //     .push(action.payload.newObject);
-    //   state.missionCompiled = false;
-    //   return;
-    // }
-    // case "POP_REPEATED_FIELD": {
-    //   const dotProp = action.payload.dotProp.split(".");
-    //   dotProp.reduce((o: any, i) => o[i], state.commands).pop();
-    //   state.missionCompiled = false;
-    //   return;
-    // }
+    case "ADD_REPEATED_FIELD": {
+      const dotProp = action.payload.dotProp.split(".");
+      dotProp
+        .reduce((o: any, i) => o[i], state.commands)
+        .push(action.payload.newElement);
+      state.missionCompiled = false;
+      return;
+    }
+    case "POP_REPEATED_FIELD": {
+      const dotProp = action.payload.dotProp.split(".");
+      dotProp.reduce((o: any, i) => o[i], state.commands).pop();
+      state.missionCompiled = false;
+      return;
+    }
     case "CENTER_ON_COMMAND": {
       state.commandAnimate[action.payload.id] = true;
       return;

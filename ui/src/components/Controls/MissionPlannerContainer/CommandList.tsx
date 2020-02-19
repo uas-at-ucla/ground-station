@@ -9,6 +9,7 @@ import {
   DroneCommand
 } from "protobuf/drone/timeline_grammar_pb";
 import { Position3D, Position2D } from "protobuf/drone/mission_commands_pb";
+import { RepeatedFieldNamesAndValues } from "redux/actions/missionActions";
 
 const GROUND_CMD_TYPES: Record<keyof GroundCommand.AsObject, string> = {
   flyThroughCommand: "flyThrough",
@@ -32,8 +33,11 @@ interface CommandChangersType {
     input: string,
     isAltitude: boolean
   ) => void;
-  // addRepeatedField: (dotProp: string, type: string) => void;
-  // popRepeatedField: (dotProp: string) => void;
+  addRepeatedField: (
+    dotProp: string,
+    fieldName: RepeatedFieldNamesAndValues["name"]
+  ) => void;
+  popRepeatedField: (dotProp: string) => void;
 }
 
 interface CommandListProps {
@@ -103,8 +107,8 @@ const CommandList = (props: CommandListProps) => (
 export default CommandList;
 
 const NumberField = (props: {
-  name: string;
   dotProp: string;
+  name: string;
   value: number;
   units?: string;
   isAltitude: boolean;
@@ -143,59 +147,61 @@ const NumberField = (props: {
   );
 };
 
-type RepeatedFieldNamesAndValues = {
-  name: "surveyPolygon";
-  value: Position2D.AsObject;
+type ConvertValueToList<
+  T extends RepeatedFieldNamesAndValues
+> = T extends RepeatedFieldNamesAndValues
+  ? {
+      name: T["name"];
+      values: T["value"][];
+    }
+  : never;
+
+type RepeatedFieldNamesAndValueLists = ConvertValueToList<
+  RepeatedFieldNamesAndValues
+>;
+
+const RepeatedField = (
+  props: {
+    dotProp: string;
+    commandRowProps: CommandRowProps;
+  } & RepeatedFieldNamesAndValueLists
+) => {
+  return (
+    <span>
+      {props.values.map((value, index: number) => (
+        <Field
+          key={index}
+          dotProp={props.dotProp + "." + index}
+          displayName={`${props.name} ${index + 1}`}
+          commandRowProps={props.commandRowProps}
+          name={props.name}
+          value={value}
+        />
+      ))}
+      <Button
+        className="input"
+        onClick={() =>
+          props.commandRowProps.commandChangers &&
+          props.commandRowProps.commandChangers.addRepeatedField(
+            props.dotProp,
+            props.name
+          )
+        }
+      >
+        +
+      </Button>
+      <Button
+        className="input"
+        onClick={() =>
+          props.commandRowProps.commandChangers &&
+          props.commandRowProps.commandChangers.popRepeatedField(props.dotProp)
+        }
+      >
+        -
+      </Button>
+    </span>
+  );
 };
-
-// const RepeatedField = ({
-//   name,
-//   dotProp,
-//   type,
-//   object
-// }: {
-//   name: string;
-//   dotProp: string;
-//   type: string;
-//   object: any[];
-// }) => {
-//   return (
-//     <span>
-//       {object.map(
-//         (element, index: number) =>
-//           null /*(
-//         <Field
-//           name={`${name} ${index + 1}`}
-//           key={index}
-//           dotProp={dotProp + "." + index}
-//           type={type}
-//           object={element}
-//         />
-//       )*/
-//       )}
-//       <Button
-//         className="input"
-//         onClick={
-//           () => props.commandChangers
-//           // TODO && props.commandChangers.addRepeatedField(dotProp, type)
-//         }
-//       >
-//         +
-//       </Button>
-//       <Button
-//         className="input"
-//         onClick={
-//           () => props.commandChangers
-//           // TODO && props.commandChangers.popRepeatedField(dotProp)
-//         }
-//       >
-//         -
-//       </Button>
-//     </span>
-//   );
-// };
-
-// type Distribute<U> = U extends any ? { key: U } : never;
 
 type DumbNameAndValue<
   Obj,
@@ -224,11 +230,13 @@ type AllFieldNamesAndValues =
 
 const Field = (
   props: {
-    showName: boolean;
     dotProp: string;
+    hideName?: boolean;
+    displayName?: string;
     commandRowProps: CommandRowProps;
   } & AllFieldNamesAndValues
 ) => {
+  const displayName = props.displayName ? props.displayName : props.name;
   switch (props.name) {
     // 'value' is a number
     case "latitude":
@@ -237,16 +245,22 @@ const Field = (
     case "time": {
       let units: string | undefined = undefined;
       let isAltitude = false;
-      if (props.name === "altitude") {
-        units = props.commandRowProps.lengthUnits;
-        isAltitude = true;
-      } else if (props.name === "time") {
-        units = "s";
+      switch (props.name) {
+        case "altitude":
+          units = props.commandRowProps.lengthUnits;
+          isAltitude = true;
+          break;
+        case "time":
+          units = "s";
+          break;
+        case "latitude":
+        case "longitude":
+          break;
       }
       return (
         <NumberField
-          name={props.name}
           dotProp={props.dotProp}
+          name={displayName}
           value={props.value}
           units={units}
           isAltitude={isAltitude}
@@ -259,14 +273,30 @@ const Field = (
     case "comeToStop":
       return (
         <span style={{ color: props.value ? undefined : "dimgray" }}>
-          {props.name}
+          {displayName}
         </span>
       ); // does not support modification because there are no bools in a GroundProgram (yet));
 
     // 'value' is an Array (repeated protobuf field):
-    case "surveyPolygonList":
+    case "surveyPolygonList": {
       // Compile errors here means there are specific cases that need to be added above and/or more types that should be added to AllKeysAndValues.
-      return null;
+      let fieldNameAndValues: RepeatedFieldNamesAndValueLists;
+      switch (props.name) {
+        case "surveyPolygonList":
+          fieldNameAndValues = {
+            name: "surveyPolygon" as const,
+            values: props.value
+          };
+      }
+
+      return (
+        <RepeatedField
+          dotProp={props.dotProp}
+          commandRowProps={props.commandRowProps}
+          {...fieldNameAndValues}
+        ></RepeatedField>
+      );
+    }
 
     // 'value' is an object (protobuf message):
     default: {
@@ -287,9 +317,9 @@ const Field = (
 
       return (
         <Row>
-          {props.showName ? (
+          {!props.hideName ? (
             <Col xs="auto" className="name">
-              {props.name}
+              {displayName}
             </Col>
           ) : null}
           {nextKeysAndValues.map(nextKeyAndValue => (
@@ -298,11 +328,7 @@ const Field = (
               className="field-container"
               key={nextKeyAndValue.name}
             >
-              {/* {field.rule === "repeated" ? (
-                  <RepeatedField {...fieldProps} />
-                ) : field.rule === "required" ? ( */}
               <Field
-                showName={true}
                 dotProp={props.dotProp + "." + nextKeyAndValue.name}
                 commandRowProps={props.commandRowProps}
                 {...nextKeyAndValue}
@@ -377,7 +403,7 @@ const CommandRowImpure = (props: CommandRowProps) => {
       </Col>
       <Col xs="auto" className="command-column">
         <Field
-          showName={false}
+          hideName={true}
           dotProp={props.cmdId + "." + cmdType}
           commandRowProps={props}
           {...cmdTypeAndObject}
