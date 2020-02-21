@@ -24,9 +24,10 @@ const mapStateToProps = (state: AppState, props: OwnProps) => {
     mission: state.mission,
     interopData: state.mission.interopData,
     mainFlyZone: derivedData.mission.mainFlyZone,
-    homeAltitude: state.telemetry.droneTelemetry
-      ? state.telemetry.droneTelemetry.sensors.homeAltitude
-      : null
+    homeAltitude:
+      state.telemetry.droneTelemetry && state.telemetry.droneTelemetry.sensors
+        ? state.telemetry.droneTelemetry.sensors.homeAltitude
+        : null
   };
 };
 
@@ -211,10 +212,12 @@ const Commands = SortableContainer((props: Props) => {
       <Button onClick={addCommand} className="command-btn">
         Add Command
       </Button>
-      {props.homeAltitude &&
+      {props.homeAltitude !== null &&
       props.interopData &&
-      props.mission.commands.length === 0 ? (
-        <Button onClick={autoGenerate}>Auto-Generate</Button>
+      props.mission.commandOrder.length === 0 ? (
+        <Button onClick={autoGenerate} color="primary">
+          Auto-Generate
+        </Button>
       ) : null}
     </Container>
   );

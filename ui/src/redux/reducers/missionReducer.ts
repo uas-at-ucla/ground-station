@@ -31,6 +31,7 @@ export default produce((state: MissionState, action: AppAction) => {
       return;
     }
     case "INTEROP_DATA": {
+      // console.log(JSON.stringify(action.payload)); // TODO make "Save/Load Interop Mission" buttons work correctly (deal with array rename to "...List")
       convertInteropToProtobufJson(action.payload);
       state.interopData = action.payload;
       return;

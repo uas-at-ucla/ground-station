@@ -19,13 +19,9 @@ import {
 } from "reactstrap";
 
 import * as droneActions from "redux/actions/droneActions";
-import { AppState } from "redux/store";
+import { AppState, selector } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
-import {
-  FlyZone,
-  Position,
-  StationaryObstacle
-} from "protobuf/interop/interop_api_pb";
+import { Position, StationaryObstacle } from "protobuf/interop/interop_api_pb";
 
 const disableBtns = false; // set to true to disable buttons when they shouldn't be triggered based on drone state
 const setpointMsgs = {
@@ -38,6 +34,7 @@ const setpointMsgs = {
 const mapStateToProps = (state: AppState) => {
   return {
     interopData: state.mission.interopData,
+    mainFlyZone: selector(state).mission.mainFlyZone,
     missionCommands: state.mission.commands,
     missionCommandOrder: state.mission.commandOrder,
     missionCompiled: state.mission.missionCompiled,
@@ -128,9 +125,9 @@ const DroneActions = (props: Props) => {
         id => props.missionCommands[id]
       ),
       fieldBoundaryList: props.interopData
-        ? ((props.interopData.mission.flyZonesList[0] as Required<
-            FlyZone.AsObject
-          >).boundaryPointsList as Required<Position.AsObject>[])
+        ? (props.mainFlyZone.boundaryPointsList as Required<
+            Position.AsObject
+          >[])
         : [],
       staticObstaclesList: props.interopData
         ? (props.interopData.mission.stationaryObstaclesList as Required<

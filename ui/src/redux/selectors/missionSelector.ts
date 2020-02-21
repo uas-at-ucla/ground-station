@@ -8,6 +8,22 @@ import { FlyZone, Position } from "protobuf/interop/interop_api_pb";
 
 //TODO Start relying less on reducers and put this logic in components.
 
+export const lostCommsMapCoord = createSelector(
+  [(state: AppState) => state.mission.interopData],
+  interopData => {
+    if (!interopData) {
+      return null;
+    }
+    const lostCommsPos = interopData.mission.lostCommsPos as Required<
+      Position.AsObject
+    >;
+    return {
+      lat: lostCommsPos.latitude,
+      lng: lostCommsPos.longitude
+    };
+  }
+);
+
 // createObjectSelector is more efficient because it only recalculates for commands that have changed
 export const commandMarkers = createObjectSelector(
   [(state: AppState) => state.mission.commands],

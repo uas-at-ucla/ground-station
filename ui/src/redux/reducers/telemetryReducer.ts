@@ -5,16 +5,16 @@ import { Sensors, Output } from "protobuf/drone/messages_pb";
 import { Mission } from "protobuf/interop/interop_api_pb";
 import { UGV_Message } from "protobuf/ugv/ugv_messages_pb";
 
+type DroneTelemetry = {
+  sensors?: Sensors.AsObject;
+  output?: Output.AsObject;
+};
+
 const initialState = {
-  droneTelemetry: undefined as
-    | { sensors: Sensors.AsObject; output: Output.AsObject }
-    | undefined,
+  droneTelemetry: undefined as DroneTelemetry | undefined,
   playback: false,
   recording: false,
-  telemetryData: new Array<{
-    sensors: Sensors.AsObject;
-    output: Output.AsObject;
-  }>(),
+  telemetryData: new Array<DroneTelemetry>(),
   pingDelay: undefined as number | undefined,
   mapCenter: { lat: 38.147483, lng: -76.427778 },
   ugvStatus: undefined as UGV_Message.AsObject["status"],
@@ -76,7 +76,7 @@ export default produce((state: TelemetryState, action: AppAction) => {
       return;
     }
     case "CENTER_ON_DRONE": {
-      if (state.droneTelemetry) {
+      if (state.droneTelemetry && state.droneTelemetry.sensors) {
         state.mapCenter = {
           lat: state.droneTelemetry.sensors.latitude,
           lng: state.droneTelemetry.sensors.latitude

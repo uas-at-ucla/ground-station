@@ -10,6 +10,7 @@ data class Mission(
     val stationaryObstacles: List<Coordinate3D>,
     val searchGridPoints: List<Coordinate>,
     val waypoints: List<Waypoint>,
+    val airDropBoundaryPoints: List<Coordinate>,
     val airDropPos: Coordinate,
     val emergentLastKnownPos: Coordinate,
     val ugvDrivePos: Coordinate,

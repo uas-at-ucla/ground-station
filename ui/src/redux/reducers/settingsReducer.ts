@@ -11,7 +11,7 @@ const initialState = {
   gndServerIp: socketHost + ":" + socketPort,
   connectedGndServerIp: socketHost + ":" + socketPort,
   gndServerConnected: false,
-  interopIp: "167.71.120.140:8000", // used to be "134.209.2.203:8000"
+  interopIp: "167.71.120.140:8000",
   interopUsername: "testuser",
   interopPassword: "testpass",
   interopMissionId: 1,

@@ -35,7 +35,7 @@ function getCustomTilesMapType() {
 }
 
 const GoogleMapWrapperComponent = (props: GoogleMap["props"]) => {
-  const mapComponent = useRef<GoogleMap | null>(null);
+  const mapComponent = useRef<GoogleMap>();
 
   // pan smoothly when map center changes
   useEffect(() => {

@@ -24,7 +24,7 @@ import UasLogo from "components/utils/UasLogo/UasLogo";
 import * as settingsActions from "redux/actions/settingsActions";
 import * as genericActions from "redux/actions/genericActions";
 import * as externalActions from "redux/actions/externalActions";
-import { AppState } from "redux/store";
+import { AppState, selector } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
 
 const defaultMapCenter = {
@@ -35,7 +35,8 @@ const defaultMapCenter = {
 const mapStateToProps = (state: AppState) => {
   return {
     settings: state.settings,
-    interopData: state.mission.interopData
+    interopData: state.mission.interopData,
+    lostCommsMapCoord: selector(state).mission.lostCommsMapCoord
   };
 };
 
@@ -233,7 +234,7 @@ const Settings = (props: Props) => {
             >
               <DropdownToggle caret>Interop IP</DropdownToggle>
               <DropdownMenu id="interopIp" onClick={handleSelect}>
-                <DropdownItem>134.209.2.203:8000</DropdownItem>
+                <DropdownItem>167.71.120.140:8000</DropdownItem>
               </DropdownMenu>
             </InputGroupButtonDropdown>
             <Input
@@ -356,17 +357,7 @@ const Settings = (props: Props) => {
           <div style={{ height: "350px", width: "500px" }}>
             <GoogleMap
               defaultZoom={17}
-              center={
-                props.interopData &&
-                props.interopData.mission.airDropPos &&
-                props.interopData.mission.airDropPos.latitude &&
-                props.interopData.mission.airDropPos.longitude
-                  ? {
-                      lat: props.interopData.mission.airDropPos.latitude,
-                      lng: props.interopData.mission.airDropPos.longitude
-                    }
-                  : defaultMapCenter
-              }
+              center={props.lostCommsMapCoord || defaultMapCenter}
               defaultMapTypeId="customTiles"
               defaultOptions={{
                 disableDefaultUI: true,
