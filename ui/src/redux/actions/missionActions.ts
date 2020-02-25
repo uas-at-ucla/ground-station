@@ -47,25 +47,20 @@ const makeDefaultCommand: () => Required<GroundCommand.AsObject> = () => ({
 });
 
 export const centerMapOnCommand = (
-  commands: MissionState["commands"],
-  cmdId: string
+  location: Position3D.AsObject | undefined,
+  cmdId?: string
 ) => {
-  const cmd = commands[cmdId];
-  const cmdType = Object.keys(cmd)[0] as keyof GroundCommand.AsObject;
-  if (cmdType !== "waitCommand" && cmdType !== "surveyCommand") {
-    const location = cmd[cmdType]?.goal;
-    if (location) {
-      return {
-        type: "CENTER_ON_COMMAND" as const,
-        payload: {
-          id: cmdId,
-          pos: {
-            lat: location.latitude,
-            lng: location.longitude
-          }
+  if (location) {
+    return {
+      type: "CENTER_ON_COMMAND" as const,
+      payload: {
+        id: cmdId,
+        pos: {
+          lat: location.latitude,
+          lng: location.longitude
         }
-      };
-    }
+      }
+    };
   }
   return { type: "NONE" as const };
 };
@@ -139,6 +134,18 @@ export const changeCommandField = (
     isAltitude: isAltitude
   }
 });
+
+export const changeNumberField = (
+  dotProp: string,
+  input: string,
+  isAltitude: boolean
+) => {
+  const newValue = Number(input);
+  if (!isNaN(newValue)) {
+    return changeCommandField(dotProp, newValue, isAltitude);
+  }
+  return { type: "NONE" as const };
+};
 
 export const addRepeatedField = (
   dotProp: string,

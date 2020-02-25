@@ -1,8 +1,9 @@
-import React, { useMemo, useCallback, useRef } from "react";
+import React, { useMemo, useCallback } from "react";
 import "./AttitudeIndicator.css";
 import NavballImg from "./navball.png";
 import PositionRef from "./navball_pos_ref.svg";
 import * as THREE from "three";
+import { useEventCallback } from "utils/customHooks";
 
 /*
 More navball skins:
@@ -46,14 +47,12 @@ const Navball = (props: Props) => {
 
   const ballContainer = useMemo(() => new THREE.Object3D(), []);
 
-  const orientationRef = useRef(props.data);
-  orientationRef.current = props.data;
-  const updateRotation = useCallback(() => {
+  const updateRotation = useEventCallback(() => {
     const theBallContainer = ballContainer;
-    theBallContainer.rotation.x = orientationRef.current["roll"];
-    theBallContainer.rotation.y = orientationRef.current["pitch"];
-    theBallContainer.rotation.z = orientationRef.current["yaw"];
-  }, [ballContainer]);
+    theBallContainer.rotation.x = props.data["roll"];
+    theBallContainer.rotation.y = props.data["pitch"];
+    theBallContainer.rotation.z = props.data["yaw"];
+  });
 
   const animate = useCallback(() => {
     renderer.render(scene, camera);

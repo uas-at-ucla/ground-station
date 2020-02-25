@@ -9,3 +9,8 @@ a[href^="https://maps.google.com/maps"] {
 .gmnoprint a, .gmnoprint span, .gm-style-cc:not([style^="position: absolute"]) {
   display: none;
 }
+
+.google-map-container {
+  width: 100%;
+  height: 100%;
+}

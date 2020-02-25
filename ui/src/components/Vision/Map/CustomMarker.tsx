@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Marker, InfoWindow } from "react-google-maps";
+import { Marker, InfoWindow } from "@react-google-maps/api";
 
 interface Props {
   marker: {

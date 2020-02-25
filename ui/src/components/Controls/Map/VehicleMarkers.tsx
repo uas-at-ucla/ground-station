@@ -1,11 +1,13 @@
 import React from "react";
-import { Marker, Circle } from "react-google-maps";
+import { Marker, Circle } from "@react-google-maps/api";
 import { connect } from "react-redux";
 
 import google from "components/utils/GoogleMap/google";
 import rover from "./icons/rover.png";
 import { AppState } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
+
+const ephCircleOptions = { clickable: false };
 
 const mapStateToProps = (state: AppState) => {
   return {
@@ -18,23 +20,23 @@ const connectComponent = connect(mapStateToProps);
 type Props = ExtractPropsType<typeof connectComponent>;
 
 const VehicleMarkers = (props: Props) => {
-  const pos = props.telemetry
-    ? {
-        lat: props.telemetry.sensors.latitude,
-        lng: props.telemetry.sensors.longitude
-      }
-    : undefined;
   return (
     <span>
-      {props.telemetry ? (
+      {props.telemetry && props.telemetry.sensors ? (
         <span>
           <Circle
-            center={pos}
+            center={{
+              lat: props.telemetry.sensors.latitude,
+              lng: props.telemetry.sensors.longitude
+            }}
             radius={props.telemetry.sensors.gpsEph}
-            options={{ clickable: false }}
+            options={ephCircleOptions}
           />
           <Marker
-            position={pos}
+            position={{
+              lat: props.telemetry.sensors.latitude,
+              lng: props.telemetry.sensors.longitude
+            }}
             icon={{
               path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
               strokeColor: "#FFFFFF",

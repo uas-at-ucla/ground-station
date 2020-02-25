@@ -1,12 +1,9 @@
 import { createSelector } from "reselect";
-import { createObjectSelector } from "reselect-map";
 
 import { AppState } from "../store";
-import { DroneCommand } from "protobuf/drone/timeline_grammar_pb";
 import { Position3D } from "protobuf/drone/mission_commands_pb";
 import { FlyZone, Position } from "protobuf/interop/interop_api_pb";
-
-//TODO Start relying less on reducers and put this logic in components.
+import { GroundCommand } from "protobuf/drone/timeline_grammar_pb";
 
 export const lostCommsMapCoord = createSelector(
   [(state: AppState) => state.mission.interopData],
@@ -24,86 +21,72 @@ export const lostCommsMapCoord = createSelector(
   }
 );
 
-// createObjectSelector is more efficient because it only recalculates for commands that have changed
-export const commandMarkers = createObjectSelector(
-  [(state: AppState) => state.mission.commands],
-  cmd => {
-    let location: Position3D.AsObject | undefined = undefined;
-    let label: google.maps.MarkerLabel | null = null;
-
-    const cmdType = Object.keys(cmd)[0] as keyof typeof cmd;
-
-    if (cmdType !== "waitCommand" && cmdType !== "surveyCommand") {
-      location = cmd[cmdType]?.goal;
-    }
-
-    switch (cmdType) {
-      case "surveyCommand":
-      case "waitCommand":
-      case "flyThroughCommand":
-      case "offAxisCommand":
-        break;
-      case "landAtLocationCommand":
-        label = {
-          fontFamily: "Fontawesome",
-          text: "\uf063",
-          fontSize: "15px"
-        };
-        break;
-      case "ugvDropCommand":
-        label = {
-          fontFamily: "Fontawesome",
-          text: "\uf187",
-          fontSize: "15px"
-        };
-        break;
-      case "waypointCommand":
-        label = {
-          fontFamily: "Fontawesome",
-          text: "\uf192",
-          fontSize: "15px"
-        };
-    }
-
-    if (location) {
-      return {
-        altitude: location.altitude,
-        position: {
-          lat: location.latitude,
-          lng: location.longitude
-        },
-        label: label
+export const locationCommands = createSelector(
+  [
+    (state: AppState) => state.mission.commands,
+    (state: AppState) => state.mission.commandOrder
+  ],
+  (commands, commandOrder) => {
+    const locationCommands: {
+      [id: string]: {
+        cmdType: keyof GroundCommand.AsObject;
+        location: Position3D.AsObject;
       };
+    } = {};
+    const locationCommandOrder: string[] = [];
+    for (const cmdId of commandOrder) {
+      const cmd = commands[cmdId];
+      const cmdType = Object.keys(cmd)[0] as keyof typeof cmd;
+      if (cmdType !== "waitCommand") {
+        let location: Position3D.AsObject;
+        if (cmdType === "surveyCommand") {
+          const cmdObj = cmd[cmdType];
+          if (!cmdObj) {
+            throw new Error("Unreachable");
+          }
+          let lat = 0;
+          let lng = 0;
+          for (const vertex of cmdObj.surveyPolygonList) {
+            lat += vertex.latitude;
+            lng += vertex.longitude;
+          }
+          lat /= cmdObj.surveyPolygonList.length;
+          lng /= cmdObj.surveyPolygonList.length;
+          location = {
+            latitude: lat,
+            longitude: lng,
+            altitude: cmdObj.altitude
+          };
+        } else {
+          const cmdObj = cmd[cmdType];
+          if (!cmdObj) {
+            throw new Error("Unreachable");
+          }
+          location = cmdObj.goal;
+        }
+        if (location) {
+          locationCommands[cmdId] = {
+            cmdType: cmdType,
+            location: location
+          };
+          locationCommandOrder.push(cmdId);
+        }
+      }
     }
-    return null; // if cmd does not have a location (e.g. a SleepCommand)
+    return {
+      commands: locationCommands,
+      order: locationCommandOrder
+    };
   }
 );
 
-export const commandPoints = createSelector(
-  [
-    (state: AppState) => state.mission.commands,
-    (state: AppState) => state.mission.commandOrder,
-    commandMarkers
-  ],
-  (commands, commandOrder, commandMarkers) => {
-    return commandOrder.map((cmdId, index) => {
-      const marker = (commandMarkers as any)[cmdId]; // TODO (problems with createObjectSelector, we probably want to ditch that and move this code into the actual Map component)
-      if (!marker) {
-        return null;
-      }
-      const cmdType = Object.keys(commands[cmdId])[0];
-      return {
-        id: cmdId,
-        name: cmdType,
-        marker: marker,
-        infobox: {
-          position: marker.position,
-          title: index + 1 + ": " + cmdType,
-          content: "Altitude: " + marker.altitude + " ft rel"
-        }
-      };
-    });
-  }
+export const groundProgramPath = createSelector(
+  [locationCommands],
+  locationCommands =>
+    locationCommands.order.map(cmdId => ({
+      lat: locationCommands.commands[cmdId].location.latitude,
+      lng: locationCommands.commands[cmdId].location.longitude
+    }))
 );
 
 export const droneProgramPath = createSelector(
@@ -114,7 +97,7 @@ export const droneProgramPath = createSelector(
     }
     const path = [];
     for (const cmd of droneProgram.commandsList) {
-      const cmdType = Object.keys(cmd)[0] as keyof DroneCommand.AsObject;
+      const cmdType = Object.keys(cmd)[0] as keyof typeof cmd;
       if (cmdType === "translateCommand") {
         const location = cmd[cmdType]?.goal;
         if (location) {
@@ -132,15 +115,19 @@ export const droneProgramPath = createSelector(
 export const mainFlyZone = createSelector(
   [(state: AppState) => state.mission.interopData],
   interopData => {
-    let mainFlyZone: FlyZone.AsObject & { isClockwise: boolean } = {
+    if (!interopData) {
+      return null;
+    }
+    let mainFlyZone: Required<FlyZone.AsObject> & { isClockwise: boolean } = {
       boundaryPointsList: [],
+      altitudeMin: 0,
+      altitudeMax: 0,
       isClockwise: false
     };
-    if (!interopData) {
-      return mainFlyZone;
-    }
     let maxArea = -1;
-    for (const flyZone of interopData.mission.flyZonesList) {
+    for (const flyZone of interopData.mission.flyZonesList as Required<
+      FlyZone.AsObject
+    >[]) {
       const area = polygonArea(
         flyZone.boundaryPointsList as Required<Position.AsObject>[]
       );

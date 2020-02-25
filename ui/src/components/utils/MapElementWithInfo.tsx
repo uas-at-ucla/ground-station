@@ -1,34 +1,51 @@
-import React, { ComponentClass, FunctionComponent } from "react";
-import { InfoWindow } from "react-google-maps";
+import React, {
+  ComponentClass,
+  FunctionComponent,
+  ReactNode,
+  useCallback,
+  useRef
+} from "react";
+import { InfoWindow } from "@react-google-maps/api";
 
-interface Props {
-  isOpen: { [key: string]: boolean };
+type Props<T> = {
+  isOpen: boolean;
+  id: string;
   toggleOpen: (id: string) => void;
-  name: string;
-  infoPosition?: any;
-  Element: ComponentClass<any> | FunctionComponent<any>;
-  [key: string]: any; //other props for the map element
-}
+  infoPosition?: google.maps.LatLngLiteral;
+  Element: ComponentClass<T> | FunctionComponent<T>;
+  children: ReactNode;
+} & T;
 
-const MapElementWithInfo = (props: Props) => {
-  const toggleOpen = () => {
-    props.toggleOpen(props.name);
+function MapElementWithInfo<T>(props: Props<T>) {
+  const toggleOpenId = props.toggleOpen;
+  const toggleOpen = useCallback(() => toggleOpenId(props.id), [
+    props.id,
+    toggleOpenId
+  ]);
+
+  const mapElement = useRef<google.maps.MVCObject>();
+  const mapElementLoad = (element: google.maps.MVCObject) => {
+    mapElement.current = element;
   };
 
-  const info = props.isOpen[props.name] ? (
-    <InfoWindow onCloseClick={toggleOpen} position={props.infoPosition}>
+  const info = props.isOpen ? (
+    <InfoWindow
+      onCloseClick={toggleOpen}
+      position={props.infoPosition}
+      anchor={mapElement.current}
+    >
       <div className="map-infobox">{props.children}</div>
     </InfoWindow>
   ) : null;
 
   return (
     <span>
-      <props.Element {...props} onClick={toggleOpen}>
+      <props.Element {...props} onClick={toggleOpen} onLoad={mapElementLoad}>
         {!props.infoPosition ? info : null}
       </props.Element>
       {props.infoPosition ? info : null}
     </span>
   );
-};
+}
 
 export default MapElementWithInfo;

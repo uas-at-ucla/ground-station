@@ -124,7 +124,7 @@ const DroneActions = (props: Props) => {
       commandsList: props.missionCommandOrder.map(
         id => props.missionCommands[id]
       ),
-      fieldBoundaryList: props.interopData
+      fieldBoundaryList: props.mainFlyZone
         ? (props.mainFlyZone.boundaryPointsList as Required<
             Position.AsObject
           >[])

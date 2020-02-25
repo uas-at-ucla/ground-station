@@ -21,7 +21,7 @@ type Props = ExtractPropsType<typeof connectComponent>;
 
 const Altimeter = (props: Props) => {
   let relAltitude = 0;
-  if (props.telemetry) {
+  if (props.telemetry && props.telemetry.sensors) {
     relAltitude = props.telemetry.sensors.relativeAltitude * FEET_PER_METER;
   }
   const percentage = (relAltitude / MAX_ALT) * 100;
@@ -30,9 +30,9 @@ const Altimeter = (props: Props) => {
   let max = Infinity;
   if (
     props.telemetry &&
+    props.telemetry.sensors &&
     props.interopData &&
-    props.mainFlyZone.altitudeMin &&
-    props.mainFlyZone.altitudeMax
+    props.mainFlyZone
   ) {
     const homeAlt = props.telemetry.sensors.homeAltitude * FEET_PER_METER;
     min = props.mainFlyZone.altitudeMin - homeAlt;

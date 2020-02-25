@@ -17,6 +17,8 @@ import "./MissionPlannerContainer.css";
 import MissionPlanner from "./MissionPlanner";
 import CommandList from "./CommandList";
 import { ExtractPropsType } from "utils/reduxUtils";
+import * as missionActions from "redux/actions/missionActions";
+import { useEventCallback } from "utils/customHooks";
 
 const mapStateToProps = (state: AppState) => {
   return {
@@ -29,7 +31,9 @@ const mapStateToProps = (state: AppState) => {
   };
 };
 
-const connectComponent = connect(mapStateToProps);
+const mapDispatchToProps = missionActions;
+
+const connectComponent = connect(mapStateToProps, mapDispatchToProps);
 type Props = ExtractPropsType<typeof connectComponent>;
 
 const MissionPlannerContainer = (props: Props) => {
@@ -45,6 +49,18 @@ const MissionPlannerContainer = (props: Props) => {
   const expand = () => setExpanded(true);
 
   const close = () => setExpanded(false);
+
+  const centerMapOnDroneCommand = useEventCallback((id: string | number) => {
+    const index = Number(id);
+    if (props.droneProgram) {
+      const cmd = props.droneProgram.commandsList[index];
+      const cmdType = Object.keys(cmd)[0] as keyof typeof cmd;
+      if (cmdType === "translateCommand") {
+        const location = cmd[cmdType]?.goal;
+        props.centerMapOnCommand(location);
+      }
+    }
+  });
 
   return (
     <div className="MissionPlannerContainer">
@@ -99,9 +115,7 @@ const MissionPlannerContainer = (props: Props) => {
                   props.droneProgram ? props.droneProgram.commandsList : []
                 }
                 className="SmallMissionPlanner"
-                centerMapOnCommand={() => {
-                  //TODO
-                }}
+                centerMapOnCommand={centerMapOnDroneCommand}
               />
             </Container>
           </div>

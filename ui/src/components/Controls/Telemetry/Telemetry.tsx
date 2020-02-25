@@ -41,7 +41,7 @@ const Telemetry = (props: Props) => {
   let telmet = blankTelmet;
   const rawTelmet = props.telemetry.droneTelemetry;
   const pingDelay = props.telemetry.pingDelay;
-  if (rawTelmet != null) {
+  if (rawTelmet && rawTelmet.sensors) {
     telmet = {
       pingDelay: pingDelay !== undefined ? pingDelay : NaN,
       autopilotState: rawTelmet["sensors"]["armed"]

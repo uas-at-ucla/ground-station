@@ -46,9 +46,9 @@
     "electron-is-dev": "Detect if electron is running in development mode"
   },
   "devDependencies": {
+    "@react-google-maps/api": "^1.8.3",
     "@types/googlemaps": "^3.39.1",
     "@types/jest": "^24.0.25",
-    "@types/markerclustererplus": "^2.1.33",
     "@types/node": "^12.12.24",
     "@types/react": "^16.9.17",
     "@types/react-dom": "^16.9.4",
@@ -85,7 +85,6 @@
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-easy-crop": "^1.17.1",
-    "react-google-maps": "^9.4.5",
     "react-redux": "^7.1.3",
     "react-router-dom": "^5.1.2",
     "react-scripts": "^3.3.0",
@@ -95,7 +94,6 @@
     "redux": "^4.0.5",
     "redux-devtools-extension": "^2.13.8",
     "reselect": "^4.0.0",
-    "reselect-map": "^1.0.5",
     "reselect-tools": "0.0.7",
     "sanitize.css": "^11.0.0",
     "shortid": "^2.2.15",

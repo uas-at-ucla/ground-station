@@ -3,10 +3,16 @@ import React, { useState, useEffect } from "react";
 import CustomMarker from "./CustomMarker";
 // import { Marker } from "react-google-maps";
 import GoogleMap from "../../utils/GoogleMap/GoogleMap";
-import HeatmapLayer from "react-google-maps/lib/components/visualization/HeatmapLayer";
+import { HeatmapLayer } from "@react-google-maps/api";
 import "./Map.css";
 
-// const google = window.google;
+const defaultMapCenter = { lat: 37.782551, lng: -122.445368 };
+
+const mapOptions = {
+  disableDefaultUI: true,
+  disableDoubleClickZoom: true,
+  scaleControl: true
+};
 
 const Map = () => {
   const [state, setState] = useState({
@@ -303,18 +309,15 @@ const Map = () => {
       <div className="Map" onContextMenu={handleCancelSelect}>
         {/*onClick={handleAreaSelect}*/}
         <GoogleMap
-          defaultZoom={16}
-          defaultCenter={{ lat: 37.782551, lng: -122.445368 }}
-          defaultMapTypeId="customTiles"
-          defaultOptions={{
-            disableDefaultUI: true,
-            disableDoubleClickZoom: true,
-            scaleControl: true
-          }}
+          zoom={16}
+          center={defaultMapCenter}
+          mapTypeId="customTiles"
+          options={mapOptions}
           onDblClick={mapDblClick}
         >
           {customMarkers}
           <HeatmapLayer
+            data={state.hmData}
             options={{
               data: state.hmData,
               radius: state.hmRadius,

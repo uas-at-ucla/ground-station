@@ -14,7 +14,7 @@ const mapStateToProps = (state: AppState) => {
   return {
     telemetry: state.telemetry.droneTelemetry,
     ugvStatus: state.telemetry.ugvStatus,
-    interopData: state.mission.interopData,
+    interopData: state.mission.originalInteropData,
     recording: state.telemetry.recording,
     telemetryData: state.telemetry.telemetryData
   };

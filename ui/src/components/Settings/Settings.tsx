@@ -13,7 +13,7 @@ import {
   DropdownMenu,
   DropdownItem
 } from "reactstrap";
-import { Marker } from "react-google-maps";
+import { Marker } from "@react-google-maps/api";
 
 import "./Settings.css";
 import GoogleMap, {
@@ -26,10 +26,17 @@ import * as genericActions from "redux/actions/genericActions";
 import * as externalActions from "redux/actions/externalActions";
 import { AppState, selector } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
+import { useEventCallback } from "utils/customHooks";
 
 const defaultMapCenter = {
   lat: 34.0689,
   lng: -118.4452
+};
+
+const mapOptions = {
+  disableDefaultUI: true,
+  disableDoubleClickZoom: true,
+  scaleControl: true
 };
 
 const mapStateToProps = (state: AppState) => {
@@ -93,7 +100,7 @@ const Settings = (props: Props) => {
     props.configureUgvDest(props.settings.antennaPos); // temporary, but convenient to use the same map
   };
 
-  const handleClickedMap = (event: google.maps.MouseEvent) => {
+  const handleClickedMap = useEventCallback((event: google.maps.MouseEvent) => {
     const pos = { lat: event.latLng.lat(), lng: event.latLng.lng() };
     if (props.settings.mapCapture === "off") {
       props.updateSettings({ antennaPos: pos });
@@ -102,7 +109,7 @@ const Settings = (props: Props) => {
     } else if (props.settings.mapCapture === "bottomRightCorner") {
       props.updateSettings({ mapCaptureBottomRight: pos });
     }
-  };
+  });
 
   const endMapCapture = () => {
     if (
@@ -356,19 +363,19 @@ const Settings = (props: Props) => {
           </Button>
           <div style={{ height: "350px", width: "500px" }}>
             <GoogleMap
-              defaultZoom={17}
+              zoom={17}
               center={props.lostCommsMapCoord || defaultMapCenter}
-              defaultMapTypeId="customTiles"
-              defaultOptions={{
-                disableDefaultUI: true,
-                disableDoubleClickZoom: true,
-                scaleControl: true
-              }}
+              mapTypeId="customTiles"
+              options={mapOptions}
               onDblClick={handleClickedMap}
             >
               <Marker position={props.settings.antennaPos} />
-              <Marker position={props.settings.mapCaptureTopLeft} />
-              <Marker position={props.settings.mapCaptureBottomRight} />
+              {props.settings.mapCaptureTopLeft && (
+                <Marker position={props.settings.mapCaptureTopLeft} />
+              )}
+              {props.settings.mapCaptureBottomRight && (
+                <Marker position={props.settings.mapCaptureBottomRight} />
+              )}
             </GoogleMap>
           </div>
         </Col>

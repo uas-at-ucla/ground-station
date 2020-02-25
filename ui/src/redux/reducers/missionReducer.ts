@@ -17,10 +17,10 @@ const initialState = {
   missionCompiled: false,
   missionUploaded: false,
   lastDroppyCommand: undefined as string | undefined,
+  originalInteropData: undefined as any,
   interopData: undefined as
     | { mission: Required<Mission.AsObject>; ip: string }
-    | undefined,
-  ugvDestination: { lat: 38.14617, lng: -76.42642 } // Official competition location
+    | undefined
 };
 export type MissionState = typeof initialState;
 
@@ -31,9 +31,8 @@ export default produce((state: MissionState, action: AppAction) => {
       return;
     }
     case "INTEROP_DATA": {
-      // console.log(JSON.stringify(action.payload)); // TODO make "Save/Load Interop Mission" buttons work correctly (deal with array rename to "...List")
-      convertInteropToProtobufJson(action.payload);
-      state.interopData = action.payload;
+      state.originalInteropData = action.payload;
+      state.interopData = convertInteropToProtobufJson(action.payload);
       return;
     }
     case "ADD_COMMAND": {
@@ -88,7 +87,9 @@ export default produce((state: MissionState, action: AppAction) => {
       return;
     }
     case "CENTER_ON_COMMAND": {
-      state.commandAnimate[action.payload.id] = true;
+      if (action.payload.id) {
+        state.commandAnimate[action.payload.id] = true;
+      }
       return;
     }
     case "COMMAND_STOP_ANIMATION": {
@@ -121,13 +122,19 @@ export default produce((state: MissionState, action: AppAction) => {
 }, initialState) as (a: any, b: any) => MissionState;
 
 function convertInteropToProtobufJson(interopJson: any) {
+  const convertedInteropData = Array.isArray(interopJson)
+    ? [...interopJson]
+    : { ...interopJson };
   for (const key in interopJson) {
     if (typeof interopJson[key] === "object") {
-      convertInteropToProtobufJson(interopJson[key]);
+      convertedInteropData[key] = convertInteropToProtobufJson(
+        interopJson[key]
+      );
     }
     if (Array.isArray(interopJson[key])) {
-      interopJson[`${key}List`] = interopJson[key];
-      delete interopJson[key];
+      convertedInteropData[`${key}List`] = convertedInteropData[key];
+      delete convertedInteropData[key];
     }
   }
+  return convertedInteropData;
 }

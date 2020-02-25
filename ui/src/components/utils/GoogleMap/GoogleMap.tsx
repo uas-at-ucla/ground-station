@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useMemo } from "react";
-import { withGoogleMap, GoogleMap } from "react-google-maps";
+import React, { useEffect, useCallback } from "react";
+import { useGoogleMap, GoogleMap } from "@react-google-maps/api";
 import axios from "axios";
 
 import "./GoogleMap.css";
@@ -7,7 +7,7 @@ import google from "./google";
 import { userDataPath, fs, path } from "utils/electronUtils";
 
 // TODO: Google updates this from time to time. Use Chrome Dev Tools "Network" tab to find the number used for image urls in the satellite map here: https://developers.google.com/maps/documentation/javascript/maptypes
-const imageUrlV = "862";
+const imageUrlV = "865";
 
 export const mapImagesFolder = path.join(userDataPath, "mapImages");
 const TILE_SIZE = 256;
@@ -34,41 +34,45 @@ function getCustomTilesMapType() {
   });
 }
 
-const GoogleMapWrapperComponent = (props: GoogleMap["props"]) => {
-  const mapComponent = useRef<GoogleMap>();
+const PanSmoothlyOnCenterChange = (props: GoogleMap["props"]) => {
+  const map = useGoogleMap();
 
   // pan smoothly when map center changes
   useEffect(() => {
-    if (mapComponent.current) {
+    if (map) {
       if (props.center) {
-        mapComponent.current.panTo(props.center);
+        map.panTo(props.center);
       }
     }
-  }, [props.center]);
+  }, [map, props.center]);
 
-  const setMapType = (component: GoogleMap) => {
-    if (component) {
-      mapComponent.current = component;
-      // google = window.google;
-      const customTilesMapType = getCustomTilesMapType();
-      const map =
-        component.context.__SECRET_MAP_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // lol don't worry
-      map.mapTypes.set("customTiles", customTilesMapType);
-      // map.setMapTypeId('customTiles');
-    }
-  };
+  return null;
+};
 
-  const GoogleMapComponent = useMemo(
-    () => withGoogleMap(props => <GoogleMap {...props} ref={setMapType} />),
-    []
+const GoogleMapWrapperComponent = (props: GoogleMap["props"]) => {
+  const setMapType = useCallback(
+    (map: google.maps.Map) => {
+      if (map) {
+        if (!map.mapTypes.get("customTiles")) {
+          map.mapTypes.set("customTiles", getCustomTilesMapType());
+        }
+        if (props.mapTypeId === "customTiles") {
+          map.setMapTypeId("customTiles");
+        }
+      }
+    },
+    [props.mapTypeId]
   );
 
   return (
-    <GoogleMapComponent
-      containerElement={<div style={{ height: `100%` }} />}
-      mapElement={<div style={{ height: `100%` }} />}
+    <GoogleMap
       {...props}
-    />
+      onLoad={setMapType}
+      mapContainerClassName="google-map-container"
+    >
+      <PanSmoothlyOnCenterChange {...props} />
+      {props.children}
+    </GoogleMap>
   );
 };
 

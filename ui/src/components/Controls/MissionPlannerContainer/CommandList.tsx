@@ -45,20 +45,19 @@ interface CommandListProps {
   groundCommands?: MissionState["commands"];
   commandOrder?: MissionState["commandOrder"];
   droneCommands?: DroneCommand.AsObject[];
-  centerMapOnCommand: (id: string) => void;
+  centerMapOnCommand: (id: string | number) => void;
   commandChangers?: CommandChangersType;
 }
 
 interface CommandRowProps {
   className: string;
-  key: string;
   command: GroundCommand.AsObject | DroneCommand.AsObject;
-  cmdId: string;
+  cmdId: string | number;
   index: number;
   myIndex: number;
   mutable: boolean;
   lengthUnits: string;
-  centerMapOnCommand: (id: string) => void;
+  centerMapOnCommand: (id: string | number) => void;
   commandChangers?: CommandChangersType;
 }
 
@@ -73,8 +72,8 @@ const CommandList = (props: CommandListProps) => (
           (cmdId, index) =>
             props.groundCommands && (
               <SortableCommand
-                className={props.className}
                 key={cmdId}
+                className={props.className}
                 centerMapOnCommand={props.centerMapOnCommand}
                 commandChangers={props.commandChangers}
                 command={props.groundCommands[cmdId]}
@@ -89,12 +88,12 @@ const CommandList = (props: CommandListProps) => (
       : props.droneCommands
       ? props.droneCommands.map((cmd, index) => (
           <CommandRow
+            key={index}
             className={props.className}
-            key={index.toString()}
             centerMapOnCommand={props.centerMapOnCommand}
             commandChangers={props.commandChangers}
             command={cmd}
-            cmdId={index.toString()}
+            cmdId={index}
             index={index}
             myIndex={index}
             mutable={false}
@@ -367,7 +366,7 @@ const CommandRowImpure = (props: CommandRowProps) => {
           size="sm"
           onClick={() =>
             props.commandChangers &&
-            props.commandChangers.deleteCommand(props.cmdId)
+            props.commandChangers.deleteCommand(props.cmdId.toString())
           }
         >
           <i className="fa fa-minus"></i>
@@ -386,7 +385,7 @@ const CommandRowImpure = (props: CommandRowProps) => {
           onChange={e =>
             props.commandChangers &&
             props.commandChangers.changeCommandType(
-              props.cmdId,
+              props.cmdId.toString(),
               props.command as GroundCommand.AsObject,
               e.target.value as keyof GroundCommand.AsObject
             )

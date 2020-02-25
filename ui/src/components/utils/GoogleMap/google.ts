@@ -7,7 +7,7 @@ if (offlineMaps) {
 const googleMapsApiURL =
   "https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,visualization&key=AIzaSyBI-Gz_lh3-rKXFwlpElD7pInA60U-iK0c";
 
-const google = {} as GoogleMapsLoader.google;
+const google = {} as typeof window.google;
 
 export function loadGoogleMapsApi(callback: () => void) {
   if (window.google) {

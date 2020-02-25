@@ -5,12 +5,11 @@ import { Container } from "reactstrap";
 import { SortableContainer } from "react-sortable-hoc";
 
 import * as missionActions from "redux/actions/missionActions";
-import { RepeatedFieldNamesAndValues } from "redux/actions/missionActions";
 import { selector, AppState } from "redux/store";
 import CommandList from "./CommandList";
 import { ExtractPropsType } from "utils/reduxUtils";
 import { Position } from "protobuf/interop/interop_api_pb";
-import { GroundCommand } from "protobuf/drone/timeline_grammar_pb";
+import { useEventCallback } from "utils/customHooks";
 
 const FEET_PER_METER = 3.28084;
 
@@ -21,7 +20,10 @@ interface OwnProps {
 const mapStateToProps = (state: AppState, props: OwnProps) => {
   const derivedData = selector(state);
   return {
-    mission: state.mission,
+    defaultAltitude: state.mission.defaultAltitude,
+    commands: state.mission.commands,
+    commandOrder: state.mission.commandOrder,
+    locationCommands: derivedData.mission.locationCommands,
     interopData: state.mission.interopData,
     mainFlyZone: derivedData.mission.mainFlyZone,
     homeAltitude:
@@ -50,12 +52,16 @@ const MissionPlanner = (props: Props) => {
 export default connectComponent(MissionPlanner);
 
 const Commands = SortableContainer((props: Props) => {
-  const centerMapOnCommand = (id: string) => {
+  const centerMapOnCommand = useEventCallback((id: string | number) => {
+    const cmdId = id.toString();
     if (props.className === "SmallMissionPlanner") {
-      props.centerMapOnCommand(props.mission.commands, id);
-      setTimeout(() => props.commandStopAnimation(id), 1000);
+      props.centerMapOnCommand(
+        props.locationCommands.commands[cmdId].location,
+        cmdId
+      );
+      setTimeout(() => props.commandStopAnimation(cmdId), 1000);
     }
-  };
+  });
 
   const addCommand = () => {
     props.addCommand({
@@ -69,55 +75,20 @@ const Commands = SortableContainer((props: Props) => {
     });
   };
 
-  const {
-    deleteCommand,
-    changeCommandType,
-    changeCommandField,
-    addRepeatedField,
-    popRepeatedField
-  } = props;
   const commandChangers = useMemo(() => {
     return {
-      deleteCommand: (id: string) => {
-        deleteCommand(id);
-      },
-
-      changeCommandType: (
-        id: string,
-        command: GroundCommand.AsObject,
-        newType: keyof GroundCommand.AsObject
-      ) => {
-        changeCommandType(id, command, newType);
-      },
-
-      changeNumberField: (
-        dotProp: string,
-        input: string,
-        isAltitude: boolean
-      ) => {
-        const newValue = Number(input);
-        if (!isNaN(newValue)) {
-          changeCommandField(dotProp, newValue, isAltitude);
-        }
-      },
-
-      addRepeatedField: (
-        dotProp: string,
-        fieldName: RepeatedFieldNamesAndValues["name"]
-      ) => {
-        addRepeatedField(dotProp, fieldName);
-      },
-
-      popRepeatedField: (dotProp: string) => {
-        popRepeatedField(dotProp);
-      }
+      deleteCommand: props.deleteCommand,
+      changeCommandType: props.changeCommandType,
+      changeNumberField: props.changeNumberField,
+      addRepeatedField: props.addRepeatedField,
+      popRepeatedField: props.popRepeatedField
     };
   }, [
-    addRepeatedField,
-    changeCommandField,
-    changeCommandType,
-    deleteCommand,
-    popRepeatedField
+    props.addRepeatedField,
+    props.changeCommandType,
+    props.changeNumberField,
+    props.deleteCommand,
+    props.popRepeatedField
   ]);
 
   const autoGenerate = () => {
@@ -126,7 +97,7 @@ const Commands = SortableContainer((props: Props) => {
       throw new Error("You weren't supposed to be able to click this button!");
     }
 
-    const targetAltitude = props.mission.defaultAltitude;
+    const targetAltitude = props.defaultAltitude;
 
     for (const waypoint of props.interopData.mission.waypointsList as Required<
       Position.AsObject
@@ -181,10 +152,7 @@ const Commands = SortableContainer((props: Props) => {
 
   return (
     <Container fluid>
-      {props.mission.interopData &&
-      props.mainFlyZone &&
-      props.mainFlyZone.altitudeMin &&
-      props.mainFlyZone.altitudeMax ? (
+      {props.mainFlyZone ? (
         <div>
           {"Mission Altitude Range: " +
             props.mainFlyZone.altitudeMin +
@@ -203,8 +171,8 @@ const Commands = SortableContainer((props: Props) => {
         </div>
       ) : null}
       <CommandList
-        groundCommands={props.mission.commands}
-        commandOrder={props.mission.commandOrder}
+        groundCommands={props.commands}
+        commandOrder={props.commandOrder}
         className={props.className}
         centerMapOnCommand={centerMapOnCommand}
         commandChangers={commandChangers}
@@ -214,7 +182,7 @@ const Commands = SortableContainer((props: Props) => {
       </Button>
       {props.homeAltitude !== null &&
       props.interopData &&
-      props.mission.commandOrder.length === 0 ? (
+      props.commandOrder.length === 0 ? (
         <Button onClick={autoGenerate} color="primary">
           Auto-Generate
         </Button>
