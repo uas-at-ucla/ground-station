@@ -6,6 +6,8 @@
   "homepage": "./",
   "//homepageComment": "This is required for React to use the correct path for file:// requests in production",
   "scripts": {
+    "start-all": "concurrently \"npm run server-start\" \"npm start\"",
+    "server-start": "node server/server.js",
     "react-start": "cross-env EXTEND_ESLINT=true BROWSER=none react-scripts start",
     "electron-start": "npm run electron-build && cross-env ELECTRON_IS_DEV=1 electron .",
     "start": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000/ && npm run electron-start\"",
@@ -24,6 +26,8 @@
     "package-linux": "npm run package -- --platform=linux"
   },
   "//scriptsComments": {
+    "start-all": "Start the React/Electron app along with the ground server",
+    "server-start": "Start the ground server",
     "react-start": "Start the React app in development mode, which will auto-reload the app when files are changed.",
     "electron-start": "Start electron in development mode, i.e. use the React app running on http://localhost:3000",
     "start": "Concurrently run react-start and electron-start",
@@ -97,12 +101,12 @@
     "reselect-tools": "0.0.7",
     "sanitize.css": "^11.0.0",
     "shortid": "^2.2.15",
+    "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
     "three": "^0.112.1",
     "ts-protoc-gen": "git://github.com/uas-at-ucla-dependencies/ts-protoc-gen#0.12.0-uas-at-ucla-2",
     "typescript": "^3.7.4",
-    "wait-on": "^3.3.0",
-    "webpack-cli": "^3.3.10"
+    "wait-on": "^3.3.0"
   },
   "//devDependenciesComments": {
     "NOTE": "devDependencies aren't included in node_modules in the packaged app. Development tools and dependencies for the React app should go here, since those dependencies get compiled into the React build.",

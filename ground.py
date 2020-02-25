@@ -15,48 +15,35 @@ def exit_if_error(*args, **kwargs):
     if exit_code != 0:
         sys.exit(exit_code)
 
-def build_server():
-    os.chdir("kotlin_server")
-    exit_if_error(["./gradlew", "build"])
-    os.chdir("..")
-
-def build_ui():
-    os.chdir("ui")
+def build(args=None):
+    os.chdir("ui_and_server")
     npm_install.npm_install()
     os.chdir("..")
 
-def build(args=None):
-    build_server()
-    build_ui()
-    print("done building")
-
 def run_all(args):
-    print("Not done yet")
-    # build()
-    # run all-web (w/o Electron) if web option specified. Otherwise, run all (w/ Electron).
-    # exit_if_error([npm_cmd, "run", "all"+args.web], cwd="server")
+    build()
+    exit_if_error([npm_cmd, "run", "start-all"], cwd="ui_and_server")
 
 def run_server(args):
-    os.chdir("kotlin_server")
-    exit_if_error(["./gradlew", "run"])
-    os.chdir("..")
+    build()
+    exit_if_error([npm_cmd, "run", "server-start"], cwd="ui_and_server")
 
 def run_ui(args):
-    build_ui()
+    build()
     # run start-web (w/o Electron) if web option specified. Otherwise, run start (w/ Electron).
-    exit_if_error([npm_cmd, "run", "start"+args.web], cwd="ui")
+    exit_if_error([npm_cmd, "run", "start"+args.web], cwd="ui_and_server")
 
 def deploy_win(args):
-    build_ui()
-    exit_if_error([npm_cmd, "run", "package-win"], cwd="ui")
+    build()
+    exit_if_error([npm_cmd, "run", "package-win"], cwd="ui_and_server")
 
 def deploy_mac(args):
-    build_ui()
-    exit_if_error([npm_cmd, "run", "package-mac"], cwd="ui")
+    build()
+    exit_if_error([npm_cmd, "run", "package-mac"], cwd="ui_and_server")
 
 def deploy_linux(args):
-    build_ui()
-    exit_if_error([npm_cmd, "run", "package-linux"], cwd="ui")
+    build()
+    exit_if_error([npm_cmd, "run", "package-linux"], cwd="ui_and_server")
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.realpath(__file__)))

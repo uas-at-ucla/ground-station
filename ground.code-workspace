@@ -22,7 +22,7 @@
     ],
     "eslint.workingDirectories": [
       { 
-        "directory" : "./ui", 
+        "directory" : "./ui_and_server", 
         "changeProcessCWD": true
       }
     ],
