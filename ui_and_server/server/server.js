@@ -1,3 +1,5 @@
+// TODO make server it's own project and bring back package.json
+
 // use require() to load libraries from node_modules
 const fs = require("fs");
 const socketIOServer = require("socket.io");

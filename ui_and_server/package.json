@@ -6,8 +6,7 @@
   "homepage": "./",
   "//homepageComment": "This is required for React to use the correct path for file:// requests in production",
   "scripts": {
-    "start-all": "concurrently \"npm run server-start\" \"npm start\"",
-    "server-start": "node server/server.js",
+    "start-all": "concurrently \"npm start\" \"cd server && npm start\"",
     "react-start": "cross-env EXTEND_ESLINT=true BROWSER=none react-scripts start",
     "electron-start": "npm run electron-build && cross-env ELECTRON_IS_DEV=1 electron .",
     "start": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000/ && npm run electron-start\"",
@@ -101,7 +100,6 @@
     "reselect-tools": "0.0.7",
     "sanitize.css": "^11.0.0",
     "shortid": "^2.2.15",
-    "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
     "three": "^0.112.1",
     "ts-protoc-gen": "git://github.com/uas-at-ucla-dependencies/ts-protoc-gen#0.12.0-uas-at-ucla-2",

@@ -1,0 +1,22 @@
+{
+    "name": "ground_server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server.js",
+    "scripts": {
+        "start": "nodemon server.js",
+        "test": "node test.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "check-dependencies": "^1.1.0",
+        "concurrently": "^4.0.1",
+        "cross-env": "^5.2.0"
+    },
+    "dependencies": {
+        "axios": "^0.18.0",
+        "nodemon": "^1.18.10",
+        "socket.io": "^2.1.1"
+    }
+}

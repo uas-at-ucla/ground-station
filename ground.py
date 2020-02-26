@@ -15,34 +15,43 @@ def exit_if_error(*args, **kwargs):
     if exit_code != 0:
         sys.exit(exit_code)
 
-def build(args=None):
+def build_ui():
     os.chdir("ui_and_server")
     npm_install.npm_install()
     os.chdir("..")
+
+def build_server():
+    os.chdir("ui_and_server/server")
+    npm_install.npm_install()
+    os.chdir("../..")
+
+def build(args=None):
+    build_ui()
+    build_server()
 
 def run_all(args):
     build()
     exit_if_error([npm_cmd, "run", "start-all"], cwd="ui_and_server")
 
 def run_server(args):
-    build()
-    exit_if_error([npm_cmd, "run", "server-start"], cwd="ui_and_server")
+    build_server()
+    exit_if_error([npm_cmd, "start"], cwd="ui_and_server/server")
 
 def run_ui(args):
-    build()
+    build_ui()
     # run start-web (w/o Electron) if web option specified. Otherwise, run start (w/ Electron).
     exit_if_error([npm_cmd, "run", "start"+args.web], cwd="ui_and_server")
 
 def deploy_win(args):
-    build()
+    build_ui()
     exit_if_error([npm_cmd, "run", "package-win"], cwd="ui_and_server")
 
 def deploy_mac(args):
-    build()
+    build_ui()
     exit_if_error([npm_cmd, "run", "package-mac"], cwd="ui_and_server")
 
 def deploy_linux(args):
-    build()
+    build_ui()
     exit_if_error([npm_cmd, "run", "package-linux"], cwd="ui_and_server")
 
 if __name__ == '__main__':
