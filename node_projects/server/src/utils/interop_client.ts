@@ -2,7 +2,7 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import fs from "fs";
-import config from "../config";
+import config from "config";
 import { Namespace } from "socket.io";
 import { AxiosInstance } from "axios";
 
@@ -12,7 +12,7 @@ const sendInterval = 1000 / interopSendFrequency;
 
 export class InteropClient {
   axiosInstance: AxiosInstance;
-  ui_io: Namespace;
+  ui_io: Namespace | undefined;
   interopTelemetry: any;
   telemetryCanUpload: boolean;
   intervalHandle: NodeJS.Timer | null;
@@ -20,7 +20,7 @@ export class InteropClient {
   constructor(
     axiosConfig: AxiosRequestConfig,
     loginResponse: AxiosResponse,
-    ui_io: Namespace
+    ui_io?: Namespace
   ) {
     const sessionCookie = loginResponse.headers["set-cookie"][0];
     axiosConfig.headers = { Cookie: sessionCookie };
@@ -41,7 +41,9 @@ export class InteropClient {
               if (!this.telemetryCanUpload) {
                 this.telemetryCanUpload = true;
                 console.log("Now able to upload telemetry :)");
-                this.ui_io.emit("INTEROP_UPLOAD_SUCCESS");
+                if (this.ui_io) {
+                  this.ui_io.emit("INTEROP_UPLOAD_SUCCESS");
+                }
               }
             })
             .catch(error => {
@@ -56,7 +58,9 @@ export class InteropClient {
                 } else {
                   console.log("    Could not make request");
                 }
-                this.ui_io.emit("INTEROP_UPLOAD_FAIL");
+                if (this.ui_io) {
+                  this.ui_io.emit("INTEROP_UPLOAD_FAIL");
+                }
               }
             });
           this.interopTelemetry.sent = true;
@@ -132,7 +136,7 @@ export default (
   ip: string,
   username: string,
   password: string,
-  ui_io: Namespace
+  ui_io?: Namespace
 ) => {
   const axiosConfig = {
     baseURL: "http://" + ip + "/api/",

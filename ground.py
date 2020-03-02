@@ -15,13 +15,20 @@ def exit_if_error(*args, **kwargs):
     if exit_code != 0:
         sys.exit(exit_code)
 
-def build_ui():
-    os.chdir("ui_and_server")
+def build_parent_node_project():
+    os.chdir("node_projects")
     npm_install.npm_install()
     os.chdir("..")
 
+def build_ui():
+    build_parent_node_project()
+    os.chdir("node_projects/ui")
+    npm_install.npm_install()
+    os.chdir("../..")
+
 def build_server():
-    os.chdir("ui_and_server/server")
+    build_parent_node_project()
+    os.chdir("node_projects/server")
     npm_install.npm_install()
     os.chdir("../..")
 
@@ -31,28 +38,28 @@ def build(args=None):
 
 def run_all(args):
     build()
-    exit_if_error([npm_cmd, "run", "start-all"], cwd="ui_and_server")
+    exit_if_error([npm_cmd, "start"], cwd="node_projects")
 
 def run_server(args):
     build_server()
-    exit_if_error([npm_cmd, "start"], cwd="ui_and_server/server")
+    exit_if_error([npm_cmd, "start"], cwd="node_projects/server")
 
 def run_ui(args):
     build_ui()
     # run start-web (w/o Electron) if web option specified. Otherwise, run start (w/ Electron).
-    exit_if_error([npm_cmd, "run", "start"+args.web], cwd="ui_and_server")
+    exit_if_error([npm_cmd, "run", "start"+args.web], cwd="node_projects/ui")
 
 def deploy_win(args):
     build_ui()
-    exit_if_error([npm_cmd, "run", "package-win"], cwd="ui_and_server")
+    exit_if_error([npm_cmd, "run", "package-win"], cwd="node_projects/ui")
 
 def deploy_mac(args):
     build_ui()
-    exit_if_error([npm_cmd, "run", "package-mac"], cwd="ui_and_server")
+    exit_if_error([npm_cmd, "run", "package-mac"], cwd="node_projects/ui")
 
 def deploy_linux(args):
     build_ui()
-    exit_if_error([npm_cmd, "run", "package-linux"], cwd="ui_and_server")
+    exit_if_error([npm_cmd, "run", "package-linux"], cwd="node_projects/ui")
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.realpath(__file__)))

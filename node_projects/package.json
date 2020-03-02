@@ -1,0 +1,40 @@
+{
+  "name": "node_projects",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "concurrently \"cd ui && npm start\" \"cd server && npm start\"",
+    "protoc": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:./protobuf\" --ts_out=\"./protobuf\" --proto_path=\"../tools/protobuf\" $(find ../tools/protobuf -iname \"*.proto\")"
+  },
+  "//scriptsComments": {
+    "protoc": "TODO Compile .proto definitions into JavaScript/TypeScript definitions. This doesn't get run automatically (yet), so it should be run manually whenever protobuf definitions change."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/google-protobuf": "^3.7.2",
+    "@typescript-eslint/eslint-plugin": "^2.21.0",
+    "@typescript-eslint/parser": "^2.21.0",
+    "check-dependencies": "^1.1.0",
+    "concurrently": "^5.1.0",
+    "cross-env": "^7.0.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-no-autofix": "^1.0.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "google-protobuf": "^3.11.4",
+    "prettier": "^1.19.1",
+    "ts-protoc-gen": "git://github.com/uas-at-ucla-dependencies/ts-protoc-gen#0.12.0-uas-at-ucla-2",
+    "typescript": "^3.8.3"
+  },
+  "//dependenciesComments": {
+    "@typescript-eslint/eslint-plugin": "TypeScript linting support for ESLint",
+    "@typescript-eslint/parser": "TypeScript parsing support for ESLint (the parser converts the code into a data structure that the linter can understand)",
+    "concurrently": "Run two commands concurrently in the same terminal",
+    "cross-env": "Allows setting environment variables for both Unix and Windows",
+    "eslint": "Linting for JavaScript",
+    "eslint-config-prettier": "Turns off ESLint rules that would conflict with Prettier.",
+    "eslint-plugin-prettier": "ESLint plugin that runs Prettier as an ESLint rule",
+    "prettier": "Code formatter to make code look pretty"
+  }
+}

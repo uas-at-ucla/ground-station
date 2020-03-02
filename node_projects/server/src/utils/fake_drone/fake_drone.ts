@@ -1,4 +1,4 @@
-import config from "../../config";
+import config from "config";
 import socketIOClient from "socket.io-client";
 
 const port = 8081;

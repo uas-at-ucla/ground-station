@@ -3,13 +3,13 @@
 // use require() to load libraries from node_modules
 import socketIOServer from "socket.io";
 
-import { Sensors, Output } from "../src/protobuf/drone/messages_pb";
+import { Sensors, Output } from "protobuf/drone/messages_pb";
 
 import fs from "fs";
 
-import loadInteropClient, { InteropClient } from "./modules/interop_client";
-import config from "./config";
-import { Mission } from "../src/protobuf/interop/interop_api_pb";
+import loadInteropClient, { InteropClient } from "./utils/interop_client";
+import config from "config";
+import { Mission } from "protobuf/interop/interop_api_pb";
 
 const inDockerContainer = fs.existsSync("/.dockerenv");
 
@@ -47,6 +47,8 @@ const ugv_io = io.of("/ugv");
 // const tracky_io = io.of('/tracky');
 const button_panel_io = io.of("/button-panel");
 const fake_drone_io = io.of("/fake-drone");
+
+console.log("server starting");
 
 /**************************
  * INTEROP CONNECTION

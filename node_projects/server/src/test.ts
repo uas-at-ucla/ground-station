@@ -1,8 +1,8 @@
 // Run this file with `node test.js testName` or `npm test testName`
+import loadInteropClient from "utils/interop_client";
 
 const tests = {
   interop: () => {
-    const loadInteropClient = require("./modules/interop_client");
     loadInteropClient("134.209.2.203:8000", "testuser", "testpass")
       .then(interopClient => {
         interopClient
@@ -70,8 +70,8 @@ const tests = {
 };
 
 const testName = process.argv[2];
-if (tests[testName]) {
-  tests[testName]();
+if (testName in tests) {
+  tests[testName as keyof typeof tests]();
 } else {
   console.log("Availble tests: " + Object.keys(tests));
 }

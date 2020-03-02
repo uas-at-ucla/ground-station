@@ -1,6 +1,7 @@
 {
+  "extends": "./tsconfigPaths.json",
   "compilerOptions": {
-    "baseUrl": "src", // Allows import statements relative to the src folder
+    "baseUrl": "src",
     "target": "es5",
     "lib": [
       "dom",

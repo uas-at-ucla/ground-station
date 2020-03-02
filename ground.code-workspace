@@ -21,8 +21,16 @@
       "typescriptreact",
     ],
     "eslint.workingDirectories": [
-      { 
-        "directory" : "./ui_and_server", 
+      {
+        "directory" : "./node_projects/ui", 
+        "changeProcessCWD": true
+      },
+      {
+        "directory" : "./node_projects/server", 
+        "changeProcessCWD": true
+      },
+      {
+        "directory" : "./node_projects", 
         "changeProcessCWD": true
       }
     ],
