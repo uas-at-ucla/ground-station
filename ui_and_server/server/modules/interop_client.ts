@@ -1,21 +1,27 @@
 // See test.js for usage example
 
-const axios = require("axios");
-const fs = require("fs");
-const config = require("../config");
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import fs from "fs";
+import config from "../config";
+import { Namespace } from "socket.io";
+import { AxiosInstance } from "axios";
 
 const FEET_PER_METER = 3.28084;
 const interopSendFrequency = 2; //Hz
 const sendInterval = 1000 / interopSendFrequency;
 
-class InteropClient {
-  // axiosInstance;
-  // ui_io;
-  // interopTelemetry;
-  // telemetryCanUpload;
-  // intervalHandle;
+export class InteropClient {
+  axiosInstance: AxiosInstance;
+  ui_io: Namespace;
+  interopTelemetry: any;
+  telemetryCanUpload: boolean;
+  intervalHandle: NodeJS.Timer | null;
 
-  constructor(axiosConfig, loginResponse, ui_io) {
+  constructor(
+    axiosConfig: AxiosRequestConfig,
+    loginResponse: AxiosResponse,
+    ui_io: Namespace
+  ) {
     const sessionCookie = loginResponse.headers["set-cookie"][0];
     axiosConfig.headers = { Cookie: sessionCookie };
     this.axiosInstance = axios.create(axiosConfig);
@@ -56,15 +62,17 @@ class InteropClient {
           this.interopTelemetry.sent = true;
         } else {
           console.log("No new telemetry to send to interop.");
-          clearInterval(this.intervalHandle);
-          this.intervalHandle = null;
+          if (this.intervalHandle) {
+            clearInterval(this.intervalHandle);
+            this.intervalHandle = null;
+          }
           this.interopTelemetry = null;
         }
       }
     }, sendInterval);
   }
 
-  getMission(id) {
+  getMission(id: number) {
     return this.axiosInstance
       .get("/missions/" + id)
       .then(res => res.data)
@@ -73,7 +81,7 @@ class InteropClient {
       });
   }
 
-  postTelemetry(telemetry) {
+  postTelemetry(telemetry: any) {
     return this.axiosInstance
       .post("/telemetry", telemetry)
       .then(res => res.data)
@@ -82,7 +90,7 @@ class InteropClient {
       });
   }
 
-  postObjectDetails(odlc) {
+  postObjectDetails(odlc: any) {
     return this.axiosInstance
       .post("/odlcs", odlc)
       .then(res => res.data)
@@ -91,7 +99,7 @@ class InteropClient {
       });
   }
 
-  postObjectImage(imagePath, odlcId) {
+  postObjectImage(imagePath: string, odlcId: number) {
     const image = fs.readFileSync(imagePath);
     const config = {
       headers: { "Content-Type": "image/jpeg" }
@@ -104,7 +112,7 @@ class InteropClient {
       });
   }
 
-  newTelemetry(telemetry) {
+  newTelemetry(telemetry: any) {
     if (telemetry.sensors) {
       this.interopTelemetry = {
         latitude: telemetry.sensors.latitude,
@@ -120,7 +128,12 @@ class InteropClient {
   }
 }
 
-module.exports = (ip, username, password, ui_io) => {
+export default (
+  ip: string,
+  username: string,
+  password: string,
+  ui_io: Namespace
+) => {
   const axiosConfig = {
     baseURL: "http://" + ip + "/api/",
     timeout: 5000

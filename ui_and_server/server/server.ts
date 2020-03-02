@@ -1,23 +1,29 @@
 // TODO make server it's own project and bring back package.json
 
 // use require() to load libraries from node_modules
-const fs = require("fs");
-const socketIOServer = require("socket.io");
+import socketIOServer from "socket.io";
+
+import { Sensors, Output } from "../src/protobuf/drone/messages_pb";
+
+import fs from "fs";
+
+import loadInteropClient, { InteropClient } from "./modules/interop_client";
+import config from "./config";
+import { Mission } from "../src/protobuf/interop/interop_api_pb";
 
 const inDockerContainer = fs.existsSync("/.dockerenv");
-
-const loadProtobufUtils = require("./modules/protobuf_utils");
-const loadInteropClient = require("./modules/interop_client");
-const config = require("./config");
 
 const server_port = 8081;
 
 const droneIP = inDockerContainer ? "192.168.3.20" : "192.168.1.20";
 const uiSendFrequency = 5; //Hz
 const trackySendFrequency = 5; //Hz
-let telemetry = { output: {} };
-let flightControllerState = null;
-let droneArmed = null;
+let telemetry = { output: {} } as {
+  output: Output.AsObject;
+  sensors: Sensors.AsObject;
+};
+let flightControllerState: string | null = null;
+let droneArmed: boolean | null = null;
 let drone_connected = false;
 
 // const ugvWaitAfterUnlatchTime = 15000; //ms
@@ -29,7 +35,7 @@ let droppyReady = false;
 // var ugvIsStill = false;
 // var ugvBecameStillTime = 0;
 let droveUgv = false;
-let ugvDriveTimer = null;
+let ugvDriveTimer: NodeJS.Timer | null = null;
 
 // create server
 const io = socketIOServer(server_port);
@@ -42,17 +48,14 @@ const ugv_io = io.of("/ugv");
 const button_panel_io = io.of("/button-panel");
 const fake_drone_io = io.of("/fake-drone");
 
-// For decoding and encoding drone messages
-const protobufUtils = null;
-// loadProtobufUtils(theProtobufUtils => {
-//   protobufUtils = theProtobufUtils;
-// });
-
 /**************************
  * INTEROP CONNECTION
  **************************/
-let interopClient = null;
-let interopData = null;
+let interopClient: InteropClient | null = null;
+let interopData: {
+  mission: Required<Mission.AsObject>;
+  ip: string;
+} | null = null;
 if (config.testing) {
   // try our test server
   connectToInterop("134.209.2.203:8000", "testuser", "testpass", 2).catch(
@@ -66,7 +69,12 @@ if (config.testing) {
   );
 }
 
-function connectToInterop(ip, username, password, missionId) {
+function connectToInterop(
+  ip: string,
+  username: string,
+  password: string,
+  missionId: number
+) {
   interopClient = null;
   return loadInteropClient(ip, username, password, ui_io)
     .then(theInteropClient => {
@@ -118,62 +126,54 @@ controls_io.on("connect", socket => {
   drone_connected = true;
   // droneIP = socket.handshake.address.replace('::ffff:', '');
   console.log("ground_controls connected");
-  function onSensors(sensors) {
-    if (protobufUtils) {
-      telemetry.sensors = protobufUtils.decodeSensors(sensors);
-      if (interopClient) {
-        interopClient.newTelemetry(telemetry);
-      }
-      if (
-        telemetry.sensors.autopilot_state !== flightControllerState ||
-        telemetry.sensors.armed !== droneArmed
-      ) {
-        flightControllerState = telemetry.sensors.autopilot_state;
-        droneArmed = telemetry.sensors.armed;
-        if (telemetry.sensors.armed) {
-          button_panel_io.emit("DRONE_STATE", flightControllerState);
-        } else {
-          button_panel_io.emit("DRONE_STATE", "DISARMED");
-        }
+  function onSensors(sensors: any) {
+    // telemetry.sensors = protobufUtils.decodeSensors(sensors); TODO
+    if (interopClient) {
+      interopClient.newTelemetry(telemetry);
+    }
+    if (
+      telemetry.sensors.autopilotState !== flightControllerState ||
+      telemetry.sensors.armed !== droneArmed
+    ) {
+      flightControllerState = telemetry.sensors.autopilotState;
+      droneArmed = telemetry.sensors.armed;
+      if (telemetry.sensors.armed) {
+        button_panel_io.emit("DRONE_STATE", flightControllerState);
+      } else {
+        button_panel_io.emit("DRONE_STATE", "DISARMED");
       }
     }
   }
 
-  socket.on("SENSORS", sensors => {
+  socket.on("SENSORS", (sensors: any) => {
     onSensors(sensors);
   });
 
-  socket.on("SENSORS_RFD900", sensors => {
+  socket.on("SENSORS_RFD900", (sensors: any) => {
     onSensors(sensors);
   });
 
-  socket.on("OUTPUT", output => {
-    if (protobufUtils) {
-      telemetry.output = protobufUtils.decodeOutput(output);
-      if (telemetry.output.deploy !== droppyReady) {
-        droppyReady = telemetry.output.deploy;
-        button_panel_io.emit("DROPPY_READY", droppyReady);
-      }
+  socket.on("OUTPUT", (output: any) => {
+    // telemetry.output = protobufUtils.decodeOutput(output); TODO
+    if (telemetry.output.deploy !== droppyReady) {
+      droppyReady = telemetry.output.deploy;
+      button_panel_io.emit("DROPPY_READY", droppyReady);
     }
   });
 
-  socket.on("COMPILED_DRONE_PROGRAM", droneProgram => {
-    if (protobufUtils) {
-      droneProgram = protobufUtils.decodeDroneProgam(droneProgram);
-      console.log(droneProgram);
-      console.log("Received drone program^");
-      ui_io.emit("COMPILED_DRONE_PROGRAM", droneProgram);
-    }
+  socket.on("COMPILED_DRONE_PROGRAM", (droneProgram: any) => {
+    // droneProgram = protobufUtils.decodeDroneProgam(droneProgram); TODO
+    console.log(droneProgram);
+    console.log("Received drone program^");
+    ui_io.emit("COMPILED_DRONE_PROGRAM", droneProgram);
   });
 
-  socket.on("UPLOADED_DRONE_PROGRAM", droneProgram => {
+  socket.on("UPLOADED_DRONE_PROGRAM", (droneProgram: any) => {
     console.log("Got acknowledgment that the Drone Program was uploaded");
-    if (protobufUtils) {
-      ui_io.emit(
-        "UPLOADED_DRONE_PROGRAM",
-        protobufUtils.decodeDroneProgam(droneProgram)
-      );
-    }
+    ui_io.emit(
+      "UPLOADED_DRONE_PROGRAM" /*,
+      protobufUtils.decodeDroneProgam(droneProgram) TODO */
+    );
   });
 
   const msgs_to_ui = [
@@ -187,7 +187,7 @@ controls_io.on("connect", socket => {
   ];
   for (const ui_msg of msgs_to_ui) {
     const local_ui_msg = ui_msg;
-    socket.on(local_ui_msg, data => {
+    socket.on(local_ui_msg, (data: any) => {
       console.log("received: " + local_ui_msg + ": " + data);
       ui_io.emit(local_ui_msg, data);
 
@@ -233,7 +233,7 @@ ugv_io.on("connect", socket => {
   console.log("UGV controls connected!");
   socket.emit("SET_TARGET", { lat: 38.14617, lng: -76.42642 }); // Official competition destination
 
-  socket.on("UGV_MESSAGE", msg => {
+  socket.on("UGV_MESSAGE", (msg: any) => {
     if (config.verbose) console.log(msg);
     ui_io.emit("UGV_MESSAGE", msg);
 
@@ -264,7 +264,7 @@ ugv_io.on("connect", socket => {
 button_panel_io.on("connect", socket => {
   console.log("button panel connected!");
 
-  socket.on("CHANGE_DROPPY_STATE", state => {
+  socket.on("CHANGE_DROPPY_STATE", (state: any) => {
     controls_io.emit("CHANGE_DROPPY_STATE", state);
   });
 
@@ -290,11 +290,7 @@ ui_io.on("connect", socket => {
     socket.emit("INTEROP_DATA", interopData);
   }
 
-  socket.on("TEST", data => {
-    console.log("TEST " + data);
-  });
-
-  socket.on("UPLOAD_IMAGE", data => {
+  socket.on("UPLOAD_IMAGE", (data: any) => {
     if (interopClient && interopData) {
       const odlc = {
         mission: interopData.mission.id,
@@ -312,16 +308,18 @@ ui_io.on("connect", socket => {
       interopClient
         .postObjectDetails(odlc)
         .then(returnedOdlc => {
-          console.log("Submitted ODLC with id " + returnedOdlc.id);
-          //TODO maybe imageFile will be a URL instead of a file path?
-          interopClient
-            .postObjectImage(data.imageFile, returnedOdlc.id)
-            .then(msg => {
-              console.log(msg);
-            })
-            .catch(error => {
-              console.log(error);
-            });
+          if (interopClient) {
+            console.log("Submitted ODLC with id " + returnedOdlc.id);
+            //TODO maybe imageFile will be a URL instead of a file path?
+            interopClient
+              .postObjectImage(data.imageFile, returnedOdlc.id)
+              .then(msg => {
+                console.log(msg);
+              })
+              .catch(error => {
+                console.log(error);
+              });
+          }
         })
         .catch(error => {
           console.log(error);
@@ -329,20 +327,19 @@ ui_io.on("connect", socket => {
     }
   });
 
-  socket.on("COMPILE_GROUND_PROGRAM", commands => {
-    console.log("received ground program from UI");
-    if (protobufUtils) {
-      const groundProgram = protobufUtils.makeGroundProgram(
-        commands,
-        interopData
-      );
-      console.log(JSON.stringify(groundProgram, null, 2));
-      const encodedGroundProgram = protobufUtils.encodeGroundProgram(
-        groundProgram
-      );
-      console.log("Sending ground program to the drone");
-      controls_io.emit("COMPILE_GROUND_PROGRAM", encodedGroundProgram);
-    }
+  socket.on("COMPILE_GROUND_PROGRAM", (commands: any) => {
+    // TODO
+    // console.log("received ground program from UI");
+    // const groundProgram = protobufUtils.makeGroundProgram(
+    //   commands,
+    //   interopData
+    // );
+    // console.log(JSON.stringify(groundProgram, null, 2));
+    // const encodedGroundProgram = protobufUtils.encodeGroundProgram(
+    //   groundProgram
+    // );
+    console.log("Sending ground program to the drone");
+    controls_io.emit("COMPILE_GROUND_PROGRAM" /*, encodedGroundProgram TODO */);
   });
 
   const msgs_to_drone = [
@@ -359,23 +356,23 @@ ui_io.on("connect", socket => {
   ];
   for (const controls_msg of msgs_to_drone) {
     const local_controls_msg = controls_msg;
-    socket.on(local_controls_msg, data => {
+    socket.on(local_controls_msg, (data: any) => {
       console.log("sending: " + local_controls_msg + ": " + data);
       controls_io.emit(local_controls_msg, data);
     });
   }
 
-  socket.on("CONNECT_TO_INTEROP", cred => {
+  socket.on("CONNECT_TO_INTEROP", (cred: any) => {
     console.log("CONNECT TO INTEROP");
     connectToInterop(cred.ip, cred.username, cred.password, cred.missionId);
   });
 
-  socket.on("CONFIGURE_TRACKY_POS", pos => {
+  socket.on("CONFIGURE_TRACKY_POS", (pos: any) => {
     console.log("Sending Tracky its estimated position");
     // tracky_io.emit('CONFIGURE_POS', pos);
   });
 
-  socket.on("SET_UGV_TARGET", pos => {
+  socket.on("SET_UGV_TARGET", (pos: any) => {
     console.log("Sending the UGV its target position");
     ugv_io.emit("SET_TARGET", pos);
   });
@@ -400,7 +397,7 @@ ui_io.on("connect", socket => {
  **************************/
 fake_drone_io.on("connect", socket => {
   console.log("fake drone connected!");
-  socket.on("TELEMETRY", droneTelemetry => {
+  socket.on("TELEMETRY", (droneTelemetry: any) => {
     if (!drone_connected) {
       // only do stuff if the real drone is not connected
       telemetry = droneTelemetry;

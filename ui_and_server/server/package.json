@@ -2,17 +2,20 @@
     "name": "ground_server",
     "version": "1.0.0",
     "description": "",
-    "main": "server.js",
+    "main": "build/server.js",
     "scripts": {
-        "start": "nodemon server.js",
-        "test": "node test.js"
+        "start": "npm run build && nodemon build/server.js",
+        "build": "tsc --project tsconfig.json",
+        "test": "npm run build && node build/test.js"
     },
     "author": "",
     "license": "ISC",
     "devDependencies": {
+        "@types/socket.io": "^2.1.4",
         "check-dependencies": "^1.1.0",
         "concurrently": "^4.0.1",
-        "cross-env": "^5.2.0"
+        "cross-env": "^5.2.0",
+        "typescript": "^3.8.3"
     },
     "dependencies": {
         "axios": "^0.18.0",
