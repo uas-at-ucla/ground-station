@@ -1,11 +1,12 @@
 // Run this file with `node test.js testName` or `npm test testName`
+import config from "config";
 import loadInteropClient from "utils/interop_client";
-import { Odlc } from "../../protobuf/interop/interop_api_pb";
+import { InteropOdlc } from "messages";
 
 const tests = {
   interop: () => {
     loadInteropClient(
-      "134.209.2.203:8000",
+      config.interopTestIp,
       "testuser",
       "testpass",
       () => {
@@ -23,22 +24,26 @@ const tests = {
             console.log();
 
             // Object Detection, Classification, and Localization
-            const testOdlc: Odlc.AsObject = {
+            const testOdlc: InteropOdlc = {
               mission: 1,
-              type: 1, // TODO convert enum "STANDARD"
+              type: "STANDARD",
               latitude: 38.1478,
               longitude: -76.4275,
-              orientation: 1, // "N", TODO convert enum "STANDARD"
-              shape: 1, //"RECTANGLE" TODO onvert enum
-              shapeColor: 1, //"RED", TODO onvert enum
+              orientation: "N",
+              shape: "RECTANGLE",
+              shapeColor: "RED",
               alphanumeric: "C",
-              alphanumericColor: 1, //"WHITE", TODO onvert enum
+              alphanumericColor: "WHITE",
               autonomous: false
             };
 
             interopClient
               .postObjectDetails(testOdlc)
               .then(odlc => {
+                if (!odlc.id) {
+                  throw new Error("Response Odlc contained no ID");
+                }
+
                 console.log("Submitted ODLC with id " + odlc.id);
                 console.log();
 
@@ -54,8 +59,8 @@ const tests = {
                         altitude: 100,
                         heading: 90
                       })
-                      .then(message => {
-                        console.log(message);
+                      .then(() => {
+                        console.log("Uploaded telemetry");
                         console.log("Test complete");
                       })
                       .catch(error => {

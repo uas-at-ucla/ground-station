@@ -2,16 +2,20 @@ import produce from "immer";
 
 import { AppAction } from "../actions/actionTypes";
 
-const isWebServer = window.location.protocol.startsWith("http"); // may need to change now that we use websockets instead of socket.io
+const isWebServer = window.location.protocol.startsWith("http");
 const defaultIP = "localhost";
-const socketHost = isWebServer ? window.location.hostname : defaultIP;
-const socketPort = 8081;
+export const defaultSocketHost = isWebServer
+  ? window.location.hostname
+  : defaultIP;
+export const defaultSocketPort = 8081;
+
+export const defaultInteropIP = "167.71.120.140:8000";
 
 const initialState = {
-  gndServerIp: socketHost + ":" + socketPort,
-  connectedGndServerIp: socketHost + ":" + socketPort,
+  gndServerIp: defaultSocketHost + ":" + defaultSocketPort,
+  connectedGndServerIp: defaultSocketHost + ":" + defaultSocketPort,
   gndServerConnected: false,
-  interopIp: "167.71.120.140:8000",
+  interopIp: defaultInteropIP,
   interopUsername: "testuser",
   interopPassword: "testpass",
   interopMissionId: 1,

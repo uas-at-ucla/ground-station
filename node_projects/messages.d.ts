@@ -1,4 +1,4 @@
-import { Mission, Telemetry } from "./protobuf/interop/interop_api_pb";
+import { Mission, Odlc } from "./protobuf/interop/interop_api_pb";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {
   GroundProgram,
@@ -11,6 +11,16 @@ export interface InteropData {
   mission: Required<Mission.AsObject>;
   ip: string;
 }
+
+type OdlcReplacedEnums = {
+  type?: keyof Odlc.TypeMap;
+  orientation?: keyof Odlc.OrientationMap;
+  shape?: keyof Odlc.ShapeMap;
+  shapeColor?: keyof Odlc.ColorMap;
+  alphanumericColor?: keyof Odlc.ColorMap;
+};
+export type InteropOdlc = Omit<Odlc.AsObject, keyof OdlcReplacedEnums> &
+  OdlcReplacedEnums;
 
 export type DroneState = "TAKEOFF" | "LAND" | "FAILSAFE" | "THROTTLE_CUT";
 

@@ -4,8 +4,8 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import fs from "fs";
 import config from "config";
 import { AxiosInstance } from "axios";
-import { DroneTelemetry } from "messages";
-import { Odlc, Telemetry, Mission } from "protobuf/interop/interop_api_pb";
+import { DroneTelemetry, InteropOdlc } from "messages";
+import { Telemetry, Mission } from "protobuf/interop/interop_api_pb";
 
 const FEET_PER_METER = 3.28084;
 const interopSendFrequency = 2; //Hz
@@ -40,8 +40,8 @@ export class InteropClient {
       if (this.interopTelemetry) {
         if (!this.interopTelemetry.sent) {
           this.postTelemetry({ ...this.interopTelemetry })
-            .then(msg => {
-              if (config.verbose) console.log(msg);
+            .then(() => {
+              if (config.verbose) console.log("uploaded telemetry");
               if (!this.telemetryCanUpload) {
                 this.telemetryCanUpload = true;
                 console.log("Now able to upload telemetry :)");
@@ -87,16 +87,18 @@ export class InteropClient {
 
   postTelemetry(telemetry: Telemetry.AsObject) {
     return this.axiosInstance
-      .post("/telemetry", telemetry)
-      .then(res => res.data)
+      .post<never>("/telemetry", telemetry)
+      .then(res => {
+        /**/
+      })
       .catch(err => {
         throw err;
       });
   }
 
-  postObjectDetails(odlc: Odlc.AsObject) {
+  postObjectDetails(odlc: InteropOdlc) {
     return this.axiosInstance
-      .post("/odlcs", odlc)
+      .post<InteropOdlc>("/odlcs", odlc)
       .then(res => res.data)
       .catch(err => {
         throw err;
@@ -109,7 +111,7 @@ export class InteropClient {
       headers: { "Content-Type": "image/jpeg" }
     };
     return this.axiosInstance
-      .post("/odlcs/" + odlcId + "/image", image, config)
+      .post<string>("/odlcs/" + odlcId + "/image", image, config)
       .then(res => res.data)
       .catch(err => {
         throw err;
@@ -165,7 +167,7 @@ export default (
   };
 
   return axios
-    .post(
+    .post<string>(
       "/login",
       {
         username: username,

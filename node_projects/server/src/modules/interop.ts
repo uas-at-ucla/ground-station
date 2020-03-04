@@ -6,7 +6,7 @@ import loadInteropClient, { InteropClient } from "utils/interop_client";
 let interopClient: InteropClient | null = null;
 if (config.testing) {
   // try our test server
-  connectToInterop("167.71.120.140:8000", "testuser", "testpass", 1).catch(
+  connectToInterop(config.interopTestIp, "testuser", "testpass", 1).catch(
     error => {
       console.log(error);
       //   if (inDockerContainer) {

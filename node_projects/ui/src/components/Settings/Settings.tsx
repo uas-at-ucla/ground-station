@@ -27,6 +27,14 @@ import * as externalActions from "redux/actions/externalActions";
 import { AppState, selector } from "redux/store";
 import { ExtractPropsType } from "utils/reduxUtils";
 import { useEventCallback } from "utils/customHooks";
+import {
+  defaultSocketHost,
+  defaultSocketPort,
+  defaultInteropIP
+} from "redux/reducers/settingsReducer";
+
+const defaultGroundStationIP = defaultSocketHost + ":" + defaultSocketPort;
+const competitionGroundStationIP = "192.168.1.10:" + defaultSocketPort;
 
 const defaultMapCenter = {
   lat: 34.0689,
@@ -159,8 +167,8 @@ const Settings = (props: Props) => {
             >
               <DropdownToggle caret>Ground Server IP</DropdownToggle>
               <DropdownMenu id="gndServerIp" onClick={handleSelect}>
-                <DropdownItem>localhost:8081</DropdownItem>
-                <DropdownItem>192.168.1.10:8081</DropdownItem>
+                <DropdownItem>{defaultGroundStationIP}</DropdownItem>
+                <DropdownItem>{competitionGroundStationIP}</DropdownItem>
               </DropdownMenu>
             </InputGroupButtonDropdown>
             <Input
@@ -241,7 +249,7 @@ const Settings = (props: Props) => {
             >
               <DropdownToggle caret>Interop IP</DropdownToggle>
               <DropdownMenu id="interopIp" onClick={handleSelect}>
-                <DropdownItem>167.71.120.140:8000</DropdownItem>
+                <DropdownItem>{defaultInteropIP}</DropdownItem>
               </DropdownMenu>
             </InputGroupButtonDropdown>
             <Input
