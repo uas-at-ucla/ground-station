@@ -6,7 +6,7 @@ import {
   GroundCommand,
   DroneProgram
 } from "protobuf/drone/timeline_grammar_pb";
-import { Mission } from "protobuf/interop/interop_api_pb";
+import { InteropData } from "messages";
 
 const initialState = {
   commands: {} as { [id: string]: GroundCommand.AsObject },
@@ -17,10 +17,7 @@ const initialState = {
   missionCompiled: false,
   missionUploaded: false,
   lastDroppyCommand: undefined as string | undefined,
-  originalInteropData: undefined as any,
-  interopData: undefined as
-    | { mission: Required<Mission.AsObject>; ip: string }
-    | undefined
+  interopData: undefined as InteropData | undefined
 };
 export type MissionState = typeof initialState;
 
@@ -31,8 +28,7 @@ export default produce((state: MissionState, action: AppAction) => {
       return;
     }
     case "INTEROP_DATA": {
-      state.originalInteropData = action.payload;
-      state.interopData = convertInteropToProtobufJson(action.payload);
+      state.interopData = action.payload[0];
       return;
     }
     case "ADD_COMMAND": {
@@ -64,8 +60,9 @@ export default produce((state: MissionState, action: AppAction) => {
     case "CHANGE_COMMAND_FIELD": {
       const dotProp = action.payload.dotProp.split(".");
       const field = dotProp.pop() as string;
-      dotProp.reduce((o: any, i) => o[i], state.commands)[field] =
-        action.payload.newValue;
+      dotProp.reduce((o: any, i: string | number) => o[i], state.commands)[
+        field
+      ] = action.payload.newValue;
       state.missionCompiled = false;
       if (action.payload.isAltitude) {
         state.defaultAltitude = action.payload.newValue;
@@ -75,14 +72,16 @@ export default produce((state: MissionState, action: AppAction) => {
     case "ADD_REPEATED_FIELD": {
       const dotProp = action.payload.dotProp.split(".");
       dotProp
-        .reduce((o: any, i) => o[i], state.commands)
+        .reduce((o: any, i: string | number) => o[i], state.commands)
         .push(action.payload.newElement);
       state.missionCompiled = false;
       return;
     }
     case "POP_REPEATED_FIELD": {
       const dotProp = action.payload.dotProp.split(".");
-      dotProp.reduce((o: any, i) => o[i], state.commands).pop();
+      dotProp
+        .reduce((o: any, i: string | number) => o[i], state.commands)
+        .pop();
       state.missionCompiled = false;
       return;
     }
@@ -98,7 +97,7 @@ export default produce((state: MissionState, action: AppAction) => {
     }
     case "COMPILED_DRONE_PROGRAM":
     case "UPLOADED_DRONE_PROGRAM": {
-      const droneProgram = action.payload as DroneProgram.AsObject;
+      const droneProgram = action.payload[0];
       if (!droneProgram.commandsList) {
         droneProgram.commandsList = [];
       }
@@ -112,7 +111,7 @@ export default produce((state: MissionState, action: AppAction) => {
       return;
     }
     case "DROPPY_COMMAND_RECEIVED": {
-      state.lastDroppyCommand = action.payload;
+      state.lastDroppyCommand = action.payload[0];
       return;
     }
     default: {
@@ -120,21 +119,3 @@ export default produce((state: MissionState, action: AppAction) => {
     }
   }
 }, initialState) as (a: any, b: any) => MissionState;
-
-function convertInteropToProtobufJson(interopJson: any) {
-  const convertedInteropData = Array.isArray(interopJson)
-    ? [...interopJson]
-    : { ...interopJson };
-  for (const key in interopJson) {
-    if (typeof interopJson[key] === "object") {
-      convertedInteropData[key] = convertInteropToProtobufJson(
-        interopJson[key]
-      );
-    }
-    if (Array.isArray(interopJson[key])) {
-      convertedInteropData[`${key}List`] = convertedInteropData[key];
-      delete convertedInteropData[key];
-    }
-  }
-  return convertedInteropData;
-}

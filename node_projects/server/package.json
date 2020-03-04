@@ -4,10 +4,10 @@
     "description": "",
     "main": "build/server.js",
     "scripts": {
-        "start": "npm run build && npm run run",
+        "start": "nodemon",
+        "build-and-run": "npm run build && npm run run",
         "build": "tsc --project tsconfig.json",
-        "run": "cross-env NODE_PATH=\"./build:..\" nodemon build/server.js",
-        "prod": "cross-env NODE_PATH=\"./build:..\" node .",
+        "run": "cross-env NODE_PATH=\"./build:..\" node .",
         "test": "npm run build && node build/test.js"
     },
     "author": "",
@@ -17,6 +17,7 @@
         "@types/socket.io-client": "^1.4.32",
         "check-dependencies": "^1.1.0",
         "concurrently": "^4.0.1",
+        "cross-env": "^7.0.1",
         "typescript": "^3.8.3"
     },
     "dependencies": {

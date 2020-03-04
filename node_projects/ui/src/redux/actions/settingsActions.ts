@@ -23,7 +23,8 @@ export const connectToGndServer = () => ({
   type: "CONNECT_TO_GND_SERVER" as const
 });
 
-export const configureTrackyPos = (pos: any) =>
+export const configureTrackyPos = (pos: { lat: number; lng: number }) =>
   transmit("CONFIGURE_TRACKY_POS", pos);
 
-export const configureUgvDest = (pos: any) => transmit("SET_UGV_TARGET", pos);
+export const configureUgvDest = (pos: { lat: number; lng: number }) =>
+  transmit("SET_UGV_TARGET", pos);

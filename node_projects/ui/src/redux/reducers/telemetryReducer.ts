@@ -1,14 +1,9 @@
 import produce from "immer";
 
 import { AppAction } from "../actions/actionTypes";
-import { Sensors, Output } from "protobuf/drone/messages_pb";
 import { Mission } from "protobuf/interop/interop_api_pb";
 import { UGV_Message } from "protobuf/ugv/ugv_messages_pb";
-
-type DroneTelemetry = {
-  sensors?: Sensors.AsObject;
-  output?: Output.AsObject;
-};
+import { DroneTelemetry } from "messages";
 
 const initialState = {
   droneTelemetry: undefined as DroneTelemetry | undefined,
@@ -33,16 +28,16 @@ export default produce((state: TelemetryState, action: AppAction) => {
       Object.assign(state, initialState);
       return;
     }
-    case "PING": {
-      state.pingDelay = action.payload;
-      return;
-    }
+    // case "PING": {
+    //   state.pingDelay = action.payload; //TODO
+    //   return;
+    // }
     case "TELEMETRY": {
       if (!state.playback) {
-        state.droneTelemetry = action.payload;
+        state.droneTelemetry = action.payload[0];
         // if recording add to list
         if (state.recording) {
-          state.telemetryData.push(action.payload);
+          state.telemetryData.push(action.payload[0]);
         }
       }
       return;
@@ -59,22 +54,6 @@ export default produce((state: TelemetryState, action: AppAction) => {
       state.droneTelemetry = action.payload;
       return;
     }
-    case "GIMBAL_SETPOINT": {
-      state.setpoints.gimbal = action.payload;
-      return;
-    }
-    case "DEPLOYMENT_MOTOR_SETPOINT": {
-      state.setpoints.deployment = action.payload;
-      return;
-    }
-    case "LATCH_SETPOINT": {
-      state.setpoints.latch = action.payload;
-      return;
-    }
-    case "HOTWIRE_SETPOINT": {
-      state.setpoints.hotwire = action.payload;
-      return;
-    }
     case "CENTER_ON_DRONE": {
       if (state.droneTelemetry && state.droneTelemetry.sensors) {
         state.mapCenter = {
@@ -89,8 +68,8 @@ export default produce((state: TelemetryState, action: AppAction) => {
       return;
     }
     case "INTEROP_DATA": {
-      if (action.payload) {
-        const mission = action.payload.mission as Mission.AsObject;
+      if (action.payload[0]) {
+        const mission = action.payload[0].mission;
         if (
           mission.airDropPos &&
           mission.airDropPos.latitude &&
@@ -105,7 +84,7 @@ export default produce((state: TelemetryState, action: AppAction) => {
       return;
     }
     case "UGV_MESSAGE": {
-      const ugvMessage = action.payload as UGV_Message.AsObject;
+      const ugvMessage = action.payload[0];
       if (ugvMessage.status !== undefined) {
         state.ugvStatus = ugvMessage.status;
       }

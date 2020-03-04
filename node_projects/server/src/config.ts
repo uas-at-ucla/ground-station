@@ -1,5 +1,5 @@
 export default {
   verbose: false,
-  testing: false,
+  testing: true,
   useFakeDrone: false
 };

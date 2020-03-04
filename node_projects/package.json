@@ -12,6 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "google-protobuf": "^3.11.4"
+  },
+  "devDependencies": {
     "@types/google-protobuf": "^3.7.2",
     "@typescript-eslint/eslint-plugin": "^2.21.0",
     "@typescript-eslint/parser": "^2.21.0",
@@ -22,12 +25,12 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-no-autofix": "^1.0.1",
     "eslint-plugin-prettier": "^3.1.2",
-    "google-protobuf": "^3.11.4",
     "prettier": "^1.19.1",
+    "strict-event-emitter-types": "^2.0.0",
     "ts-protoc-gen": "git://github.com/uas-at-ucla-dependencies/ts-protoc-gen#0.12.0-uas-at-ucla-2",
     "typescript": "^3.8.3"
   },
-  "//dependenciesComments": {
+  "//devDependenciesComments": {
     "@typescript-eslint/eslint-plugin": "TypeScript linting support for ESLint",
     "@typescript-eslint/parser": "TypeScript parsing support for ESLint (the parser converts the code into a data structure that the linter can understand)",
     "concurrently": "Run two commands concurrently in the same terminal",

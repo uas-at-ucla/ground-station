@@ -116,7 +116,7 @@ const DroneActions = (props: Props) => {
 
   const sendSetpoint = (e: MouseEvent<HTMLButtonElement>) => {
     const name = e.currentTarget.name as keyof typeof setpointMsgs;
-    props.sendSetpoint(setpointMsgs[name], setpointInputs[name]);
+    // props.sendSetpoint(setpointMsgs[name], setpointInputs[name]); //TODO the setpoint stuff is legacy code from last year
   };
 
   const compileMission = () => {

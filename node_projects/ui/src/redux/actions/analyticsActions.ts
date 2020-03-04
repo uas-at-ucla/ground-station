@@ -1,5 +1,5 @@
 import { TelemetryState } from "redux/reducers/telemetryReducer";
-import { MissionState } from "redux/reducers/missionReducer";
+import { InteropData } from "messages";
 
 export const togglePlayback = () => ({ type: "TOGGLE_PLAYBACK" as const });
 
@@ -8,9 +8,9 @@ export const playback = (telemetry: TelemetryState["droneTelemetry"]) => ({
   payload: telemetry
 });
 
-export const loadInteropData = (data: MissionState["interopData"]) => ({
+export const loadInteropData = (data: InteropData) => ({
   type: "INTEROP_DATA" as const,
-  payload: data
+  payload: [data] as [typeof data]
 });
 
 export const toggleRecording = () => ({ type: "TOGGLE_RECORD" as const });

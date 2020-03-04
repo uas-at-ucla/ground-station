@@ -3,8 +3,9 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import fs from "fs";
 import config from "config";
-import { Namespace } from "socket.io";
 import { AxiosInstance } from "axios";
+import { DroneTelemetry } from "messages";
+import { Odlc, Telemetry, Mission } from "protobuf/interop/interop_api_pb";
 
 const FEET_PER_METER = 3.28084;
 const interopSendFrequency = 2; //Hz
@@ -12,20 +13,23 @@ const sendInterval = 1000 / interopSendFrequency;
 
 export class InteropClient {
   axiosInstance: AxiosInstance;
-  ui_io: Namespace | undefined;
-  interopTelemetry: any;
+  interopTelemetry: (Telemetry.AsObject & { sent?: boolean }) | null;
   telemetryCanUpload: boolean;
   intervalHandle: NodeJS.Timer | null;
+  uploadSuccessCallback: () => void;
+  uploadFailureCallback: () => void;
 
   constructor(
     axiosConfig: AxiosRequestConfig,
     loginResponse: AxiosResponse,
-    ui_io?: Namespace
+    uploadSuccessCallback: () => void,
+    uploadFailureCallback: () => void
   ) {
     const sessionCookie = loginResponse.headers["set-cookie"][0];
     axiosConfig.headers = { Cookie: sessionCookie };
     this.axiosInstance = axios.create(axiosConfig);
-    this.ui_io = ui_io;
+    this.uploadSuccessCallback = uploadSuccessCallback;
+    this.uploadFailureCallback = uploadFailureCallback;
     this.interopTelemetry = null;
     this.telemetryCanUpload = true;
     this.intervalHandle = null;
@@ -41,9 +45,7 @@ export class InteropClient {
               if (!this.telemetryCanUpload) {
                 this.telemetryCanUpload = true;
                 console.log("Now able to upload telemetry :)");
-                if (this.ui_io) {
-                  this.ui_io.emit("INTEROP_UPLOAD_SUCCESS");
-                }
+                this.uploadSuccessCallback();
               }
             })
             .catch(error => {
@@ -58,9 +60,7 @@ export class InteropClient {
                 } else {
                   console.log("    Could not make request");
                 }
-                if (this.ui_io) {
-                  this.ui_io.emit("INTEROP_UPLOAD_FAIL");
-                }
+                this.uploadFailureCallback();
               }
             });
           this.interopTelemetry.sent = true;
@@ -79,13 +79,13 @@ export class InteropClient {
   getMission(id: number) {
     return this.axiosInstance
       .get("/missions/" + id)
-      .then(res => res.data)
+      .then(res => this.convertInteropMissionToProtobufJson(res.data))
       .catch(err => {
         throw err;
       });
   }
 
-  postTelemetry(telemetry: any) {
+  postTelemetry(telemetry: Telemetry.AsObject) {
     return this.axiosInstance
       .post("/telemetry", telemetry)
       .then(res => res.data)
@@ -94,7 +94,7 @@ export class InteropClient {
       });
   }
 
-  postObjectDetails(odlc: any) {
+  postObjectDetails(odlc: Odlc.AsObject) {
     return this.axiosInstance
       .post("/odlcs", odlc)
       .then(res => res.data)
@@ -116,7 +116,7 @@ export class InteropClient {
       });
   }
 
-  newTelemetry(telemetry: any) {
+  newTelemetry(telemetry: DroneTelemetry) {
     if (telemetry.sensors) {
       this.interopTelemetry = {
         latitude: telemetry.sensors.latitude,
@@ -130,13 +130,34 @@ export class InteropClient {
       }
     }
   }
+
+  convertInteropMissionToProtobufJson(
+    interopJson: any
+  ): Required<Mission.AsObject> {
+    const convertedInteropData = Array.isArray(interopJson)
+      ? [...interopJson]
+      : { ...interopJson };
+    for (const key in interopJson) {
+      if (typeof interopJson[key] === "object") {
+        convertedInteropData[key] = this.convertInteropMissionToProtobufJson(
+          interopJson[key]
+        );
+      }
+      if (Array.isArray(interopJson[key])) {
+        convertedInteropData[`${key}List`] = convertedInteropData[key];
+        delete convertedInteropData[key];
+      }
+    }
+    return convertedInteropData;
+  }
 }
 
 export default (
   ip: string,
   username: string,
   password: string,
-  ui_io?: Namespace
+  uploadSuccessCallback: () => void,
+  uploadFailureCallback: () => void
 ) => {
   const axiosConfig = {
     baseURL: "http://" + ip + "/api/",
@@ -154,7 +175,12 @@ export default (
     )
     .then(response => {
       console.log("Logged in to interop");
-      return new InteropClient(axiosConfig, response, ui_io);
+      return new InteropClient(
+        axiosConfig,
+        response,
+        uploadSuccessCallback,
+        uploadFailureCallback
+      );
     })
     .catch(error => {
       console.log("Failed to login to interop!");

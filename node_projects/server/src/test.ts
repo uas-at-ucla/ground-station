@@ -1,9 +1,20 @@
 // Run this file with `node test.js testName` or `npm test testName`
 import loadInteropClient from "utils/interop_client";
+import { Odlc } from "../../protobuf/interop/interop_api_pb";
 
 const tests = {
   interop: () => {
-    loadInteropClient("134.209.2.203:8000", "testuser", "testpass")
+    loadInteropClient(
+      "134.209.2.203:8000",
+      "testuser",
+      "testpass",
+      () => {
+        /**/
+      },
+      () => {
+        /**/
+      }
+    )
       .then(interopClient => {
         interopClient
           .getMission(2)
@@ -12,16 +23,16 @@ const tests = {
             console.log();
 
             // Object Detection, Classification, and Localization
-            const testOdlc = {
-              mission: 2,
-              type: "STANDARD",
+            const testOdlc: Odlc.AsObject = {
+              mission: 1,
+              type: 1, // TODO convert enum "STANDARD"
               latitude: 38.1478,
               longitude: -76.4275,
-              orientation: "N",
-              shape: "RECTANGLE",
-              shapeColor: "RED",
+              orientation: 1, // "N", TODO convert enum "STANDARD"
+              shape: 1, //"RECTANGLE" TODO onvert enum
+              shapeColor: 1, //"RED", TODO onvert enum
               alphanumeric: "C",
-              alphanumericColor: "WHITE",
+              alphanumericColor: 1, //"WHITE", TODO onvert enum
               autonomous: false
             };
 
