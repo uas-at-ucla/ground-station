@@ -47,7 +47,7 @@ before_deploy:
   - zip -r FlightDeck-linux-x64.zip FlightDeck-linux-x64
   - zip -r FlightDeck-darwin-x64.zip FlightDeck-darwin-x64
   - zip -r FlightDeck-win32-x64.zip FlightDeck-win32-x64
-  - cd ../..
+  - cd ../../..
 
   - git config --local user.name UAS@UCLA
   - git config --local user.email unmannedsystems.ucla@gmail.com
