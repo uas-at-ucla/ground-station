@@ -1,0 +1,29 @@
+{
+    "name": "ground_server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "build/server.js",
+    "scripts": {
+        "start": "nodemon",
+        "build-and-run": "npm run build && npm run run",
+        "build": "tsc --project tsconfig.json",
+        "run": "cross-env NODE_PATH=\"./build:..\" node .",
+        "test": "npm run build && node build/test.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/socket.io": "^2.1.4",
+        "@types/socket.io-client": "^1.4.32",
+        "check-dependencies": "^1.1.0",
+        "concurrently": "^4.0.1",
+        "cross-env": "^7.0.1",
+        "typescript": "^3.8.3"
+    },
+    "dependencies": {
+        "axios": "^0.18.0",
+        "nodemon": "^1.18.10",
+        "socket.io": "^2.1.1",
+        "socket.io-client": "^2.3.0"
+    }
+}

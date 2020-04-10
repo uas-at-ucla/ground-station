@@ -1,0 +1,28 @@
+{
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+        "react-app", // Start with default config from create-react-app
+        "plugin:react/recommended", // React recommended linting rules
+        "prettier/react", // Disable React linting rules that conflict with Prettier
+        "../.eslintrc.json" // Extend general config from parent folder
+    ],
+    "parserOptions": {
+        "project": "./tsconfig.json",
+        "ecmaVersion": 2018,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "jsx": true
+        }
+    },
+    "plugins": ["react-hooks"],
+    "rules": {
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "warn",
+        "@typescript-eslint/no-unnecessary-type-assertion": "off" // When React compiles the app, it gets confused about protobuf types. This keeps it happy.
+    },
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    }
+}

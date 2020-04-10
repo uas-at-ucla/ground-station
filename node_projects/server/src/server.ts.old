@@ -1,0 +1,419 @@
+// TODO make server it's own project and bring back package.json
+
+// use require() to load libraries from node_modules
+import socketIOServer from "socket.io";
+
+import { Sensors, Output } from "protobuf/drone/messages_pb";
+
+import fs from "fs";
+
+import loadInteropClient, { InteropClient } from "./utils/interop_client";
+import config from "config";
+import { Mission } from "protobuf/interop/interop_api_pb";
+
+const inDockerContainer = fs.existsSync("/.dockerenv");
+
+const server_port = 8081;
+
+const droneIP = inDockerContainer ? "192.168.3.20" : "192.168.1.20";
+const uiSendFrequency = 5; //Hz
+const trackySendFrequency = 5; //Hz
+let telemetry = { output: {} } as {
+  output: Output.AsObject;
+  sensors: Sensors.AsObject;
+};
+let flightControllerState: string | null = null;
+let droneArmed: boolean | null = null;
+let drone_connected = false;
+
+// const ugvWaitAfterUnlatchTime = 15000; //ms
+// const ugvStillTimeThreshold = 15000; //ms
+const ugvWaitTimeAfterCut = 15000; // ms
+let droppyReady = false;
+// var dropping = false;
+// var ugvUnlatchTime = 0;
+// var ugvIsStill = false;
+// var ugvBecameStillTime = 0;
+let droveUgv = false;
+let ugvDriveTimer: NodeJS.Timer | null = null;
+
+// create server
+const io = socketIOServer(server_port);
+
+// create namespaces
+const ui_io = io.of("/ui");
+const controls_io = io.of("/ground-controls");
+const ugv_io = io.of("/ugv");
+// const tracky_io = io.of('/tracky');
+const button_panel_io = io.of("/button-panel");
+const fake_drone_io = io.of("/fake-drone");
+
+console.log("server starting");
+
+/**************************
+ * INTEROP CONNECTION
+ **************************/
+let interopClient: InteropClient | null = null;
+let interopData: {
+  mission: Required<Mission.AsObject>;
+  ip: string;
+} | null = null;
+if (config.testing) {
+  // try our test server
+  connectToInterop("134.209.2.203:8000", "testuser", "testpass", 2).catch(
+    error => {
+      if (inDockerContainer) {
+        connectToInterop("192.168.3.30:80", "testuser", "testpass", 2);
+      } else {
+        connectToInterop("localhost:8000", "testuser", "testpass", 2);
+      }
+    }
+  );
+}
+
+function connectToInterop(
+  ip: string,
+  username: string,
+  password: string,
+  missionId: number
+) {
+  interopClient = null;
+  return loadInteropClient(ip, username, password, ui_io)
+    .then(theInteropClient => {
+      interopClient = theInteropClient;
+      interopClient
+        .getMission(missionId)
+        .then(mission => {
+          interopData = {
+            ip: ip,
+            mission: mission
+          };
+          console.log("Interop data retrieved");
+          ui_io.emit("INTEROP_DATA", interopData);
+        })
+        .catch(error => {
+          console.log(
+            "Interop mission retrieval failed. Check the mission ID."
+          );
+          interopData = null;
+          ui_io.emit("INTEROP_DATA", interopData);
+          if (config.verbose) console.log(error);
+        });
+    })
+    .catch(error => {
+      console.log("Interop login failed");
+      interopData = null;
+      ui_io.emit("INTEROP_DATA", interopData);
+      if (config.verbose) console.log(error);
+    });
+}
+
+/**************************
+ * ANTENNA TRACKER
+ **************************/
+// const trackySendInterval = 1000 / trackySendFrequency;
+// setInterval(() => {
+//   if (telemetry.sensors) {
+//     tracky_io.emit('DRONE_POS', telemetry.sensors);
+//   }
+// }, trackySendInterval);
+// tracky_io.on('connect', (socket) => {
+//   console.log("Antenna tracker connected!");
+// });
+
+/**************************
+ * GROUND_CONTROLS SOCKET
+ **************************/
+controls_io.on("connect", socket => {
+  drone_connected = true;
+  // droneIP = socket.handshake.address.replace('::ffff:', '');
+  console.log("ground_controls connected");
+  function onSensors(sensors: any) {
+    // telemetry.sensors = protobufUtils.decodeSensors(sensors); TODO
+    if (interopClient) {
+      interopClient.newTelemetry(telemetry);
+    }
+    if (
+      telemetry.sensors.autopilotState !== flightControllerState ||
+      telemetry.sensors.armed !== droneArmed
+    ) {
+      flightControllerState = telemetry.sensors.autopilotState;
+      droneArmed = telemetry.sensors.armed;
+      if (telemetry.sensors.armed) {
+        button_panel_io.emit("DRONE_STATE", flightControllerState);
+      } else {
+        button_panel_io.emit("DRONE_STATE", "DISARMED");
+      }
+    }
+  }
+
+  socket.on("SENSORS", (sensors: any) => {
+    onSensors(sensors);
+  });
+
+  socket.on("SENSORS_RFD900", (sensors: any) => {
+    onSensors(sensors);
+  });
+
+  socket.on("OUTPUT", (output: any) => {
+    // telemetry.output = protobufUtils.decodeOutput(output); TODO
+    if (telemetry.output.deploy !== droppyReady) {
+      droppyReady = telemetry.output.deploy;
+      button_panel_io.emit("DROPPY_READY", droppyReady);
+    }
+  });
+
+  socket.on("COMPILED_DRONE_PROGRAM", (droneProgram: any) => {
+    // droneProgram = protobufUtils.decodeDroneProgam(droneProgram); TODO
+    console.log(droneProgram);
+    console.log("Received drone program^");
+    ui_io.emit("COMPILED_DRONE_PROGRAM", droneProgram);
+  });
+
+  socket.on("UPLOADED_DRONE_PROGRAM", (droneProgram: any) => {
+    console.log("Got acknowledgment that the Drone Program was uploaded");
+    ui_io.emit(
+      "UPLOADED_DRONE_PROGRAM" /*,
+      protobufUtils.decodeDroneProgam(droneProgram) TODO */
+    );
+  });
+
+  const msgs_to_ui = [
+    "MISSION_COMPILE_ERROR",
+    "MISSION_STATUS",
+    "GIMBAL_SETPOINT",
+    "DEPLOYMENT_MOTOR_SETPOINT",
+    "LATCH_SETPOINT",
+    "HOTWIRE_SETPOINT",
+    "DROPPY_COMMAND_RECEIVED"
+  ];
+  for (const ui_msg of msgs_to_ui) {
+    const local_ui_msg = ui_msg;
+    socket.on(local_ui_msg, (data: any) => {
+      console.log("received: " + local_ui_msg + ": " + data);
+      ui_io.emit(local_ui_msg, data);
+
+      if (local_ui_msg === "DROPPY_COMMAND_RECEIVED") {
+        if (data === "RESET_LATCH") {
+          droveUgv = false;
+        } else if (data === "STOP_CUT" || data === "CANCEL_DROP") {
+          if (ugvDriveTimer) {
+            clearTimeout(ugvDriveTimer);
+            droveUgv = false;
+          }
+        }
+        if (data === "CUT_LINE" && !droveUgv) {
+          droveUgv = true;
+          console.log(
+            "Going to drive UGV in " +
+              ugvWaitTimeAfterCut / 1000 +
+              " seconds (unless cancelled)"
+          );
+          ugvDriveTimer = setTimeout(() => {
+            console.log("Driving the UGV!");
+            ugv_io.emit("DRIVE_TO_TARGET");
+          }, ugvWaitTimeAfterCut);
+        } /*else if (data === 'START_DROP') {
+          dropping = true;
+          ugvUnlatchTime = Date.now();
+        }*/
+
+        button_panel_io.emit("DROPPY_COMMAND_RECEIVED", data);
+      }
+    });
+  }
+
+  socket.on("disconnect", () => {
+    console.log("ground_controls disconnected");
+  });
+});
+
+/**************************
+ * UGV SOCKET
+ **************************/
+ugv_io.on("connect", socket => {
+  console.log("UGV controls connected!");
+  socket.emit("SET_TARGET", { lat: 38.14617, lng: -76.42642 }); // Official competition destination
+
+  socket.on("UGV_MESSAGE", (msg: any) => {
+    if (config.verbose) console.log(msg);
+    ui_io.emit("UGV_MESSAGE", msg);
+
+    /*if (msg.status && msg.status.is_still != null) {
+      let currentTime = Date.now();
+      if (currentTime - ugvUnlatchTime > ugvWaitAfterUnlatchTime) {
+        if (dropping && !ugvIsStill && msg.status.is_still) {
+          ugvIsStill = true;
+          ugvBecameStillTime = currentTime;
+        } else if (dropping && msg.status.is_still && (currentTime - ugvBecameStillTime > ugvStillTimeThreshold)) {
+          console.log("I think I should cut the fishing line!");
+          // controls_io.emit('CHANGE_DROPPY_STATE', 'CUT_LINE'); // TODO should we actually do
+        } else if (dropping && ugvIsStill && !msg.status.is_still) {
+          ugvIsStill = false;
+        }
+      }
+    }*/
+  });
+
+  socket.on("disconnect", () => {
+    console.log("UGV controls disconnected");
+  });
+});
+
+/**************************
+ * BUTTON PANEL SOCKET
+ **************************/
+button_panel_io.on("connect", socket => {
+  console.log("button panel connected!");
+
+  socket.on("CHANGE_DROPPY_STATE", (state: any) => {
+    controls_io.emit("CHANGE_DROPPY_STATE", state);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("button panel disconnected");
+  });
+});
+
+/**************************
+ * UI SOCKET
+ **************************/
+const uiSendInterval = 1000 / uiSendFrequency;
+setInterval(() => {
+  // periodically send telemetry to UI
+  if (telemetry.sensors) {
+    if (config.verbose) console.log(JSON.stringify(telemetry, null, 2));
+    ui_io.emit("TELEMETRY", telemetry);
+  }
+}, uiSendInterval);
+ui_io.on("connect", socket => {
+  console.log("ui connected!");
+  if (interopData) {
+    socket.emit("INTEROP_DATA", interopData);
+  }
+
+  socket.on("UPLOAD_IMAGE", (data: any) => {
+    if (interopClient && interopData) {
+      const odlc = {
+        mission: interopData.mission.id,
+        type: "STANDARD",
+        latitude: data.latitude ? data.latitude : 0,
+        longitude: data.longitude ? data.longitude : 0,
+        orientation: data.orient,
+        shape: data.shape,
+        shapeColor: data.shapeCol,
+        alphanumeric: data.letter,
+        alphanumericColor: data.letterCol,
+        autonomous: false
+      };
+
+      interopClient
+        .postObjectDetails(odlc)
+        .then(returnedOdlc => {
+          if (interopClient) {
+            console.log("Submitted ODLC with id " + returnedOdlc.id);
+            //TODO maybe imageFile will be a URL instead of a file path?
+            interopClient
+              .postObjectImage(data.imageFile, returnedOdlc.id)
+              .then(msg => {
+                console.log(msg);
+              })
+              .catch(error => {
+                console.log(error);
+              });
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    }
+  });
+
+  socket.on("COMPILE_GROUND_PROGRAM", (commands: any) => {
+    // TODO
+    // console.log("received ground program from UI");
+    // const groundProgram = protobufUtils.makeGroundProgram(
+    //   commands,
+    //   interopData
+    // );
+    // console.log(JSON.stringify(groundProgram, null, 2));
+    // const encodedGroundProgram = protobufUtils.encodeGroundProgram(
+    //   groundProgram
+    // );
+    console.log("Sending ground program to the drone");
+    controls_io.emit("COMPILE_GROUND_PROGRAM" /*, encodedGroundProgram TODO */);
+  });
+
+  const msgs_to_drone = [
+    "UPLOAD_MISSION",
+    "RUN_MISSION",
+    "PAUSE_MISSION",
+    "END_MISSION",
+    "CHANGE_DRONE_STATE",
+    "GIMBAL_SETPOINT",
+    "DEPLOYMENT_MOTOR_SETPOINT",
+    "LATCH_SETPOINT",
+    "HOTWIRE_SETPOINT",
+    "CHANGE_DROPPY_STATE"
+  ];
+  for (const controls_msg of msgs_to_drone) {
+    const local_controls_msg = controls_msg;
+    socket.on(local_controls_msg, (data: any) => {
+      console.log("sending: " + local_controls_msg + ": " + data);
+      controls_io.emit(local_controls_msg, data);
+    });
+  }
+
+  socket.on("CONNECT_TO_INTEROP", (cred: any) => {
+    console.log("CONNECT TO INTEROP");
+    connectToInterop(cred.ip, cred.username, cred.password, cred.missionId);
+  });
+
+  socket.on("CONFIGURE_TRACKY_POS", (pos: any) => {
+    console.log("Sending Tracky its estimated position");
+    // tracky_io.emit('CONFIGURE_POS', pos);
+  });
+
+  socket.on("SET_UGV_TARGET", (pos: any) => {
+    console.log("Sending the UGV its target position");
+    ugv_io.emit("SET_TARGET", pos);
+  });
+
+  socket.on("DRIVE_UGV", () => {
+    console.log("Driving the UGV!");
+    ugv_io.emit("DRIVE_TO_TARGET");
+  });
+
+  socket.on("DISABLE_UGV", () => {
+    console.log("Disabling the UGV");
+    ugv_io.emit("DISABLE");
+  });
+
+  socket.on("disconnect", () => {
+    console.log("ui disconnected");
+  });
+});
+
+/**************************
+ * FAKE_DRONE SOCKET
+ **************************/
+fake_drone_io.on("connect", socket => {
+  console.log("fake drone connected!");
+  socket.on("TELEMETRY", (droneTelemetry: any) => {
+    if (!drone_connected) {
+      // only do stuff if the real drone is not connected
+      telemetry = droneTelemetry;
+      if (interopClient) {
+        interopClient.newTelemetry(telemetry);
+      }
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("fake drone disconnected");
+  });
+});
+
+if (config.testing && config.useFakeDrone) {
+  require("./modules/fake_drone/fake_drone");
+}
