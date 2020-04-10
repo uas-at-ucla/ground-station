@@ -31,7 +31,7 @@ function createWindow() {
     protocol.interceptFileProtocol(
       "file",
       (request, callback) => {
-        const url = request.url.substr(7); // Remove "file://"
+        const url = decodeURI(request.url).substr(7); // Remove "file://"
         if (url.startsWith("/static")) {
           callback(path.normalize(`${__dirname}/../build/${url}`));
         } else {
