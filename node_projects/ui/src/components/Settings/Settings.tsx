@@ -51,7 +51,8 @@ const mapStateToProps = (state: AppState) => {
   return {
     settings: state.settings,
     interopData: state.mission.interopData,
-    lostCommsMapCoord: selector(state).mission.lostCommsMapCoord
+    lostCommsMapCoord: selector(state).mission.googleMapInteropMission
+      ?.lostCommsPos
   };
 };
 

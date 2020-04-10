@@ -125,9 +125,10 @@ const DroneActions = (props: Props) => {
         id => props.missionCommands[id]
       ),
       fieldBoundaryList: props.mainFlyZone
-        ? (props.mainFlyZone.boundaryPointsList as Required<
-            Position.AsObject
-          >[])
+        ? props.mainFlyZone.boundaryPointsList.map(point => ({
+            latitude: point.lat,
+            longitude: point.lng
+          }))
         : [],
       staticObstaclesList: props.interopData
         ? (props.interopData.mission.stationaryObstaclesList as Required<

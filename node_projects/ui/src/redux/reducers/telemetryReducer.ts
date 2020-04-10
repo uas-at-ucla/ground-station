@@ -1,7 +1,6 @@
 import produce from "immer";
 
 import { AppAction } from "../actions/actionTypes";
-import { Mission } from "protobuf/interop/interop_api_pb";
 import { UGV_Message } from "protobuf/ugv/ugv_messages_pb";
 import { DroneTelemetry } from "messages";
 
