@@ -11,7 +11,7 @@
     "start": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000/ && npm run electron-start\"",
     "start-web": "cross-env EXTEND_ESLINT=true PORT=3001 react-scripts start",
     "start-prod": "cross-env ELECTRON_IS_DEV=0 electron .",
-    "react-build": "cross-env EXTEND_ESLINT=true react-scripts build",
+    "react-build": "cross-env EXTEND_ESLINT=true CI=false react-scripts build",
     "electron-build": "tsc electron/electron.ts",
     "build": "npm run electron-build && npm run react-build",
     "test": "cross-env EXTEND_ESLINT=true react-scripts test --env=jsdom",
